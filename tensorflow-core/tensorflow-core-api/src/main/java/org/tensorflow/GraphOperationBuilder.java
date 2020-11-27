@@ -464,7 +464,6 @@ public final class GraphOperationBuilder implements OperationBuilder {
   }
 
   private static void setAttrTensor(TF_OperationDescription handle, String name, TF_Tensor tensorHandle) {
-    System.out.println("Setting " + name);
     requireHandle(handle);
     requireTensor(tensorHandle);
 
