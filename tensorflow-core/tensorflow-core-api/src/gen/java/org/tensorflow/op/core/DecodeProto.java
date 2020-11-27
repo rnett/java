@@ -82,6 +82,7 @@ import org.tensorflow.types.TString;
  * - A "bytes://<bytes>", in which protocol descriptors are created from `<bytes>`,
  * which is expected to be a `FileDescriptorSet` serialized as a string.
  */
+@Operator
 public final class DecodeProto extends RawOp {
   
   /**

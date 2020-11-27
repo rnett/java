@@ -263,7 +263,7 @@ public final class SampleDistortedBoundingBox<T extends TNumber> extends RawOp {
    * 1-D, containing `[target_height, target_width, -1]`. Provide as input to
    * `tf.slice`.
    */
-  public Output<T> size() {
+  public Output<T> sizeOutput() {
     return size;
   }
   

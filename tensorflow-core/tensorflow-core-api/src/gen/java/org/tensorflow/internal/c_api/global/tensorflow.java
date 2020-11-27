@@ -311,6 +311,7 @@ limitations under the License.
 // #include <stdbool.h>
 // #include <stdint.h>
 
+// #include "tensorflow/c/c_api_macros.h"
 // #include "tensorflow/c/tf_datatype.h"
 // #include "tensorflow/c/tf_status.h"
 
@@ -334,6 +335,12 @@ limitations under the License.
 // #endif  // SWIG
 
 // #ifdef __cplusplus
+// Targeting ../TF_AllocatorAttributes.java
+
+
+
+public static native @MemberGetter int TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE();
+public static final int TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE = TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE();
 // Targeting ../TF_Tensor.java
 
 
@@ -438,67 +445,6 @@ public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
                                                 int num_new_dims,
                                                 TF_Status status);
 
-// --------------------------------------------------------------------------
-// Encode the string `src` (`src_len` bytes long) into `dst` in the format
-// required by TF_STRING tensors. Does not write to memory more than `dst_len`
-// bytes beyond `*dst`. `dst_len` should be at least
-// TF_StringEncodedSize(src_len).
-//
-// On success returns the size in bytes of the encoded string.
-// Returns an error into `status` otherwise.
-public static native @Cast("size_t") long TF_StringEncode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("char*") BytePointer dst, @Cast("size_t") long dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringEncode(String src, @Cast("size_t") long src_len,
-                                             @Cast("char*") ByteBuffer dst, @Cast("size_t") long dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringEncode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("char*") byte[] dst, @Cast("size_t") long dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringEncode(String src, @Cast("size_t") long src_len,
-                                             @Cast("char*") BytePointer dst, @Cast("size_t") long dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringEncode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("char*") ByteBuffer dst, @Cast("size_t") long dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringEncode(String src, @Cast("size_t") long src_len,
-                                             @Cast("char*") byte[] dst, @Cast("size_t") long dst_len,
-                                             TF_Status status);
-
-// Decode a string encoded using TF_StringEncode.
-//
-// On success, sets `*dst` to the start of the decoded string and `*dst_len` to
-// its length. Returns the number of bytes starting at `src` consumed while
-// decoding. `*dst` points to memory within the encoded buffer.  On failure,
-// `*dst` and `*dst_len` are undefined and an error is set in `status`.
-//
-// Does not read memory more than `src_len` bytes beyond `src`.
-public static native @Cast("size_t") long TF_StringDecode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") PointerPointer dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringDecode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") @ByPtrPtr BytePointer dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringDecode(String src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") @ByPtrPtr ByteBuffer dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringDecode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") @ByPtrPtr byte[] dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringDecode(String src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") @ByPtrPtr BytePointer dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringDecode(@Cast("const char*") BytePointer src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") @ByPtrPtr ByteBuffer dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-public static native @Cast("size_t") long TF_StringDecode(String src, @Cast("size_t") long src_len,
-                                             @Cast("const char**") @ByPtrPtr byte[] dst, @Cast("size_t*") SizeTPointer dst_len,
-                                             TF_Status status);
-
-// Return the size in bytes required to encode a string `len` bytes long into a
-// TF_STRING tensor.
-public static native @Cast("size_t") long TF_StringEncodedSize(@Cast("size_t") long len);
-
 // Returns bool iff this tensor is aligned.
 public static native @Cast("bool") boolean TF_TensorIsAligned(@Const TF_Tensor arg0);
 
@@ -535,6 +481,7 @@ limitations under the License.
 // #include "tensorflow/c/tf_datatype.h"
 // #include "tensorflow/c/tf_status.h"
 // #include "tensorflow/c/tf_tensor.h"
+// #include "tensorflow/c/tf_tstring.h"
 
 // --------------------------------------------------------------------------
 // C API for TensorFlow.
@@ -623,6 +570,9 @@ public static native TF_Buffer TF_NewBuffer();
 public static native void TF_DeleteBuffer(TF_Buffer arg0);
 
 public static native @ByVal TF_Buffer TF_GetBuffer(TF_Buffer buffer);
+// Targeting ../TF_StringView.java
+
+
 // Targeting ../TF_SessionOptions.java
 
 
@@ -2699,6 +2649,10 @@ public static native TF_Buffer TF_GetRegisteredKernelsForOp(
     @Cast("const char*") BytePointer name, TF_Status status);
 public static native TF_Buffer TF_GetRegisteredKernelsForOp(
     String name, TF_Status status);
+
+// Update edge, switch input/ output in a node
+public static native void TF_UpdateEdge(TF_Graph graph, @ByVal TF_Output new_src,
+                                         @ByVal TF_Input dst, TF_Status status);
 // Targeting ../TF_Server.java
 
 
@@ -2743,6 +2697,15 @@ public static native void TF_RegisterLogListener(
 public static native void TF_RegisterLogListener(
     Listener_String listener);
 
+// Register a FileSystem plugin from filename `plugin_filename`.
+//
+// On success, place OK in status.
+// On failure, place an error status in status.
+public static native void TF_RegisterFilesystemPlugin(
+    @Cast("const char*") BytePointer plugin_filename, TF_Status status);
+public static native void TF_RegisterFilesystemPlugin(
+    String plugin_filename, TF_Status status);
+
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
@@ -2771,8 +2734,10 @@ limitations under the License.
 
 // #include <stdint.h>
 
+// #include "tensorflow/c/c_api.h"
 // #include "tensorflow/c/tf_datatype.h"
 // #include "tensorflow/c/tf_status.h"
+// #include "tensorflow/c/tf_tensor.h"
 
 // Macro to control visibility of exported symbols in the shared library (.so,
 // .dylib, .dll).
@@ -2838,6 +2803,10 @@ public static native void TF_KernelBuilder_HostMemory(
     TF_KernelBuilder kernel_builder, @Cast("const char*") BytePointer arg_name);
 public static native void TF_KernelBuilder_HostMemory(
     TF_KernelBuilder kernel_builder, String arg_name);
+
+// Specify a priority number for this kernel.
+public static native void TF_KernelBuilder_Priority(
+    TF_KernelBuilder kernel_builder, int priority_number);
 
 // Register the given kernel builder with the TensorFlow runtime. If
 // registration fails, the given status will be populated.
@@ -2947,6 +2916,10 @@ public static native void TF_OpKernelConstruction_GetAttrInt32(
     TF_OpKernelConstruction ctx, String attr_name, int[] val,
     TF_Status status);
 
+// Returns the unique operation name for this OpKernel.
+public static native @ByVal TF_StringView TF_OpKernelConstruction_GetName(
+    TF_OpKernelConstruction ctx);
+
 // Allocates Tensor for output at given index. Caller takes ownership of
 // returned TF_Tensor and should deallocate it using TF_DeleteTensor(tensor).
 //
@@ -2964,6 +2937,40 @@ public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
                                             int index, @Cast("TF_DataType") int dtype,
                                             @Cast("int64_t*") long[] dims, int num_dims,
                                             @Cast("size_t") long len, TF_Status status);
+
+// Tries to forward one of the inputs given in input_indices to
+// output[output_index]. If none of the given inputs can be forwarded, calls
+// allocate_output() to allocate a new output buffer. The index of the
+// forwarded input will be assign to output argument forwarded_input (if it's
+// not nullptr). If no inputs are forwarded, forwarded_input will be assigned
+// -1.
+public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
+    TF_OpKernelContext context, IntPointer candidate_input_indices,
+    int num_candidate_input_indices, int output_index, @Cast("int64_t*") LongPointer output_dims,
+    int output_num_dims, IntPointer forwarded_input, TF_Status status);
+public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
+    TF_OpKernelContext context, IntBuffer candidate_input_indices,
+    int num_candidate_input_indices, int output_index, @Cast("int64_t*") LongBuffer output_dims,
+    int output_num_dims, IntBuffer forwarded_input, TF_Status status);
+public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
+    TF_OpKernelContext context, int[] candidate_input_indices,
+    int num_candidate_input_indices, int output_index, @Cast("int64_t*") long[] output_dims,
+    int output_num_dims, int[] forwarded_input, TF_Status status);
+
+// Allocates a temporary Tensor of the specified type and shape. The
+// Tensor must not be used after kernel construction is
+// complete.
+//
+// num_dims must equal the size of array dims
+public static native TF_Tensor TF_AllocateTemp(
+    TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") LongPointer dims, int num_dims,
+    TF_AllocatorAttributes alloc_attrs, TF_Status status);
+public static native TF_Tensor TF_AllocateTemp(
+    TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") LongBuffer dims, int num_dims,
+    TF_AllocatorAttributes alloc_attrs, TF_Status status);
+public static native TF_Tensor TF_AllocateTemp(
+    TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") long[] dims, int num_dims,
+    TF_AllocatorAttributes alloc_attrs, TF_Status status);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
@@ -3269,6 +3276,11 @@ public static native void TF_ShapeInferenceContextSetOutput(TF_ShapeInferenceCon
                                               int i, TF_ShapeHandle handle,
                                               TF_Status status);
 
+// Returns a newly-allocated scalar shape handle. The returned handle should
+// be freed with TF_DeleteShapeHandle.
+public static native TF_ShapeHandle TF_ShapeInferenceContextScalar(
+    TF_ShapeInferenceContext ctx);
+
 // Returns a newly-allocate shape handle representing a vector of the given
 // size. The returned handle should be freed with TF_DeleteShapeHandle.
 public static native TF_ShapeHandle TF_ShapeInferenceContextVectorFromSize(
@@ -3452,7 +3464,7 @@ public static final int
   TFE_DEVICE_PLACEMENT_SILENT = 2,
   // Placement policy which silently copies int32 tensors but not other dtypes.
   TFE_DEVICE_PLACEMENT_SILENT_FOR_INT32 = 3;
-// LINT.ThenChange(//tensorflow/core/common_runtime/eager/context.h)
+// LINT.ThenChange(//tensorflow/c/eager/immediate_execution_context.h)
 
 // Sets the default execution mode (sync/async). Note that this can be
 // overridden per thread using TFE_ContextSetExecutorForThread.
@@ -3608,23 +3620,23 @@ public static native TFE_Op TFE_NewOp(TFE_Context ctx,
 public static native TFE_Op TFE_NewOp(TFE_Context ctx,
                                         String op_or_function_name,
                                         TF_Status status);
-
 public static native void TFE_DeleteOp(TFE_Op op);
+
+// Returns the op or function name `op` will execute.
+//
+// The returned string remains valid throughout the lifetime of 'op'.
+public static native @Cast("const char*") BytePointer TFE_OpGetName(@Const TFE_Op op,
+                                                TF_Status status);
+public static native TFE_Context TFE_OpGetContext(@Const TFE_Op op,
+                                                    TF_Status status);
 
 public static native void TFE_OpSetDevice(TFE_Op op, @Cast("const char*") BytePointer device_name,
                                            TF_Status status);
 public static native void TFE_OpSetDevice(TFE_Op op, String device_name,
                                            TF_Status status);
 // The returned string remains valid throughout the lifetime of 'op'.
-public static native @Cast("const char*") BytePointer TFE_OpGetDevice(TFE_Op op,
+public static native @Cast("const char*") BytePointer TFE_OpGetDevice(@Const TFE_Op op,
                                                   TF_Status status);
-
-// When 'enable' is set to 1, and if TensorFlow library is built with XLA
-// support, a subsequent TFE_Execute() call on `op` will run the op via XLA.
-//
-// If the library is not built with XLA support, this call would be a no-op.
-public static native void TFE_OpSetXLACompilation(TFE_Op op,
-                                                   @Cast("unsigned char") byte enable);
 
 public static native void TFE_OpAddInput(TFE_Op op, TFE_TensorHandle input,
                                           TF_Status status);
@@ -3637,6 +3649,23 @@ public static native void TFE_OpAddInputList(TFE_Op op,
                                               @ByPtrPtr TFE_TensorHandle inputs,
                                               int num_inputs,
                                               TF_Status status);
+
+// Fetches the current number of inputs attached to `op`.
+//
+// Does not use the operation's definition to determine how many inputs should
+// be attached. It is intended for use with TFE_OpGetFlatInput to inspect an
+// already-finalized operation.
+//
+// Note that TFE_OpGetFlatInputCount and TFE_OpGetFlatInput operate on a flat
+// sequence of inputs, unlike TFE_OpGetInputLength (for getting the length of a
+// particular named input list, which may only be part of the op's inputs).
+public static native int TFE_OpGetFlatInputCount(@Const TFE_Op op,
+                                                  TF_Status status);
+// Returns a borrowed reference to one of `op`'s inputs. Use
+// `TFE_TensorHandleCopySharingTensor` to make a new reference.
+public static native TFE_TensorHandle TFE_OpGetFlatInput(@Const TFE_Op op,
+                                                           int index,
+                                                           TF_Status status);
 
 public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
                                                     @Cast("const char*") BytePointer attr_name,

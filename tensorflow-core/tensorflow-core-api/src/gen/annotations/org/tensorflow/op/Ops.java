@@ -24,21 +24,7 @@ import org.tensorflow.EagerSession;
 import org.tensorflow.ExecutionEnvironment;
 import org.tensorflow.Operand;
 import org.tensorflow.Tensor;
-import org.tensorflow.ndarray.BooleanNdArray;
-import org.tensorflow.ndarray.ByteNdArray;
-import org.tensorflow.ndarray.DoubleNdArray;
-import org.tensorflow.ndarray.FloatNdArray;
-import org.tensorflow.ndarray.IntNdArray;
 import org.tensorflow.ndarray.LongNdArray;
-import org.tensorflow.ndarray.NdArray;
-import org.tensorflow.ndarray.Shape;
-import org.tensorflow.ndarray.buffer.BooleanDataBuffer;
-import org.tensorflow.ndarray.buffer.ByteDataBuffer;
-import org.tensorflow.ndarray.buffer.DataBuffer;
-import org.tensorflow.ndarray.buffer.DoubleDataBuffer;
-import org.tensorflow.ndarray.buffer.FloatDataBuffer;
-import org.tensorflow.ndarray.buffer.IntDataBuffer;
-import org.tensorflow.ndarray.buffer.LongDataBuffer;
 import org.tensorflow.op.core.Abort;
 import org.tensorflow.op.core.All;
 import org.tensorflow.op.core.Any;
@@ -68,6 +54,8 @@ import org.tensorflow.op.core.Constant;
 import org.tensorflow.op.core.ConsumeMutexLock;
 import org.tensorflow.op.core.ControlTrigger;
 import org.tensorflow.op.core.CountUpTo;
+import org.tensorflow.op.core.DecodeImage;
+import org.tensorflow.op.core.DecodeProto;
 import org.tensorflow.op.core.DeepCopy;
 import org.tensorflow.op.core.DeleteSessionTensor;
 import org.tensorflow.op.core.DestroyResourceOp;
@@ -77,6 +65,8 @@ import org.tensorflow.op.core.DynamicStitch;
 import org.tensorflow.op.core.EditDistance;
 import org.tensorflow.op.core.Empty;
 import org.tensorflow.op.core.EmptyTensorList;
+import org.tensorflow.op.core.EmptyTensorMap;
+import org.tensorflow.op.core.EncodeProto;
 import org.tensorflow.op.core.EnsureShape;
 import org.tensorflow.op.core.ExpandDims;
 import org.tensorflow.op.core.ExtractVolumePatches;
@@ -101,12 +91,14 @@ import org.tensorflow.op.core.InplaceAdd;
 import org.tensorflow.op.core.InplaceSub;
 import org.tensorflow.op.core.InplaceUpdate;
 import org.tensorflow.op.core.IsVariableInitialized;
+import org.tensorflow.op.core.KthOrderStatistic;
 import org.tensorflow.op.core.LookupTableExport;
 import org.tensorflow.op.core.LookupTableFind;
 import org.tensorflow.op.core.LookupTableImport;
 import org.tensorflow.op.core.LookupTableInsert;
 import org.tensorflow.op.core.LookupTableSize;
 import org.tensorflow.op.core.LoopCond;
+import org.tensorflow.op.core.MakeUnique;
 import org.tensorflow.op.core.MapClear;
 import org.tensorflow.op.core.MapIncompleteSize;
 import org.tensorflow.op.core.MapPeek;
@@ -142,6 +134,8 @@ import org.tensorflow.op.core.Placeholder;
 import org.tensorflow.op.core.PlaceholderWithDefault;
 import org.tensorflow.op.core.Print;
 import org.tensorflow.op.core.Prod;
+import org.tensorflow.op.core.QuantizeAndDequantizeV4;
+import org.tensorflow.op.core.QuantizeAndDequantizeV4Grad;
 import org.tensorflow.op.core.QuantizedReshape;
 import org.tensorflow.op.core.Range;
 import org.tensorflow.op.core.Rank;
@@ -192,6 +186,7 @@ import org.tensorflow.op.core.ScatterUpdate;
 import org.tensorflow.op.core.Select;
 import org.tensorflow.op.core.SetDiff1d;
 import org.tensorflow.op.core.SetSize;
+import org.tensorflow.op.core.Shape;
 import org.tensorflow.op.core.ShapeN;
 import org.tensorflow.op.core.Size;
 import org.tensorflow.op.core.Skipgram;
@@ -206,12 +201,18 @@ import org.tensorflow.op.core.Stage;
 import org.tensorflow.op.core.StageClear;
 import org.tensorflow.op.core.StagePeek;
 import org.tensorflow.op.core.StageSize;
+import org.tensorflow.op.core.StatelessSampleDistortedBoundingBox;
 import org.tensorflow.op.core.StopGradient;
 import org.tensorflow.op.core.StridedSlice;
 import org.tensorflow.op.core.StridedSliceAssign;
 import org.tensorflow.op.core.StridedSliceGrad;
 import org.tensorflow.op.core.Sum;
 import org.tensorflow.op.core.SwitchCond;
+import org.tensorflow.op.core.TPUCompileSucceededAssert;
+import org.tensorflow.op.core.TPUExecute;
+import org.tensorflow.op.core.TPUExecuteAndUpdateVariables;
+import org.tensorflow.op.core.TPUPartitionedInput;
+import org.tensorflow.op.core.TPUPartitionedOutput;
 import org.tensorflow.op.core.TemporaryVariable;
 import org.tensorflow.op.core.TensorArray;
 import org.tensorflow.op.core.TensorArrayClose;
@@ -243,6 +244,12 @@ import org.tensorflow.op.core.TensorListScatterIntoExistingList;
 import org.tensorflow.op.core.TensorListSetItem;
 import org.tensorflow.op.core.TensorListSplit;
 import org.tensorflow.op.core.TensorListStack;
+import org.tensorflow.op.core.TensorMapErase;
+import org.tensorflow.op.core.TensorMapHasKey;
+import org.tensorflow.op.core.TensorMapInsert;
+import org.tensorflow.op.core.TensorMapLookup;
+import org.tensorflow.op.core.TensorMapSize;
+import org.tensorflow.op.core.TensorMapStackKeys;
 import org.tensorflow.op.core.TensorScatterMax;
 import org.tensorflow.op.core.TensorScatterMin;
 import org.tensorflow.op.core.TensorScatterNdAdd;
@@ -253,6 +260,8 @@ import org.tensorflow.op.core.TensorScatterNdUpdate;
 import org.tensorflow.op.core.TensorStridedSliceUpdate;
 import org.tensorflow.op.core.Tile;
 import org.tensorflow.op.core.Timestamp;
+import org.tensorflow.op.core.TopKUnique;
+import org.tensorflow.op.core.TopKWithUnique;
 import org.tensorflow.op.core.TryRpc;
 import org.tensorflow.op.core.Unbatch;
 import org.tensorflow.op.core.UnbatchGrad;
@@ -266,6 +275,9 @@ import org.tensorflow.op.core.VarIsInitializedOp;
 import org.tensorflow.op.core.Variable;
 import org.tensorflow.op.core.VariableShape;
 import org.tensorflow.op.core.Where;
+import org.tensorflow.op.core.XlaRecvFromHost;
+import org.tensorflow.op.core.XlaSendToHost;
+import org.tensorflow.op.core.XlaSetBound;
 import org.tensorflow.op.core.XlaSpmdFullToShardShape;
 import org.tensorflow.op.core.XlaSpmdShardToFullShape;
 import org.tensorflow.op.core.Zeros;
@@ -1108,17 +1120,6 @@ public final class Ops {
   }
 
   /**
-   * Creates a constant of {@code long} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code long} elements.
-   * @return a long constant
-   */
-  public Constant<TInt64> constant(LongNdArray data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
    * Creates a rank-1 constant of {@code int} elements.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1154,48 +1155,13 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-5 constant of {@code long} elements.
+   * Creates a constant of {@code float} elements that is a copy of a given n-dimensional array.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a long constant
+   * @param data an n-dimensional array of {@code float} elements.
+   * @return a float constant
    */
-  public Constant<TInt64> constant(long[][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-5 constant of {@code boolean} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(boolean[][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a constant of {@code int} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code int} elements.
-   * @return an integer constant
-   */
-  public Constant<TInt32> constant(IntNdArray data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a constant of {@code double} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code double} elements.
-   * @return a double constant
-   */
-  public Constant<TFloat64> constant(DoubleNdArray data) {
+  public Constant<TFloat32> constant(FloatNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1212,18 +1178,6 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-6 constant of {@code float} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a float constant
-   */
-  public Constant<TFloat32> constant(float[][][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
    * Creates a constant containing a single {@code byte} element.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1235,120 +1189,36 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-3 constant of {@code boolean} elements.
+   * Creates a constant of {@code long} elements that is a copy of a given n-dimensional array.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(boolean[][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-4 constant of {@code float} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a float constant
-   */
-  public Constant<TFloat32> constant(float[][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-2 constant of {@code long} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
+   * @param data an n-dimensional array of {@code long} elements.
    * @return a long constant
    */
-  public Constant<TInt64> constant(long[][] data) {
+  public Constant<TInt64> constant(LongNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
   /**
-   * Creates a rank-5 constant of {@code byte} elements.
+   * Creates a constant of {@code double} elements that is a copy of a given n-dimensional array.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a byte constant
-   */
-  public Constant<TUint8> constant(byte[][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a constant of {@code boolean} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code boolean} elements.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(BooleanNdArray data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-2 constant of {@code float} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a float constant
-   */
-  public Constant<TFloat32> constant(float[][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a constant of {@code byte} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code byte} elements.
-   * @return a byte constant
-   */
-  public Constant<TUint8> constant(ByteNdArray data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-2 constant of {@code byte} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a byte constant
-   */
-  public Constant<TUint8> constant(byte[][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-5 constant of {@code double} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
+   * @param data an n-dimensional array of {@code double} elements.
    * @return a double constant
    */
-  public Constant<TFloat64> constant(double[][][][][] data) {
+  public Constant<TFloat64> constant(DoubleNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
   /**
-   * Creates a rank-3 constant of {@code float} elements.
+   * Creates a constant of {@code String} elements that is a copy of a given n-dimensional array,
+   *  using the default UTF-8 encoding.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a float constant
+   * @param data an n-dimensional array of {@code String} elements.
+   * @return a string constant
    */
-  public Constant<TFloat32> constant(float[][][] data) {
+  public Constant<TString> constant(<any> data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1377,30 +1247,6 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-2 constant of {@code boolean} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(boolean[][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a constant of {@code String} elements that is a copy of a given n-dimensional array,
-   *  using the default UTF-8 encoding.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code String} elements.
-   * @return a string constant
-   */
-  public Constant<TString> constant(NdArray<String> data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
    * Creates a {@code String} constant using the default, UTF-8 encoding.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1412,26 +1258,13 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-4 constant of {@code double} elements.
+   * Creates a constant of {@code int} elements that is a copy of a given n-dimensional array.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a double constant
+   * @param data an n-dimensional array of {@code int} elements.
+   * @return an integer constant
    */
-  public Constant<TFloat64> constant(double[][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-2 constant of {@code double} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a double constant
-   */
-  public Constant<TFloat64> constant(double[][] data) {
+  public Constant<TInt32> constant(IntNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1444,18 +1277,6 @@ public final class Ops {
    */
   public Constant<TInt32> constant(int data) {
     return Constant.scalarOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-4 constant of {@code byte} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a byte constant
-   */
-  public Constant<TUint8> constant(byte[][][][] data) {
-    return Constant.tensorOf(scope, data);
   }
 
   /**
@@ -1482,6 +1303,17 @@ public final class Ops {
   }
 
   /**
+   * Creates a constant of {@code boolean} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code boolean} elements.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(BooleanNdArray data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
    * Creates a constant containing a single {@code float} element.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1493,50 +1325,13 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-5 constant of {@code float} elements.
+   * Creates a constant of {@code byte} elements that is a copy of a given n-dimensional array.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a float constant
+   * @param data an n-dimensional array of {@code byte} elements.
+   * @return a byte constant
    */
-  public Constant<TFloat32> constant(float[][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-3 constant of {@code double} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a double constant
-   */
-  public Constant<TFloat64> constant(double[][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-6 constant of {@code long} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a long constant
-   */
-  public Constant<TInt64> constant(long[][][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-4 constant of {@code long} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a long constant
-   */
-  public Constant<TInt64> constant(long[][][][] data) {
+  public Constant<TUint8> constant(ByteNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1565,30 +1360,6 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-3 constant of {@code byte} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a byte constant
-   */
-  public Constant<TUint8> constant(byte[][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-6 constant of {@code byte} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a byte constant
-   */
-  public Constant<TUint8> constant(byte[][][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
    * Creates a rank-2 constant of {@code int} elements.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1597,17 +1368,6 @@ public final class Ops {
    * @return an integer constant
    */
   public Constant<TInt32> constant(int[][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a constant of {@code float} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code float} elements.
-   * @return a float constant
-   */
-  public Constant<TFloat32> constant(FloatNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1636,30 +1396,6 @@ public final class Ops {
   }
 
   /**
-   * Creates a rank-6 constant of {@code boolean} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(boolean[][][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-6 constant of {@code double} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a double constant
-   */
-  public Constant<TFloat64> constant(double[][][][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
    * Creates a constant containing a single {@code boolean} element.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1668,42 +1404,6 @@ public final class Ops {
    */
   public Constant<TBool> constant(boolean data) {
     return Constant.scalarOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-4 constant of {@code boolean} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(boolean[][][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-3 constant of {@code long} elements.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data An array containing the values to put into the new constant. The dimensions of the
-   *      new constant will match those of the array.
-   * @return a long constant
-   */
-  public Constant<TInt64> constant(long[][][] data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
-   * Creates a rank-1 constant of {@code long} elements representing the size of each dimensions of
-   *  the given shape.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape a shape
-   * @return a long constant
-   */
-  public Constant<TInt64> constant(Shape shape) {
-    return Constant.tensorOf(scope, shape);
   }
 
   /**
@@ -1751,34 +1451,8 @@ public final class Ops {
    * @param data an n-dimensional array of {@code String} elements.
    * @return a string constant
    */
-  public Constant<TString> constant(Charset charset, NdArray<String> data) {
+  public Constant<TString> constant(Charset charset, <any> data) {
     return Constant.tensorOf(scope, charset, data);
-  }
-
-  /**
-   * Create a {@link TFloat32} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a float constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TFloat32> constant(Shape shape, FloatDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TBool} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return an boolean constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TBool> constant(Shape shape, BooleanDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
   }
 
   /**
@@ -1791,46 +1465,6 @@ public final class Ops {
    * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
    */
   public Constant<TUint8> constant(Shape shape, ByteDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TInt64} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a long constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TInt64> constant(Shape shape, LongDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TString} constant with data from the given buffer, using the default UTF-8
-   *  encoding.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a string constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TString> constant(Shape shape, DataBuffer<String> data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TFloat64} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a double constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TFloat64> constant(Shape shape, DoubleDataBuffer data) {
     return Constant.tensorOf(scope, shape, data);
   }
 
@@ -1848,6 +1482,72 @@ public final class Ops {
   }
 
   /**
+   * Create a {@link TInt64} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a long constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TInt64> constant(Shape shape, LongDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TFloat64} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a double constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TFloat64> constant(Shape shape, DoubleDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TString} constant with data from the given buffer, using the default UTF-8
+   *  encoding.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a string constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TString> constant(Shape shape, <any> data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TBool} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return an boolean constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TBool> constant(Shape shape, BooleanDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TFloat32} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a float constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TFloat32> constant(Shape shape, FloatDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
    * Create a {@link TString} constant with data from the given buffer, using the given encoding.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1857,7 +1557,7 @@ public final class Ops {
    * @return a string constant
    * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
    */
-  public Constant<TString> constant(Charset charset, Shape shape, DataBuffer<String> data) {
+  public Constant<TString> constant(Charset charset, Shape shape, <any> data) {
     return Constant.tensorOf(scope, charset, shape, data);
   }
 
@@ -1917,6 +1617,133 @@ public final class Ops {
    */
   public <T extends TNumber> CountUpTo<T> countUpTo(Operand<T> ref, Long limit) {
     return CountUpTo.create(scope, ref, limit);
+  }
+
+  /**
+   * Function for decode_bmp, decode_gif, decode_jpeg, and decode_png.
+   *  <p>
+   *  Detects whether an image is a BMP, GIF, JPEG, or PNG, and performs the
+   *  appropriate operation to convert the input bytes string into a Tensor of type
+   *  dtype.
+   *  <p>
+   *  <i>NOTE</i>: decode_gif returns a 4-D array [num_frames, height, width, 3], as
+   *  opposed to decode_bmp, decode_jpeg and decode_png, which return 3-D arrays
+   *  [height, width, num_channels]. Make sure to take this into account when
+   *  constructing your graph if you are intermixing GIF files with BMP, JPEG, and/or
+   *  PNG files. Alternately, set the expand_animations argument of this function to
+   *  False, in which case the op will return 3-dimensional tensors and will truncate
+   *  animated GIF files to the first frame.
+   *  <p>
+   *  <i>NOTE</i>: If the first frame of an animated GIF does not occupy the entire
+   *  canvas (maximum frame width x maximum frame height), then it fills the
+   *  unoccupied areas (in the first frame) with zeros (black). For frames after the
+   *  first frame that does not occupy the entire canvas, it uses the previous
+   *  frame to fill the unoccupied areas.
+   *
+   * @param <T> data type for {@code image()} output
+   * @param contents 0-D. The encoded image bytes.
+   * @param options carries optional attributes values
+   * @return a new instance of DecodeImage
+   */
+  public DecodeImage<TUint8> decodeImage(Operand<TString> contents,
+      DecodeImage.Options... options) {
+    return DecodeImage.create(scope, contents, options);
+  }
+
+  /**
+   * Function for decode_bmp, decode_gif, decode_jpeg, and decode_png.
+   *  <p>
+   *  Detects whether an image is a BMP, GIF, JPEG, or PNG, and performs the
+   *  appropriate operation to convert the input bytes string into a Tensor of type
+   *  dtype.
+   *  <p>
+   *  <i>NOTE</i>: decode_gif returns a 4-D array [num_frames, height, width, 3], as
+   *  opposed to decode_bmp, decode_jpeg and decode_png, which return 3-D arrays
+   *  [height, width, num_channels]. Make sure to take this into account when
+   *  constructing your graph if you are intermixing GIF files with BMP, JPEG, and/or
+   *  PNG files. Alternately, set the expand_animations argument of this function to
+   *  False, in which case the op will return 3-dimensional tensors and will truncate
+   *  animated GIF files to the first frame.
+   *  <p>
+   *  <i>NOTE</i>: If the first frame of an animated GIF does not occupy the entire
+   *  canvas (maximum frame width x maximum frame height), then it fills the
+   *  unoccupied areas (in the first frame) with zeros (black). For frames after the
+   *  first frame that does not occupy the entire canvas, it uses the previous
+   *  frame to fill the unoccupied areas.
+   *
+   * @param <T> data type for {@code image()} output
+   * @param contents 0-D. The encoded image bytes.
+   * @param dtype The desired DType of the returned Tensor.
+   * @param options carries optional attributes values
+   * @return a new instance of DecodeImage
+   */
+  public <T extends TNumber> DecodeImage<T> decodeImage(Operand<TString> contents,
+      DataType<T> dtype, DecodeImage.Options... options) {
+    return DecodeImage.create(scope, contents, dtype, options);
+  }
+
+  /**
+   * The op extracts fields from a serialized protocol buffers message into tensors.
+   *  <p>
+   *  The `decode_proto` op extracts fields from a serialized protocol buffers
+   *  message into tensors.  The fields in `field_names` are decoded and converted
+   *  to the corresponding `output_types` if possible.
+   *  <p>
+   *  A `message_type` name must be provided to give context for the field names.
+   *  The actual message descriptor can be looked up either in the linked-in
+   *  descriptor pool or a filename provided by the caller using the
+   *  `descriptor_source` attribute.
+   *  <p>
+   *  Each output tensor is a dense tensor. This means that it is padded to hold
+   *  the largest number of repeated elements seen in the input minibatch. (The
+   *  shape is also padded by one to prevent zero-sized dimensions). The actual
+   *  repeat counts for each example in the minibatch can be found in the `sizes`
+   *  output. In many cases the output of `decode_proto` is fed immediately into
+   *  tf.squeeze if missing values are not a concern. When using tf.squeeze, always
+   *  pass the squeeze dimension explicitly to avoid surprises.
+   *  <p>
+   *  For the most part, the mapping between Proto field types and TensorFlow dtypes
+   *  is straightforward. However, there are a few special cases:
+   *  <p>
+   *  - A proto field that contains a submessage or group can only be converted
+   *  to `DT_STRING` (the serialized submessage). This is to reduce the complexity
+   *  of the API. The resulting string can be used as input to another instance of
+   *  the decode_proto op.
+   *  <p>
+   *  - TensorFlow lacks support for unsigned integers. The ops represent uint64
+   *  types as a `DT_INT64` with the same twos-complement bit pattern (the obvious
+   *  way). Unsigned int32 values can be represented exactly by specifying type
+   *  `DT_INT64`, or using twos-complement if the caller specifies `DT_INT32` in
+   *  the `output_types` attribute.
+   *  <p>
+   *  Both binary and text proto serializations are supported, and can be
+   *  chosen using the `format` attribute.
+   *  <p>
+   *  The `descriptor_source` attribute selects the source of protocol
+   *  descriptors to consult when looking up `message_type`. This may be:
+   *  <p>
+   *  - An empty string  or "local://", in which case protocol descriptors are
+   *  created for C++ (not Python) proto definitions linked to the binary.
+   *  <p>
+   *  - A file, in which case protocol descriptors are created from the file,
+   *  which is expected to contain a `FileDescriptorSet` serialized as a string.
+   *  NOTE: You can build a `descriptor_source` file using the `--descriptor_set_out`
+   *  and `--include_imports` options to the protocol compiler `protoc`.
+   *  <p>
+   *  - A "bytes://<bytes>", in which protocol descriptors are created from `<bytes>`,
+   *  which is expected to be a `FileDescriptorSet` serialized as a string.
+   *
+   * @param bytes Tensor of serialized protos with shape `batch_shape`.
+   * @param messageType Name of the proto message type to decode.
+   * @param fieldNames List of strings containing proto field names. An extension field can be decoded
+   *  by using its full name, e.g. EXT_PACKAGE.EXT_FIELD_NAME.
+   * @param outputTypes List of TF types to use for the respective field in field_names.
+   * @param options carries optional attributes values
+   * @return a new instance of DecodeProto
+   */
+  public DecodeProto decodeProto(Operand<TString> bytes, String messageType,
+      List<String> fieldNames, List<DataType<?>> outputTypes, DecodeProto.Options... options) {
+    return DecodeProto.create(scope, bytes, messageType, fieldNames, outputTypes, options);
   }
 
   /**
@@ -2160,6 +1987,73 @@ public final class Ops {
   }
 
   /**
+   * Creates and returns an empty tensor map.
+   *  <p>
+   *  handle: an empty tensor map
+   *
+   * @return a new instance of EmptyTensorMap
+   */
+  public EmptyTensorMap emptyTensorMap() {
+    return EmptyTensorMap.create(scope);
+  }
+
+  /**
+   * The op serializes protobuf messages provided in the input tensors.
+   *  <p>
+   *  The types of the tensors in `values` must match the schema for the fields
+   *  specified in `field_names`. All the tensors in `values` must have a common
+   *  shape prefix, <i>batch_shape</i>.
+   *  <p>
+   *  The `sizes` tensor specifies repeat counts for each field.  The repeat count
+   *  (last dimension) of a each tensor in `values` must be greater than or equal
+   *  to corresponding repeat count in `sizes`.
+   *  <p>
+   *  A `message_type` name must be provided to give context for the field names.
+   *  The actual message descriptor can be looked up either in the linked-in
+   *  descriptor pool or a filename provided by the caller using the
+   *  `descriptor_source` attribute.
+   *  <p>
+   *  For the most part, the mapping between Proto field types and TensorFlow dtypes
+   *  is straightforward. However, there are a few special cases:
+   *  <p>
+   *  - A proto field that contains a submessage or group can only be converted
+   *  to `DT_STRING` (the serialized submessage). This is to reduce the complexity
+   *  of the API. The resulting string can be used as input to another instance of
+   *  the decode_proto op.
+   *  <p>
+   *  - TensorFlow lacks support for unsigned integers. The ops represent uint64
+   *  types as a `DT_INT64` with the same twos-complement bit pattern (the obvious
+   *  way). Unsigned int32 values can be represented exactly by specifying type
+   *  `DT_INT64`, or using twos-complement if the caller specifies `DT_INT32` in
+   *  the `output_types` attribute.
+   *  <p>
+   *  The `descriptor_source` attribute selects the source of protocol
+   *  descriptors to consult when looking up `message_type`. This may be:
+   *  <p>
+   *  - An empty string  or "local://", in which case protocol descriptors are
+   *  created for C++ (not Python) proto definitions linked to the binary.
+   *  <p>
+   *  - A file, in which case protocol descriptors are created from the file,
+   *  which is expected to contain a `FileDescriptorSet` serialized as a string.
+   *  NOTE: You can build a `descriptor_source` file using the `--descriptor_set_out`
+   *  and `--include_imports` options to the protocol compiler `protoc`.
+   *  <p>
+   *  - A "bytes://<bytes>", in which protocol descriptors are created from `<bytes>`,
+   *  which is expected to be a `FileDescriptorSet` serialized as a string.
+   *
+   * @param sizes Tensor of int32 with shape `[batch_shape, len(field_names)]`.
+   * @param values List of tensors containing values for the corresponding field.
+   * @param fieldNames List of strings containing proto field names.
+   * @param messageType Name of the proto message type to decode.
+   * @param options carries optional attributes values
+   * @return a new instance of EncodeProto
+   */
+  public EncodeProto encodeProto(Operand<TInt32> sizes, Iterable<Operand<?>> values,
+      List<String> fieldNames, String messageType, EncodeProto.Options... options) {
+    return EncodeProto.create(scope, sizes, values, fieldNames, messageType, options);
+  }
+
+  /**
    * Ensures that the tensor's shape matches the expected shape.
    *  <p>
    *  Raises an error if the input tensor's shape does not match the specified shape.
@@ -2219,7 +2113,7 @@ public final class Ops {
   }
 
   /**
-   * Extract `patches` from `input` and put them in the "depth" output dimension. 3D extension of `extract_image_patches`.
+   * Extract `patches` from `input` and put them in the `"depth"` output dimension. 3D extension of `extract_image_patches`.
    *
    * @param <T> data type for {@code patches()} output
    * @param input 5-D Tensor with shape `[batch, in_planes, in_rows, in_cols, depth]`.
@@ -2228,10 +2122,10 @@ public final class Ops {
    *  `input`. Must be: `[1, stride_planes, stride_rows, stride_cols, 1]`.
    * @param padding The type of padding algorithm to use.
    *  <p>
-   *  We specify the size-related attributes as:
+   *  The size-related attributes are specified as follows:
    *  <pre>{@code
-   *        ksizes = [1, ksize_planes, ksize_rows, ksize_cols, 1]
-   *        strides = [1, stride_planes, strides_rows, strides_cols, 1]
+   *  ksizes = [1, ksize_planes, ksize_rows, ksize_cols, 1]
+   *  strides = [1, stride_planes, strides_rows, strides_cols, 1]
    *  }</pre>
    * @return a new instance of ExtractVolumePatches
    */
@@ -2866,6 +2760,32 @@ public final class Ops {
   }
 
   /**
+   * Computes the Kth order statistic of a data set. The current
+   *  <p>
+   *  implementation uses a binary search requiring exactly 32 passes over
+   *  the input data. The running time is linear with respect to input
+   *  size. The median-of-medians algorithm is probably faster, but is
+   *  difficult to implement efficiently in XLA. The implementation imposes
+   *  a total ordering on floats. The ordering is consistent with the usual
+   *  partial order.  Positive NaNs are greater than positive
+   *  infinity. Negative NaNs are less than negative infinity. NaNs with
+   *  distinct payloads are treated as distinct. Subnormal numbers are
+   *  preserved (not flushed to zero). Positive infinity is greater than all
+   *  numbers. Negative infinity is less than all numbers. Positive is
+   *  greater than negative zero. There are less than k values greater than
+   *  the kth order statistic. There are at least k values greater than or
+   *  equal to the Kth order statistic. The semantics are not the same as
+   *  top_k_unique.
+   *
+   * @param input
+   * @param k
+   * @return a new instance of KthOrderStatistic
+   */
+  public KthOrderStatistic kthOrderStatistic(Operand<TFloat32> input, Long k) {
+    return KthOrderStatistic.create(scope, input, k);
+  }
+
+  /**
    * Outputs all keys and values in the table.
    *
    * @param <T> data type for {@code keys()} output
@@ -2953,6 +2873,21 @@ public final class Ops {
    */
   public LoopCond loopCond(Operand<TBool> input) {
     return LoopCond.create(scope, input);
+  }
+
+  /**
+   * Make all elements in the non-Batch dimension unique, but \"close\" to
+   *  <p>
+   *  their initial value. Never returns a sub-normal number. Never returns
+   *  zero. The sign of each input element is always identical to the sign
+   *  of the corresponding output element. Behavior for infinite elements is
+   *  undefined. Behavior for subnormal elements is undefined.
+   *
+   * @param input
+   * @return a new instance of MakeUnique
+   */
+  public MakeUnique makeUnique(Operand<TFloat32> input) {
+    return MakeUnique.create(scope, input);
   }
 
   /**
@@ -3737,6 +3672,44 @@ public final class Ops {
   public <T extends TType, U extends TNumber> Prod<T> prod(Operand<T> input, Operand<U> axis,
       Prod.Options... options) {
     return Prod.create(scope, input, axis, options);
+  }
+
+  /**
+   * Returns the gradient of `QuantizeAndDequantizeV4`.
+   *  <p>
+   *  This is almost identical to QuantizeAndDequantizeV2, except that it returns a
+   *  gradient of 1 for inputs that are within the quantization range, or 0 otherwise.
+   *
+   * @param <T> data type for {@code output()} output
+   * @param input
+   * @param inputMin
+   * @param inputMax
+   * @param options carries optional attributes values
+   * @return a new instance of QuantizeAndDequantizeV4
+   */
+  public <T extends TNumber> QuantizeAndDequantizeV4<T> quantizeAndDequantizeV4(Operand<T> input,
+      Operand<T> inputMin, Operand<T> inputMax, QuantizeAndDequantizeV4.Options... options) {
+    return QuantizeAndDequantizeV4.create(scope, input, inputMin, inputMax, options);
+  }
+
+  /**
+   * Returns the gradient of `QuantizeAndDequantizeV4`.
+   *  <p>
+   *  Returns a gradient of 1 for inputs that are within the quantization range,
+   *  or 0 otherwise.
+   *
+   * @param <T> data type for {@code inputBackprop()} output
+   * @param gradients
+   * @param input
+   * @param inputMin
+   * @param inputMax
+   * @param options carries optional attributes values
+   * @return a new instance of QuantizeAndDequantizeV4Grad
+   */
+  public <T extends TNumber> QuantizeAndDequantizeV4Grad<T> quantizeAndDequantizeV4Grad(
+      Operand<T> gradients, Operand<T> input, Operand<T> inputMin, Operand<T> inputMax,
+      QuantizeAndDequantizeV4Grad.Options... options) {
+    return QuantizeAndDequantizeV4Grad.create(scope, gradients, input, inputMin, inputMax, options);
   }
 
   /**
@@ -5446,8 +5419,8 @@ public final class Ops {
    * @param input
    * @return a new instance of Shape
    */
-  public <T extends TType> org.tensorflow.op.core.Shape<TInt32> shape(Operand<T> input) {
-    return org.tensorflow.op.core.Shape.create(scope, input);
+  public <T extends TType> Shape<TInt32> shape(Operand<T> input) {
+    return Shape.create(scope, input);
   }
 
   /**
@@ -5466,9 +5439,9 @@ public final class Ops {
    * @param outType
    * @return a new instance of Shape
    */
-  public <U extends TNumber, T extends TType> org.tensorflow.op.core.Shape<U> shape(
-      Operand<T> input, DataType<U> outType) {
-    return org.tensorflow.op.core.Shape.create(scope, input, outType);
+  public <U extends TNumber, T extends TType> Shape<U> shape(Operand<T> input,
+      DataType<U> outType) {
+    return Shape.create(scope, input, outType);
   }
 
   /**
@@ -5849,6 +5822,87 @@ public final class Ops {
   }
 
   /**
+   * Generate a randomly distorted bounding box for an image deterministically.
+   *  <p>
+   *  Bounding box annotations are often supplied in addition to ground-truth labels
+   *  in image recognition or object localization tasks. A common technique for
+   *  training such a system is to randomly distort an image while preserving its
+   *  content, i.e. <i>data augmentation</i>. This Op, given the same `seed`,
+   *  deterministically outputs a randomly distorted localization of an object, i.e.
+   *  bounding box, given an `image_size`, `bounding_boxes` and a series of
+   *  constraints.
+   *  <p>
+   *  The output of this Op is a single bounding box that may be used to crop the
+   *  original image. The output is returned as 3 tensors: `begin`, `size` and
+   *  `bboxes`. The first 2 tensors can be fed directly into `tf.slice` to crop the
+   *  image. The latter may be supplied to `tf.image.draw_bounding_boxes` to visualize
+   *  what the bounding box looks like.
+   *  <p>
+   *  Bounding boxes are supplied and returned as `[y_min, x_min, y_max, x_max]`. The
+   *  bounding box coordinates are floats in `[0.0, 1.0]` relative to the width and
+   *  the height of the underlying image.
+   *  <p>
+   *  The output of this Op is guaranteed to be the same given the same `seed` and is
+   *  independent of how many times the function is called, and independent of global
+   *  seed settings (e.g. `tf.random.set_seed`).
+   *  <p>
+   *  Example usage:
+   *  <p>
+   *  >>> image = np.array([[[1], [2], [3]], [[4], [5], [6]], [[7], [8], [9]]])
+   *  >>> bbox = tf.constant(
+   *  ...   [0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4])
+   *  >>> seed = (1, 2)
+   *  >>> # Generate a single distorted bounding box.
+   *  >>> bbox_begin, bbox_size, bbox_draw = (
+   *  ...   tf.image.stateless_sample_distorted_bounding_box(
+   *  ...     tf.shape(image), bounding_boxes=bbox, seed=seed))
+   *  >>> # Employ the bounding box to distort the image.
+   *  >>> tf.slice(image, bbox_begin, bbox_size)
+   *  <tf.Tensor: shape=(2, 2, 1), dtype=int64, numpy=
+   *  array([[[1],
+   *          [2]],
+   *         [[4],
+   *          [5]]])>
+   *  >>> # Draw the bounding box in an image summary.
+   *  >>> colors = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+   *  >>> tf.image.draw_bounding_boxes(
+   *  ...   tf.expand_dims(tf.cast(image, tf.float32),0), bbox_draw, colors)
+   *  <tf.Tensor: shape=(1, 3, 3, 1), dtype=float32, numpy=
+   *  array([[[[1.],
+   *           [1.],
+   *           [3.]],
+   *          [[1.],
+   *           [1.],
+   *           [6.]],
+   *          [[7.],
+   *           [8.],
+   *           [9.]]]], dtype=float32)>
+   *  <p>
+   *  Note that if no bounding box information is available, setting
+   *  `use_image_if_no_bounding_boxes = true` will assume there is a single implicit
+   *  bounding box covering the whole image. If `use_image_if_no_bounding_boxes` is
+   *  false and no bounding boxes are supplied, an error is raised.
+   *
+   * @param <T> data type for {@code begin()} output
+   * @param imageSize 1-D, containing `[height, width, channels]`.
+   * @param boundingBoxes 3-D with shape `[batch, N, 4]` describing the N bounding boxes
+   *  associated with the image.
+   * @param minObjectCovered The cropped area of the image must contain at least this
+   *  fraction of any bounding box supplied. The value of this parameter should be
+   *  non-negative. In the case of 0, the cropped area does not need to overlap
+   *  any of the bounding boxes supplied.
+   * @param seed 1-D with shape `[2]`. The seed to the random number generator. Must have dtype
+   *  `int32` or `int64`. (When using XLA, only `int32` is allowed.)
+   * @param options carries optional attributes values
+   * @return a new instance of StatelessSampleDistortedBoundingBox
+   */
+  public <T extends TNumber, U extends TNumber> StatelessSampleDistortedBoundingBox<T> statelessSampleDistortedBoundingBox(
+      Operand<T> imageSize, Operand<TFloat32> boundingBoxes, Operand<TFloat32> minObjectCovered,
+      Operand<U> seed, StatelessSampleDistortedBoundingBox.Options... options) {
+    return StatelessSampleDistortedBoundingBox.create(scope, imageSize, boundingBoxes, minObjectCovered, seed, options);
+  }
+
+  /**
    * Stops gradient computation.
    *  <p>
    *  When executed in a graph, this op outputs its input tensor as-is.
@@ -6083,6 +6137,88 @@ public final class Ops {
    */
   public <T extends TType> SwitchCond<T> switchCond(Operand<T> data, Operand<TBool> pred) {
     return SwitchCond.create(scope, data, pred);
+  }
+
+  /**
+   * Asserts that compilation succeeded. This op produces no output and closes the
+   *  <p>
+   *  device during failure to ensure all pending device interactions fail.
+   *  <p>
+   *  'compilation_status' is a serialized CompilationResultProto.
+   *
+   * @param compilationStatus
+   * @return a new instance of TPUCompileSucceededAssert
+   */
+  public TPUCompileSucceededAssert tPUCompileSucceededAssert(Operand<TString> compilationStatus) {
+    return TPUCompileSucceededAssert.create(scope, compilationStatus);
+  }
+
+  /**
+   * Op that loads and executes a TPU program on a TPU device.
+   *  <p>
+   *  For the internal use of the distributed TPU compiler.
+   *
+   * @param args
+   * @param key
+   * @param Tresults
+   * @return a new instance of TPUExecute
+   */
+  public TPUExecute tPUExecute(Iterable<Operand<?>> args, Operand<TString> key,
+      List<DataType<?>> Tresults) {
+    return TPUExecute.create(scope, args, key, Tresults);
+  }
+
+  /**
+   * Op that executes a program with optional in-place variable updates.
+   *  <p>
+   *  It (optionally) reads device variables, loads and executes a TPU program on a
+   *  TPU device, and then (optionally) in-place updates variables using the program
+   *  outputs, as specified in attributes device_var_reads_indices (program input
+   *  indices from directly reading variables) and device_var_updates_indices (program
+   *  output indices used to update variables, -1 means no-update/read-only). Such
+   *  program outputs are consumed by these variables will not appear in the op
+   *  output. For the internal use of the distributed TPU compiler.
+   *
+   * @param args
+   * @param key
+   * @param Tresults
+   * @param deviceVarReadsIndices
+   * @param deviceVarUpdatesIndices
+   * @return a new instance of TPUExecuteAndUpdateVariables
+   */
+  public TPUExecuteAndUpdateVariables tPUExecuteAndUpdateVariables(Iterable<Operand<?>> args,
+      Operand<TString> key, List<DataType<?>> Tresults, List<Long> deviceVarReadsIndices,
+      List<Long> deviceVarUpdatesIndices) {
+    return TPUExecuteAndUpdateVariables.create(scope, args, key, Tresults, deviceVarReadsIndices, deviceVarUpdatesIndices);
+  }
+
+  /**
+   * An op that groups a list of partitioned inputs together. This op
+   *
+   * @param <T> data type for {@code output()} output
+   * @param inputs A list of partitioned inputs which must have the same shape.
+   * @param options carries optional attributes values
+   * @return a new instance of TPUPartitionedInput
+   */
+  public <T extends TType> TPUPartitionedInput<T> tPUPartitionedInput(Iterable<Operand<T>> inputs,
+      TPUPartitionedInput.Options... options) {
+    return TPUPartitionedInput.create(scope, inputs, options);
+  }
+
+  /**
+   * An op that demultiplexes a tensor to be sharded by XLA to a list of partitioned
+   *  <p>
+   *  outputs outside the XLA computation.
+   *
+   * @param <T> data type for {@code output()} output
+   * @param inputs A tensor which represents the full shape of partitioned tensors.
+   * @param numSplits
+   * @param options carries optional attributes values
+   * @return a new instance of TPUPartitionedOutput
+   */
+  public <T extends TType> TPUPartitionedOutput<T> tPUPartitionedOutput(Operand<T> inputs,
+      Long numSplits, TPUPartitionedOutput.Options... options) {
+    return TPUPartitionedOutput.create(scope, inputs, numSplits, options);
   }
 
   /**
@@ -6685,6 +6821,103 @@ public final class Ops {
   }
 
   /**
+   * Returns a tensor map with item from given key erased.
+   *  <p>
+   *  input_handle: the original map
+   *  output_handle: the map with value from given key removed
+   *  key: the key of the value to be erased
+   *
+   * @param inputHandle
+   * @param key
+   * @param valueDtype
+   * @return a new instance of TensorMapErase
+   */
+  public <T extends TType, U extends TType> TensorMapErase tensorMapErase(Operand<?> inputHandle,
+      Operand<T> key, DataType<U> valueDtype) {
+    return TensorMapErase.create(scope, inputHandle, key, valueDtype);
+  }
+
+  /**
+   * Returns whether the given key exists in the map.
+   *  <p>
+   *  input_handle: the input map
+   *  key: the key to check
+   *  has_key: whether the key is already in the map or not
+   *
+   * @param inputHandle
+   * @param key
+   * @return a new instance of TensorMapHasKey
+   */
+  public <T extends TType> TensorMapHasKey tensorMapHasKey(Operand<?> inputHandle, Operand<T> key) {
+    return TensorMapHasKey.create(scope, inputHandle, key);
+  }
+
+  /**
+   * Returns a map that is the 'input_handle' with the given key-value pair inserted.
+   *  <p>
+   *  input_handle: the original map
+   *  output_handle: the map with key and value inserted
+   *  key: the key to be inserted
+   *  value: the value to be inserted
+   *
+   * @param inputHandle
+   * @param key
+   * @param value
+   * @return a new instance of TensorMapInsert
+   */
+  public <T extends TType, U extends TType> TensorMapInsert tensorMapInsert(Operand<?> inputHandle,
+      Operand<T> key, Operand<U> value) {
+    return TensorMapInsert.create(scope, inputHandle, key, value);
+  }
+
+  /**
+   * Returns the value from a given key in a tensor map.
+   *  <p>
+   *  input_handle: the input map
+   *  key: the key to be looked up
+   *  value: the value found from the given key
+   *
+   * @param <U> data type for {@code value()} output
+   * @param inputHandle
+   * @param key
+   * @param valueDtype
+   * @return a new instance of TensorMapLookup
+   */
+  public <U extends TType, T extends TType> TensorMapLookup<U> tensorMapLookup(
+      Operand<?> inputHandle, Operand<T> key, DataType<U> valueDtype) {
+    return TensorMapLookup.create(scope, inputHandle, key, valueDtype);
+  }
+
+  /**
+   * Returns the number of tensors in the input tensor map.
+   *  <p>
+   *  input_handle: the input map
+   *  size: the number of tensors in the map
+   *
+   * @param inputHandle
+   * @return a new instance of TensorMapSize
+   */
+  public TensorMapSize tensorMapSize(Operand<?> inputHandle) {
+    return TensorMapSize.create(scope, inputHandle);
+  }
+
+  /**
+   * Returns a Tensor stack of all keys in a tensor map.
+   *  <p>
+   *  input_handle: the input map
+   *  keys: the returned Tensor of all keys in the map
+   *
+   * @param <T> data type for {@code keys()} output
+   * @param inputHandle
+   * @param keyDtype
+   * @return a new instance of TensorMapStackKeys
+   */
+  public <T extends TType> TensorMapStackKeys<T> tensorMapStackKeys(Operand<?> inputHandle,
+      DataType<T> keyDtype) {
+    return TensorMapStackKeys.create(scope, inputHandle, keyDtype);
+  }
+
+  /**
    *
    * @param <T> data type for {@code output()} output
    * @param tensor Tensor to update.
@@ -6892,73 +7125,37 @@ public final class Ops {
    *  scattered onto an existing tensor (as opposed to a zero-tensor). If the memory
    *  for the existing tensor cannot be re-used, a copy is made and updated.
    *  <p>
-   *  If `indices` contains duplicates, then their updates are accumulated (summed).
+   *  If `indices` contains duplicates, then we pick the last update for the index.
    *  <p>
-   *  <b>WARNING</b>: The order in which updates are applied is nondeterministic, so the
-   *  output will be nondeterministic if `indices` contains duplicates -- because
-   *  of some numerical approximation issues, numbers summed in different order
-   *  may yield different results.
+   *  If an out of bound index is found on CPU, an error is returned.
+   *  <p>
+   *  <b>WARNING</b>: There are some GPU specific semantics for this operation.
+   *  - If an out of bound index is found, the index is ignored.
+   *  - The order in which updates are applied is nondeterministic, so the output
+   *  will be nondeterministic if `indices` contains duplicates.
    *  <p>
    *  `indices` is an integer tensor containing indices into a new tensor of shape
-   *  `shape`.  The last dimension of `indices` can be at most the rank of `shape`:
+   *  `shape`.
+   *  <ul>
+   *  <li>
+   *  `indices` must have at least 2 axes: `(num_updates, index_depth)`.
+   *  </li>
+   *  <li>
+   *  The last axis of `indices` is how deep to index into `tensor` so  this index
+   *    depth must be less than the rank of `tensor`: `indices.shape[-1] <= tensor.ndim`
+   *  </li>
+   *  </ul>
+   *  if `indices.shape[-1] = tensor.rank` this Op indexes and updates scalar elements.
+   *  if `indices.shape[-1] < tensor.rank` it indexes and updates slices of the input
+   *  `tensor`.
    *  <p>
-   *      indices.shape[-1] <= shape.rank
-   *  <p>
-   *  The last dimension of `indices` corresponds to indices into elements
-   *  (if `indices.shape[-1] = shape.rank`) or slices
-   *  (if `indices.shape[-1] < shape.rank`) along dimension `indices.shape[-1]` of
-   *  `shape`.  `updates` is a tensor with shape
-   *  <p>
-   *      indices.shape[:-1] + shape[indices.shape[-1]:]
-   *  <p>
-   *  The simplest form of scatter is to insert individual elements in a tensor by
-   *  index. For example, say we want to insert 4 scattered elements in a rank-1
-   *  tensor with 8 elements.
-   *  <p>
-   *  <div style="width:70%; margin:auto; margin-bottom:10px; margin-top:20px;">
-   *  <img style="width:100%" src="https://www.tensorflow.org/images/ScatterNd1.png" alt>
-   *  </div>
-   *  <p>
-   *  In Python, this scatter operation would look like this:
-   *  <p>
-   *      >>> indices = tf.constant([[4], [3], [1], [7]])
-   *      >>> updates = tf.constant([9, 10, 11, 12])
-   *      >>> tensor = tf.ones([8], dtype=tf.int32)
-   *      >>> print(tf.tensor_scatter_nd_update(tensor, indices, updates))
-   *      tf.Tensor([ 1 11  1 10  9  1  1 12], shape=(8,), dtype=int32)
-   *  <p>
-   *  We can also, insert entire slices of a higher rank tensor all at once. For
-   *  example, if we wanted to insert two slices in the first dimension of a
-   *  rank-3 tensor with two matrices of new values.
-   *  <p>
-   *  In Python, this scatter operation would look like this:
-   *  <p>
-   *      >>> indices = tf.constant([[0], [2]])
-   *      >>> updates = tf.constant([[[5, 5, 5, 5], [6, 6, 6, 6],
-   *      ...                         [7, 7, 7, 7], [8, 8, 8, 8]],
-   *      ...                        [[5, 5, 5, 5], [6, 6, 6, 6],
-   *      ...                         [7, 7, 7, 7], [8, 8, 8, 8]]])
-   *      >>> tensor = tf.ones([4, 4, 4], dtype=tf.int32)
-   *      >>> print(tf.tensor_scatter_nd_update(tensor, indices, updates).numpy())
-   *      [[[5 5 5 5]
-   *        [6 6 6 6]
-   *        [7 7 7 7]
-   *        [8 8 8 8]]
-   *       [[1 1 1 1]
-   *        [1 1 1 1]
-   *        [1 1 1 1]
-   *        [1 1 1 1]]
-   *       [[5 5 5 5]
-   *        [6 6 6 6]
-   *        [7 7 7 7]
-   *        [8 8 8 8]]
-   *       [[1 1 1 1]
-   *        [1 1 1 1]
-   *        [1 1 1 1]
-   *        [1 1 1 1]]]
-   *  <p>
-   *  Note that on CPU, if an out of bound index is found, an error is returned.
-   *  On GPU, if an out of bound index is found, the index is ignored.
+   *  Each `update` has a rank of `tensor.rank - indices.shape[-1]`.
+   *  The overall shape of `updates` is:
+   *  <pre>{@code
+   *  indices.shape[:-1] + tensor.shape[indices.shape[-1]:]
+   *  }</pre>
+   *  For usage examples see the python [tf.tensor_scatter_nd_update](
+   *  https://www.tensorflow.org/api_docs/python/tf/tensor_scatter_nd_update) function
    *
    * @param <T> data type for {@code output()} output
    * @param tensor Tensor to copy/update.
@@ -7047,6 +7244,46 @@ public final class Ops {
    */
   public Timestamp timestamp() {
     return Timestamp.create(scope);
+  }
+
+  /**
+   * Returns the TopK unique values in the array in sorted order. The
+   *  <p>
+   *  running time is proportional to the product of K and the input
+   *  size. Sorting the whole array is more efficient for sufficiently large
+   *  values of K. The median-of-medians algorithm is probably faster, but
+   *  difficult to implement efficiently in XLA. If there are fewer than K
+   *  unique numbers (not NANs), the results are padded with negative
+   *  infinity. NaNs are never returned. Subnormal numbers are flushed to
+   *  zero. If an element appears at multiple indices, the highest index is
+   *  returned. If a TopK element never appears in the input due to padding
+   *  values, the indices are padded with negative one. If a padding value
+   *  appears in the input and padding is needed, the highest index of the
+   *  padding value will be returned. The semantics are not the same as
+   *  kth_order_statistic.
+   *
+   * @param input
+   * @param k
+   * @return a new instance of TopKUnique
+   */
+  public TopKUnique topKUnique(Operand<TFloat32> input, Long k) {
+    return TopKUnique.create(scope, input, k);
+  }
+
+  /**
+   * Returns the TopK values in the array in sorted order. This is a combination
+   *  <p>
+   *  of MakeUnique and TopKUnique. The returned top-K will have its lower bits
+   *  replaced by iota, thus it will be close to the original value but not exactly
+   *  the same. The running time is proportional to the product of K and the input
+   *  size. NaNs are never returned. Subnormal numbers are flushed to zero.
+   *
+   * @param input
+   * @param k
+   * @return a new instance of TopKWithUnique
+   */
+  public TopKWithUnique topKWithUnique(Operand<TFloat32> input, Long k) {
+    return TopKWithUnique.create(scope, input, k);
   }
 
   /**
@@ -7644,6 +7881,53 @@ public final class Ops {
    */
   public <T extends TType> Where where(Operand<T> condition) {
     return Where.create(scope, condition);
+  }
+
+  /**
+   * An op to receive a tensor from the host.
+   *  <p>
+   *  output: the tensor that will be received from the host.
+   *  Toutput: element type for output.
+   *  shape: shape for output.
+   *  key: A unique identifier for this region used to match up host transfers.
+   *
+   * @param <T> data type for {@code output()} output
+   * @param Toutput
+   * @param shape
+   * @param key
+   * @return a new instance of XlaRecvFromHost
+   */
+  public <T extends TType> XlaRecvFromHost<T> xlaRecvFromHost(DataType<T> Toutput, Shape shape,
+      String key) {
+    return XlaRecvFromHost.create(scope, Toutput, shape, key);
+  }
+
+  /**
+   * An op to send a tensor to the host.
+   *  <p>
+   *  input: the tensor that will be sent to the host.
+   *  Tinput: element type for input.
+   *  key: A unique identifier for this region used to match up host transfers.
+   *
+   * @param input
+   * @param key
+   * @return a new instance of XlaSendToHost
+   */
+  public <T extends TType> XlaSendToHost xlaSendToHost(Operand<T> input, String key) {
+    return XlaSendToHost.create(scope, input, key);
+  }
+
+  /**
+   * Set a bound for the given input value as a hint to Xla compiler,
+   *  <p>
+   *          returns the same value.
+   *
+   * @param input
+   * @param bound
+   * @return a new instance of XlaSetBound
+   */
+  public XlaSetBound xlaSetBound(Operand<TInt32> input, Operand<TInt32> bound) {
+    return XlaSetBound.create(scope, input, bound);
   }
 
   /**

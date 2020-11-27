@@ -30,6 +30,9 @@ import org.tensorflow.types.family.TNumber;
 import org.tensorflow.types.family.TType;
 
 /**
+ * Writes a scalar summary.
+ * <p>
+ * Writes scalar `value` at `step` with `tag` using summary `writer`.
  */
 public final class WriteScalarSummary extends RawOp {
   

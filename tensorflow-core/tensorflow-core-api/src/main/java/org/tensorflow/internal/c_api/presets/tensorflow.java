@@ -213,6 +213,8 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                .put(new Info("TFE_Op").pointerTypes("TFE_Op").base("org.tensorflow.internal.c_api.AbstractTFE_Op"))
                .put(new Info("TFE_Op::operation").javaText("@MemberGetter public native @ByRef EagerOperation operation();"))
                .put(new Info("TFE_TensorHandle").pointerTypes("TFE_TensorHandle").base("org.tensorflow.internal.c_api.AbstractTFE_TensorHandle"))
-               .put(new Info("TF_ShapeInferenceContextDimValueKnown", "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)").skip());
+               .put(new Info("TF_ShapeInferenceContextDimValueKnown", "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)").skip())
+                .put(new Info("TF_Bool").valueTypes("boolean").cast()) //TODO boolean or char?
+        ;
     }
 }

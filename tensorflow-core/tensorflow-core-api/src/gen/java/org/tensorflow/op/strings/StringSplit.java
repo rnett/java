@@ -123,7 +123,7 @@ public final class StringSplit extends RawOp {
   
   /**
    */
-  public Output<TInt64> shape() {
+  public Output<TInt64> shapeOutput() {
     return shape;
   }
   

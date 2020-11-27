@@ -58,8 +58,17 @@ public final class ModelDataset extends RawOp implements Operand<TType> {
       return this;
     }
     
+    /**
+     * @param ramBudget 
+     */
+    public Options ramBudget(Long ramBudget) {
+      this.ramBudget = ramBudget;
+      return this;
+    }
+    
     private Long algorithm;
     private Long cpuBudget;
+    private Long ramBudget;
     
     private Options() {
     }
@@ -98,6 +107,9 @@ public final class ModelDataset extends RawOp implements Operand<TType> {
         if (opts.cpuBudget != null) {
           opBuilder.setAttr("cpu_budget", opts.cpuBudget);
         }
+        if (opts.ramBudget != null) {
+          opBuilder.setAttr("ram_budget", opts.ramBudget);
+        }
       }
     }
     return new ModelDataset(opBuilder.build());
@@ -115,6 +127,13 @@ public final class ModelDataset extends RawOp implements Operand<TType> {
    */
   public static Options cpuBudget(Long cpuBudget) {
     return new Options().cpuBudget(cpuBudget);
+  }
+  
+  /**
+   * @param ramBudget 
+   */
+  public static Options ramBudget(Long ramBudget) {
+    return new Options().ramBudget(ramBudget);
   }
   
   /**

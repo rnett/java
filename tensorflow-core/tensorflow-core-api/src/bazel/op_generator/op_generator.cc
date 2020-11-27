@@ -320,6 +320,20 @@ void RenderConstructor(const OpSpec& op, const Type& op_class,
   writer->EndMethod();
 }
 
+string NormalizeName(const string name){
+	if(name == "data"){
+		return "dataOutput";
+	} else if(name == "size"){
+		return "sizeOutput";
+	} else if(name == "shape"){
+     		return "shapeOutput";
+	} else if(name == "rank"){
+		return "rankOutput";
+	} else {
+		return name;
+	}
+}
+
 void RenderGettersAndSetters(const OpSpec& op, SourceWriter* writer) {
   for (const AttributeSpec& attr : op.optional_attributes()) {
     Method setter = Method::Create(attr.var().name(), Type::Class("Options"));
@@ -332,7 +346,7 @@ void RenderGettersAndSetters(const OpSpec& op, SourceWriter* writer) {
         .EndMethod();
   }
   for (const ArgumentSpec& output : op.outputs()) {
-    Method getter = Method::Create(output.var().name(), output.var().type());
+    Method getter = Method::Create(NormalizeName(output.var().name()), output.var().type());
     Javadoc getter_doc = Javadoc::Create(output.description());
     writer->BeginMethod(getter, PUBLIC, &getter_doc)
         .Append("return " + output.var().name() + ";")

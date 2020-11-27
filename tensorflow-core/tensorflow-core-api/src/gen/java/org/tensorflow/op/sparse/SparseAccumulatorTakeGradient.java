@@ -83,7 +83,7 @@ public final class SparseAccumulatorTakeGradient<T extends TType> extends RawOp 
   /**
    * Shape of the average of the accumulated sparse gradients.
    */
-  public Output<TInt64> shape() {
+  public Output<TInt64> shapeOutput() {
     return shape;
   }
   

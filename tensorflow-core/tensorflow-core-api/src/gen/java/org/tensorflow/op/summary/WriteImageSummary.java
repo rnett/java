@@ -31,6 +31,10 @@ import org.tensorflow.types.family.TNumber;
 import org.tensorflow.types.family.TType;
 
 /**
+ * Writes an image summary.
+ * <p>
+ * Writes image `tensor` at `step` with `tag` using summary `writer`.
+ * `tensor` is image with shape [height, width, channels].
  */
 public final class WriteImageSummary extends RawOp {
   

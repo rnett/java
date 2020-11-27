@@ -20,7 +20,6 @@ package org.tensorflow.op;
 import java.util.List;
 import org.tensorflow.DataType;
 import org.tensorflow.Operand;
-import org.tensorflow.ndarray.Shape;
 import org.tensorflow.op.data.AnonymousIterator;
 import org.tensorflow.op.data.BatchDataset;
 import org.tensorflow.op.data.CSVDataset;

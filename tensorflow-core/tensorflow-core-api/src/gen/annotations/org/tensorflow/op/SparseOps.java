@@ -19,7 +19,6 @@ package org.tensorflow.op;
 
 import org.tensorflow.DataType;
 import org.tensorflow.Operand;
-import org.tensorflow.ndarray.Shape;
 import org.tensorflow.op.sparse.AddManySparseToTensorsMap;
 import org.tensorflow.op.sparse.AddSparseToTensorsMap;
 import org.tensorflow.op.sparse.DenseToDenseSetOperation;

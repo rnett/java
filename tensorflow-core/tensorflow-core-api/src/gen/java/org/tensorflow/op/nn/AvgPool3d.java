@@ -31,6 +31,9 @@ import org.tensorflow.types.family.TType;
 
 /**
  * Performs 3D average pooling on the input.
+ * <p>
+ * Each entry in `output` is the mean of the corresponding size `ksize` window in
+ * `value`.
  * 
  * @param <T> data type for {@code output()} output
  */
