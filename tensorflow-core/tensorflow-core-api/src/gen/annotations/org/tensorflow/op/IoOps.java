@@ -20,6 +20,7 @@ package org.tensorflow.op;
 import java.util.List;
 import org.tensorflow.DataType;
 import org.tensorflow.Operand;
+import org.tensorflow.ndarray.Shape;
 import org.tensorflow.op.io.DecodeBase64;
 import org.tensorflow.op.io.DecodeCompressed;
 import org.tensorflow.op.io.DecodeCsv;

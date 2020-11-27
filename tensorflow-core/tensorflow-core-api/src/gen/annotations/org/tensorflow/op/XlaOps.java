@@ -19,6 +19,7 @@ package org.tensorflow.op;
 
 import org.tensorflow.DataType;
 import org.tensorflow.Operand;
+import org.tensorflow.ndarray.Shape;
 import org.tensorflow.op.xla.BroadcastHelper;
 import org.tensorflow.op.xla.ClusterOutput;
 import org.tensorflow.op.xla.Conv;

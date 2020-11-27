@@ -24,7 +24,21 @@ import org.tensorflow.EagerSession;
 import org.tensorflow.ExecutionEnvironment;
 import org.tensorflow.Operand;
 import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.BooleanNdArray;
+import org.tensorflow.ndarray.ByteNdArray;
+import org.tensorflow.ndarray.DoubleNdArray;
+import org.tensorflow.ndarray.FloatNdArray;
+import org.tensorflow.ndarray.IntNdArray;
 import org.tensorflow.ndarray.LongNdArray;
+import org.tensorflow.ndarray.NdArray;
+import org.tensorflow.ndarray.Shape;
+import org.tensorflow.ndarray.buffer.BooleanDataBuffer;
+import org.tensorflow.ndarray.buffer.ByteDataBuffer;
+import org.tensorflow.ndarray.buffer.DataBuffer;
+import org.tensorflow.ndarray.buffer.DoubleDataBuffer;
+import org.tensorflow.ndarray.buffer.FloatDataBuffer;
+import org.tensorflow.ndarray.buffer.IntDataBuffer;
+import org.tensorflow.ndarray.buffer.LongDataBuffer;
 import org.tensorflow.op.core.Abort;
 import org.tensorflow.op.core.All;
 import org.tensorflow.op.core.Any;
@@ -186,7 +200,6 @@ import org.tensorflow.op.core.ScatterUpdate;
 import org.tensorflow.op.core.Select;
 import org.tensorflow.op.core.SetDiff1d;
 import org.tensorflow.op.core.SetSize;
-import org.tensorflow.op.core.Shape;
 import org.tensorflow.op.core.ShapeN;
 import org.tensorflow.op.core.Size;
 import org.tensorflow.op.core.Skipgram;
@@ -1120,6 +1133,17 @@ public final class Ops {
   }
 
   /**
+   * Creates a constant of {@code long} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code long} elements.
+   * @return a long constant
+   */
+  public Constant<TInt64> constant(LongNdArray data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
    * Creates a rank-1 constant of {@code int} elements.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1155,13 +1179,48 @@ public final class Ops {
   }
 
   /**
-   * Creates a constant of {@code float} elements that is a copy of a given n-dimensional array.
+   * Creates a rank-5 constant of {@code long} elements.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code float} elements.
-   * @return a float constant
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a long constant
    */
-  public Constant<TFloat32> constant(FloatNdArray data) {
+  public Constant<TInt64> constant(long[][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-5 constant of {@code boolean} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(boolean[][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a constant of {@code int} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code int} elements.
+   * @return an integer constant
+   */
+  public Constant<TInt32> constant(IntNdArray data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a constant of {@code double} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code double} elements.
+   * @return a double constant
+   */
+  public Constant<TFloat64> constant(DoubleNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1178,6 +1237,18 @@ public final class Ops {
   }
 
   /**
+   * Creates a rank-6 constant of {@code float} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a float constant
+   */
+  public Constant<TFloat32> constant(float[][][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
    * Creates a constant containing a single {@code byte} element.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1189,36 +1260,120 @@ public final class Ops {
   }
 
   /**
-   * Creates a constant of {@code long} elements that is a copy of a given n-dimensional array.
+   * Creates a rank-3 constant of {@code boolean} elements.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code long} elements.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(boolean[][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-4 constant of {@code float} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a float constant
+   */
+  public Constant<TFloat32> constant(float[][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-2 constant of {@code long} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
    * @return a long constant
    */
-  public Constant<TInt64> constant(LongNdArray data) {
+  public Constant<TInt64> constant(long[][] data) {
     return Constant.tensorOf(scope, data);
   }
 
   /**
-   * Creates a constant of {@code double} elements that is a copy of a given n-dimensional array.
+   * Creates a rank-5 constant of {@code byte} elements.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code double} elements.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a byte constant
+   */
+  public Constant<TUint8> constant(byte[][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a constant of {@code boolean} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code boolean} elements.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(BooleanNdArray data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-2 constant of {@code float} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a float constant
+   */
+  public Constant<TFloat32> constant(float[][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a constant of {@code byte} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code byte} elements.
+   * @return a byte constant
+   */
+  public Constant<TUint8> constant(ByteNdArray data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-2 constant of {@code byte} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a byte constant
+   */
+  public Constant<TUint8> constant(byte[][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-5 constant of {@code double} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
    * @return a double constant
    */
-  public Constant<TFloat64> constant(DoubleNdArray data) {
+  public Constant<TFloat64> constant(double[][][][][] data) {
     return Constant.tensorOf(scope, data);
   }
 
   /**
-   * Creates a constant of {@code String} elements that is a copy of a given n-dimensional array,
-   *  using the default UTF-8 encoding.
+   * Creates a rank-3 constant of {@code float} elements.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code String} elements.
-   * @return a string constant
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a float constant
    */
-  public Constant<TString> constant(<any> data) {
+  public Constant<TFloat32> constant(float[][][] data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1247,6 +1402,30 @@ public final class Ops {
   }
 
   /**
+   * Creates a rank-2 constant of {@code boolean} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(boolean[][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a constant of {@code String} elements that is a copy of a given n-dimensional array,
+   *  using the default UTF-8 encoding.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code String} elements.
+   * @return a string constant
+   */
+  public Constant<TString> constant(NdArray<String> data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
    * Creates a {@code String} constant using the default, UTF-8 encoding.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1258,13 +1437,26 @@ public final class Ops {
   }
 
   /**
-   * Creates a constant of {@code int} elements that is a copy of a given n-dimensional array.
+   * Creates a rank-4 constant of {@code double} elements.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code int} elements.
-   * @return an integer constant
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a double constant
    */
-  public Constant<TInt32> constant(IntNdArray data) {
+  public Constant<TFloat64> constant(double[][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-2 constant of {@code double} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a double constant
+   */
+  public Constant<TFloat64> constant(double[][] data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1277,6 +1469,18 @@ public final class Ops {
    */
   public Constant<TInt32> constant(int data) {
     return Constant.scalarOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-4 constant of {@code byte} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a byte constant
+   */
+  public Constant<TUint8> constant(byte[][][][] data) {
+    return Constant.tensorOf(scope, data);
   }
 
   /**
@@ -1303,17 +1507,6 @@ public final class Ops {
   }
 
   /**
-   * Creates a constant of {@code boolean} elements that is a copy of a given n-dimensional array.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code boolean} elements.
-   * @return a boolean constant
-   */
-  public Constant<TBool> constant(BooleanNdArray data) {
-    return Constant.tensorOf(scope, data);
-  }
-
-  /**
    * Creates a constant containing a single {@code float} element.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1325,13 +1518,50 @@ public final class Ops {
   }
 
   /**
-   * Creates a constant of {@code byte} elements that is a copy of a given n-dimensional array.
+   * Creates a rank-5 constant of {@code float} elements.
    *
    * @param scope is a scope used to add the underlying operation.
-   * @param data an n-dimensional array of {@code byte} elements.
-   * @return a byte constant
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a float constant
    */
-  public Constant<TUint8> constant(ByteNdArray data) {
+  public Constant<TFloat32> constant(float[][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-3 constant of {@code double} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a double constant
+   */
+  public Constant<TFloat64> constant(double[][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-6 constant of {@code long} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a long constant
+   */
+  public Constant<TInt64> constant(long[][][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-4 constant of {@code long} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a long constant
+   */
+  public Constant<TInt64> constant(long[][][][] data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1360,6 +1590,30 @@ public final class Ops {
   }
 
   /**
+   * Creates a rank-3 constant of {@code byte} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a byte constant
+   */
+  public Constant<TUint8> constant(byte[][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-6 constant of {@code byte} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a byte constant
+   */
+  public Constant<TUint8> constant(byte[][][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
    * Creates a rank-2 constant of {@code int} elements.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1368,6 +1622,17 @@ public final class Ops {
    * @return an integer constant
    */
   public Constant<TInt32> constant(int[][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a constant of {@code float} elements that is a copy of a given n-dimensional array.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data an n-dimensional array of {@code float} elements.
+   * @return a float constant
+   */
+  public Constant<TFloat32> constant(FloatNdArray data) {
     return Constant.tensorOf(scope, data);
   }
 
@@ -1396,6 +1661,30 @@ public final class Ops {
   }
 
   /**
+   * Creates a rank-6 constant of {@code boolean} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(boolean[][][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-6 constant of {@code double} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a double constant
+   */
+  public Constant<TFloat64> constant(double[][][][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
    * Creates a constant containing a single {@code boolean} element.
    *
    * @param scope is a scope used to add the underlying operation.
@@ -1404,6 +1693,42 @@ public final class Ops {
    */
   public Constant<TBool> constant(boolean data) {
     return Constant.scalarOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-4 constant of {@code boolean} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a boolean constant
+   */
+  public Constant<TBool> constant(boolean[][][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-3 constant of {@code long} elements.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param data An array containing the values to put into the new constant. The dimensions of the
+   *      new constant will match those of the array.
+   * @return a long constant
+   */
+  public Constant<TInt64> constant(long[][][] data) {
+    return Constant.tensorOf(scope, data);
+  }
+
+  /**
+   * Creates a rank-1 constant of {@code long} elements representing the size of each dimensions of
+   *  the given shape.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape a shape
+   * @return a long constant
+   */
+  public Constant<TInt64> constant(Shape shape) {
+    return Constant.tensorOf(scope, shape);
   }
 
   /**
@@ -1451,73 +1776,20 @@ public final class Ops {
    * @param data an n-dimensional array of {@code String} elements.
    * @return a string constant
    */
-  public Constant<TString> constant(Charset charset, <any> data) {
+  public Constant<TString> constant(Charset charset, NdArray<String> data) {
     return Constant.tensorOf(scope, charset, data);
   }
 
   /**
-   * Create a {@link TUint8} constant with data from the given buffer.
+   * Create a {@link TFloat32} constant with data from the given buffer.
    *
    * @param scope is a scope used to add the underlying operation.
    * @param shape the tensor shape.
    * @param data a buffer containing the tensor data.
-   * @return a byte constant
+   * @return a float constant
    * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
    */
-  public Constant<TUint8> constant(Shape shape, ByteDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TInt32} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return an integer constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TInt32> constant(Shape shape, IntDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TInt64} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a long constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TInt64> constant(Shape shape, LongDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TFloat64} constant with data from the given buffer.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a double constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TFloat64> constant(Shape shape, DoubleDataBuffer data) {
-    return Constant.tensorOf(scope, shape, data);
-  }
-
-  /**
-   * Create a {@link TString} constant with data from the given buffer, using the default UTF-8
-   *  encoding.
-   *
-   * @param scope is a scope used to add the underlying operation.
-   * @param shape the tensor shape.
-   * @param data a buffer containing the tensor data.
-   * @return a string constant
-   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
-   */
-  public Constant<TString> constant(Shape shape, <any> data) {
+  public Constant<TFloat32> constant(Shape shape, FloatDataBuffer data) {
     return Constant.tensorOf(scope, shape, data);
   }
 
@@ -1535,15 +1807,68 @@ public final class Ops {
   }
 
   /**
-   * Create a {@link TFloat32} constant with data from the given buffer.
+   * Create a {@link TUint8} constant with data from the given buffer.
    *
    * @param scope is a scope used to add the underlying operation.
    * @param shape the tensor shape.
    * @param data a buffer containing the tensor data.
-   * @return a float constant
+   * @return a byte constant
    * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
    */
-  public Constant<TFloat32> constant(Shape shape, FloatDataBuffer data) {
+  public Constant<TUint8> constant(Shape shape, ByteDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TInt64} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a long constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TInt64> constant(Shape shape, LongDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TString} constant with data from the given buffer, using the default UTF-8
+   *  encoding.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a string constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TString> constant(Shape shape, DataBuffer<String> data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TFloat64} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return a double constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TFloat64> constant(Shape shape, DoubleDataBuffer data) {
+    return Constant.tensorOf(scope, shape, data);
+  }
+
+  /**
+   * Create a {@link TInt32} constant with data from the given buffer.
+   *
+   * @param scope is a scope used to add the underlying operation.
+   * @param shape the tensor shape.
+   * @param data a buffer containing the tensor data.
+   * @return an integer constant
+   * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
+   */
+  public Constant<TInt32> constant(Shape shape, IntDataBuffer data) {
     return Constant.tensorOf(scope, shape, data);
   }
 
@@ -1557,7 +1882,7 @@ public final class Ops {
    * @return a string constant
    * @throws IllegalArgumentException If the tensor shape is not compatible with the buffer
    */
-  public Constant<TString> constant(Charset charset, Shape shape, <any> data) {
+  public Constant<TString> constant(Charset charset, Shape shape, DataBuffer<String> data) {
     return Constant.tensorOf(scope, charset, shape, data);
   }
 
@@ -5419,8 +5744,8 @@ public final class Ops {
    * @param input
    * @return a new instance of Shape
    */
-  public <T extends TType> Shape<TInt32> shape(Operand<T> input) {
-    return Shape.create(scope, input);
+  public <T extends TType> org.tensorflow.op.core.Shape<TInt32> shape(Operand<T> input) {
+    return org.tensorflow.op.core.Shape.create(scope, input);
   }
 
   /**
@@ -5439,9 +5764,9 @@ public final class Ops {
    * @param outType
    * @return a new instance of Shape
    */
-  public <U extends TNumber, T extends TType> Shape<U> shape(Operand<T> input,
-      DataType<U> outType) {
-    return Shape.create(scope, input, outType);
+  public <U extends TNumber, T extends TType> org.tensorflow.op.core.Shape<U> shape(
+      Operand<T> input, DataType<U> outType) {
+    return org.tensorflow.op.core.Shape.create(scope, input, outType);
   }
 
   /**
