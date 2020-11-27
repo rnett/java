@@ -47,7 +47,11 @@ import org.bytedeco.javacpp.tools.InfoMapper;
 //                "tensorflow/c/env.h",
                 "tensorflow/c/kernels.h",
                 "tensorflow/c/ops.h",
-                "tensorflow/c/eager/c_api.h"
+                "tensorflow/c/eager/c_api.h",
+                "tensorflow/c/eager/gradients.h",
+                "tensorflow/core/lib/gtl/array_slice.h",
+//                "tensorflow/c/eager/tape.h",
+//                "absl/types/span.h"
             },
             link = "tensorflow_cc@.2",
             preload = {"iomp5", "mklml", "mklml_intel", "tensorflow_framework@.2"},
@@ -185,7 +189,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
     public void map(InfoMap infoMap) {
         infoMap.put(new Info("TF_CAPI_EXPORT").cppTypes().annotations())
                .put(new Info("TF_Buffer::data").javaText("public native @Const Pointer data(); public native TF_Buffer data(Pointer data);"))
-               .put(new Info("TF_Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
+               .put(new Info("TF_Status", "Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
                .put(new Info("TF_Buffer").pointerTypes("TF_Buffer").base("org.tensorflow.internal.c_api.AbstractTF_Buffer"))
                .put(new Info("TF_Tensor").pointerTypes("TF_Tensor").base("org.tensorflow.internal.c_api.AbstractTF_Tensor"))
                .put(new Info("TF_Session").pointerTypes("TF_Session").base("org.tensorflow.internal.c_api.AbstractTF_Session"))
@@ -214,7 +218,23 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                .put(new Info("TFE_Op::operation").javaText("@MemberGetter public native @ByRef EagerOperation operation();"))
                .put(new Info("TFE_TensorHandle").pointerTypes("TFE_TensorHandle").base("org.tensorflow.internal.c_api.AbstractTFE_TensorHandle"))
                .put(new Info("TF_ShapeInferenceContextDimValueKnown", "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)").skip())
+                .put(new Info("AbstractTensorHandle").javaNames("TFE_TensorHandle").cppText("TFE_TensorHandle"))
+                .put(new Info("AbstractContext").javaNames("TFE_Context").cppText("TFE_Context"))
+                .put(new Info("absl::Span<AbstractTensorHandleconst *>").cppTypes("gtl::ArraySlice<AbstractTensorHandle*>"))
+                .put(new Info("gtl::ArraySlice<AbstractTensorHandle*>").pointerTypes("HandleList"))
+                .put(new Info("gtl::ArraySlice<int64>").pointerTypes("LongList"))
+//                .put(new Info("Tape").pointerTypes("GradientTape"))
+                .put(new Info("std::unordered_map<string,std::unordered_set<int> >", "std::unordered_map<std::string,std::unordered_set<int> >").pointerTypes("UnorderedMapOfStringsToSetInt").define())
+                .put(new Info("std::unordered_set<int>").pointerTypes("UnorderedSetInt").define())
+                .put(new Info("string", "std::string").cppTypes("std::string").cppText("std::string").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("@Cast({\"char*\", \"std::string*\"}) BytePointer"))
+                .put(new Info("tensorflow::gradients::GradientRegistry::Register").skip()).put(new Info("string", "std::string").cppTypes("std::string").cppText("std::string").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("@Cast({\"char*\", \"std::string*\"}) BytePointer"))
+                .put(new Info("tensorflow::DataType").cast().valueTypes("int").pointerTypes("IntPointer"))
+                .put(new Info("int64", "tensorflow::int64").valueTypes("long"))
+                .put(new Info("tensorflow::gradients::ForwardOperation::attrs").skip()) //TODO handle
+                .put(new Info("tensorflow::gradients::TapeVSpace").pointerTypes("TapeVSpace").base("org.tensorflow.internal.c_api.AbstractTapeVSpace"))
                 .put(new Info("TF_Bool").valueTypes("boolean").cast()) //TODO boolean or char?
+                .put(new Info("types.pb.h").skip())
+//        .put(new Info("<farmhash.h>").cppText("src/farmhash.h"))
         ;
     }
 }
