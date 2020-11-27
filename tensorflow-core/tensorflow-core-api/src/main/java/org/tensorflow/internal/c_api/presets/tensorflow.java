@@ -47,7 +47,11 @@ import org.bytedeco.javacpp.tools.InfoMapper;
 //                "tensorflow/c/env.h",
                 "tensorflow/c/kernels.h",
                 "tensorflow/c/ops.h",
-                "tensorflow/c/eager/c_api.h"
+                "tensorflow/c/eager/c_api.h",
+                "tensorflow/c/eager/tape.h",
+                "tensorflow/core/framework/types.pb.h",
+                "tensorflow/core/lib/gtl/array_slice.h",
+                "tensorflow/java/cpp_test.h",
             },
             link = "tensorflow_cc@.2",
             preload = {"iomp5", "mklml", "mklml_intel", "tensorflow_framework@.2"},
@@ -213,6 +217,18 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                .put(new Info("TFE_Op").pointerTypes("TFE_Op").base("org.tensorflow.internal.c_api.AbstractTFE_Op"))
                .put(new Info("TFE_Op::operation").javaText("@MemberGetter public native @ByRef EagerOperation operation();"))
                .put(new Info("TFE_TensorHandle").pointerTypes("TFE_TensorHandle").base("org.tensorflow.internal.c_api.AbstractTFE_TensorHandle"))
-               .put(new Info("TF_ShapeInferenceContextDimValueKnown", "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)").skip());
+               .put(new Info("TF_ShapeInferenceContextDimValueKnown", "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)").skip())
+                .put(new Info("std::unordered_map<string,std::unordered_set<int> >", "std::unordered_map<std::string,std::unordered_set<int> >").pointerTypes("UnorderedMapOfStringsToSetInt").define())
+                .put(new Info("std::unordered_set<int>").pointerTypes("UnorderedSetInt").define())
+                .put(new Info("string", "std::string").cppTypes("std::string").cppText("std::string").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("@Cast({\"char*\", \"std::string*\"}) BytePointer"))
+                .put(new Info("tensorflow::DataType").cast().valueTypes("int").pointerTypes("IntPointer"))
+                .put(new Info("types.pb.h").skip())
+                .put(new Info("JavaTapeTensor").pointerTypes("TapeTensor").define())
+//                .put(new Info("tensorflow::eager::GradientTape<Gradient,BackwardFunction,TapeTensor >").pointerTypes("TFE_GradientTape").base("org.tensorflow.internal.c_api.AbstractTFE_GradientTape"))
+//                .put(new Info("gtl::ArraySlice<Gradient*>").pointerTypes("GradientList").define())
+//                .put(new Info("gtl::ArraySlice<int64>").pointerTypes("LongList").define())
+//                .put(new Info("gtl::ArraySlice<tensorflow::DataType>").pointerTypes("DataTypeList").define())
+                .put(new Info("int64", "tensorflow::int64").valueTypes("long"));
+//                .put(new Info("DataType").valueTypes("int").cast());
     }
 }

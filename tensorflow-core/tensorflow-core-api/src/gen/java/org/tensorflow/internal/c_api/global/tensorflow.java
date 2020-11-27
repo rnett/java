@@ -11,6 +11,12 @@ import org.bytedeco.javacpp.annotation.*;
 public class tensorflow extends org.tensorflow.internal.c_api.presets.tensorflow {
     static { Loader.load(); }
 
+// Targeting ../UnorderedMapOfStringsToSetInt.java
+
+
+// Targeting ../UnorderedSetInt.java
+
+
 // Parsed from tensorflow/core/util/port.h
 
 /* Copyright 2015 The TensorFlow Authors. All Rights Reserved.
@@ -4016,6 +4022,225 @@ public static native void TFE_ContextEndStep(TFE_Context ctx);
 // #endif
 
 // #endif  // TENSORFLOW_C_EAGER_C_API_H_
+
+
+// Parsed from tensorflow/c/eager/tape.h
+
+/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+// #ifndef TENSORFLOW_C_EAGER_TAPE_H_
+// #define TENSORFLOW_C_EAGER_TAPE_H_
+
+// Language-agnostic gradient tape. Does not perform backpropagation, just
+// maintains the data structures required to do so.
+
+// #include <stack>
+// #include <unordered_map>
+// #include <unordered_set>
+// #include <vector>
+
+// #include "tensorflow/core/framework/tensor_shape.h"
+// #include "tensorflow/core/framework/types.h"
+// #include "tensorflow/core/lib/gtl/array_slice.h"
+// #include "tensorflow/core/lib/gtl/cleanup.h"
+// #include "tensorflow/core/lib/gtl/flatmap.h"
+// #include "tensorflow/core/lib/gtl/flatset.h"
+// #include "tensorflow/core/platform/types.h"
+
+// Represents an entry in the tape.
+
+// Map from tensor_id to internally-defined operation-id of the operation which
+// produced this tensor. A value of -1 means that the tensor was directly
+// watched and not the result of any operation in the tape.
+
+// Map from operation-id to tape entry.
+
+// Operations the tape needs to perform on tensors to do backpropagation. Named
+// "vspace" because a subset of these are related to a vector space, such as
+// adding gradients, getting zeroes, etc. Currently cannot be implemented
+// without using tensorflow python code, hence left unspecified here.
+//
+// Gradient is the type returned by gradient functions. In Python TF it's either
+// Tensor or IndexedSlices or None, which here we map to nullptr. Gradients need
+// to allow their size to be computed and they need to be passable to a backward
+// function and deleted (as the backprop code creates lots of gradients the user
+// is not interested in).
+//
+// BackwardFunction needs to be a closure which stores intermediate activations
+// from the forward computation and calls a vector-jacobian product function
+// (also known as adjoint function) to compute, given downstream gradients,
+// upstream gradients.
+//
+// TODO(apassos) provide concrete template instantiations for TFE_TensorHandle
+// specialization, which is blocked by quite a few things needing to loop back
+// into python now.
+
+// Traces the execution of operations, doing eager garbage collection, and
+// exporting a full trace so other code can do backpropagation. Not thread-safe.
+
+// Describes a callback for special-cased and more efficient jvp computation.
+//
+// Could just be a simple typedef in ForwardAccumulator, but MSVC chokes on
+// that.
+
+// Computes Jacobian-vector products using forward-mode automatic
+// differentiation.
+//
+// While GradientTape's RecordOperation is trivial, ForwardAccumulator's
+// Accumulate runs the gradient computation immediately.
+//
+// Keeps references to Tensors watched via Watch and computed in Accumulate
+// corresponding to output_tensors, and releases these references in its
+// destructor. However, waiting until the destructor runs loses the memory
+// efficiency of forward-mode autodiff. Instead, language bindings should call
+// DeleteGradient as soon as a Tensor which was `Watch`ed or was an output
+// Tensor passed to Accumulate goes out of scope.
+//
+// Not thread-safe.
+
+// Template instantiations here
+
+@Namespace("tensorflow::eager") public static native @Cast("bool") boolean IsDtypeTrainable(@Cast("tensorflow::DataType") int dtype);
+
+
+
+
+
+
+
+
+
+// Terminology:
+//
+//  - op: a possibly composite operation, which has an entry in the tape
+//  - target: dy in dx/dy
+//  - source: dx in dx/dy
+//  - tensor: one of the many inputs or outputs of an operation
+//
+// Below here we do the gradient algorithm. It works as follows:
+//
+// First we filter the tape to just the subset of operations we want to
+// differentiate. In the process of doing so we count how many times each Tensor
+// is used as an input to an op (so we know when we're done computing gradients
+// for that Tensor). We also count, for each tape entry, how many of its output
+// Tensors need gradients to be computed (Tensors which are not used do not need
+// any gradients to be computed).
+//
+// Finally, we start a backprop stack with a set of tape entries for which we
+// have all gradients available. This set usually is a subset of the set of
+// targets (not all since targets which have outputs in the tape will not have
+// gradients available initially).
+//
+// Then we repeatedly pop an entry from the stack, run its backprop, and update
+// the gradients of its inputs. Once we have computed all gradients for a single
+// input we can mark this input as done, and this can trigger adding an entry to
+// the stack if all outputs of that entry are now done.
+//
+// When the stack is empty we have gradients for all tensors we're interested
+// in.
+
+// If `persistent_tape` is true, op_tape is not changed and none of the
+// backwards functions are deleted.
+// If `persistent_tape` is false, op_tape is cleared and backwards functions
+// not needed for gradient computation are deleted. Backwards functions that
+// are needed, are copied and returned in BackpropInitialState.
+
+// TODO(agarwal): use an automatic mechanism for handling None arguments to
+// gradient functions.
+//
+// Some gradient functions can accept None arguments for gradients. The
+// following maps the operation name to the indices at which the corresponding
+// gradient function can accept None values. e.g. FusedBatchNorm outputs 5
+// values and hence receives 5 gradient values during backprop. However the
+// gradient function uses only the first of those values and ignores the rest.
+// The entry, "FusedBatchNorm": [1, 2, 3, 4], indicates that only the gradient
+// corresponding to index 0 is used, and the gradient values at indices 1-4 are
+// ignored (and hence can be None). The backprop algorithm can then leverage
+// this by not constructing zeros to pass for those indices.
+@Namespace("tensorflow::eager") public static native UnorderedMapOfStringsToSetInt FunctionsAcceptingNoneForIndicesMap();
+
+  // namespace
+
+// If over kMinAggregateCount gradients are accumulated and the total
+// memory consumption is over kMinAggregateBytes, do an early aggregation
+// so as to release the gradient tensor to save memory.
+@Namespace("tensorflow::eager") @MemberGetter public static native int kMinAggregateCount();
+@Namespace("tensorflow::eager") @MemberGetter public static native int kMinAggregateBytes();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // namespace eager
+  // namespace tensorflow
+
+// #endif  // TENSORFLOW_C_EAGER_TAPE_H_
+
+
+// Parsed from tensorflow/core/lib/gtl/array_slice.h
+
+/* Copyright 2015 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
+// #ifndef TENSORFLOW_CORE_LIB_GTL_ARRAY_SLICE_H_
+// #define TENSORFLOW_CORE_LIB_GTL_ARRAY_SLICE_H_
+
+// #include "absl/types/span.h"
+// TODO(timshen): This is kept only because lots of targets transitively depend
+// on it. Remove all targets' dependencies.
+// #include "tensorflow/core/lib/gtl/inlined_vector.h"
+
+  // namespace gtl
+  // namespace tensorflow
+
+// #endif  // TENSORFLOW_CORE_LIB_GTL_ARRAY_SLICE_H_
+
+
+// Parsed from tensorflow/java/cpp_test.h
+
+
+
+// #include "tensorflow/c/eager/c_api.h"
+// #include "tensorflow/core/lib/core/status.h"
+// Targeting ../TapeTensor.java
+
+
+
+//static JavaTapeTensor TapeTensorFromTensor(PyObject* tensor);
 
 
 }
