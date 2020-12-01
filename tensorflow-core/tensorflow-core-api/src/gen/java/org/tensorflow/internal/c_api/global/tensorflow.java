@@ -11,12 +11,6 @@ import org.bytedeco.javacpp.annotation.*;
 public class tensorflow extends org.tensorflow.internal.c_api.presets.tensorflow {
     static { Loader.load(); }
 
-// Targeting ../UnorderedMapOfStringsToSetInt.java
-
-
-// Targeting ../UnorderedSetInt.java
-
-
 // Parsed from tensorflow/core/util/port.h
 
 /* Copyright 2015 The TensorFlow Authors. All Rights Reserved.
@@ -4108,7 +4102,6 @@ limitations under the License.
 
 // Returns a unique id for the tensor which is used by the tape to build
 // the gradient graph. See documentation of `TapeTensor` for more details.
-@Namespace("tensorflow::gradients") public static native long ToId(TFE_TensorHandle t);
 // Targeting ../TapeTensor.java
 
 
@@ -4128,37 +4121,6 @@ limitations under the License.
   // namespace tensorflow
 
 // #endif  // TENSORFLOW_C_EAGER_GRADIENTS_H_
-
-
-// Parsed from tensorflow/core/lib/gtl/array_slice.h
-
-/* Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-==============================================================================*/
-
-// #ifndef TENSORFLOW_CORE_LIB_GTL_ARRAY_SLICE_H_
-// #define TENSORFLOW_CORE_LIB_GTL_ARRAY_SLICE_H_
-
-// #include "absl/types/span.h"
-// TODO(timshen): This is kept only because lots of targets transitively depend
-// on it. Remove all targets' dependencies.
-// #include "tensorflow/core/lib/gtl/inlined_vector.h"
-
-  // namespace gtl
-  // namespace tensorflow
-
-// #endif  // TENSORFLOW_CORE_LIB_GTL_ARRAY_SLICE_H_
 
 
 }

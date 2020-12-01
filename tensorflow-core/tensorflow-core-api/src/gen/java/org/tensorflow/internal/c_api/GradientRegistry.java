@@ -29,6 +29,4 @@ public class GradientRegistry extends Pointer {
     }
 
   
-  public native @ByVal TF_Status Lookup(@Const @ByRef ForwardOperation op,
-                  @UniquePtr BackwardFunction backward_function);
 }

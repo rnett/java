@@ -21,7 +21,4 @@ public class DefaultGradientFunction extends Pointer {
     /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
     public DefaultGradientFunction(Pointer p) { super(p); }
 
-  public native TFE_TensorHandle get(
-        Context ctx, @ByVal HandleList grad_inputs,
-        int i);
 }

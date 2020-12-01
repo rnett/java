@@ -27,7 +27,4 @@ public class AllZerosDefaultGradients extends DefaultGradientFunction {
 
   public AllZerosDefaultGradients(@Const @ByRef ForwardOperation op) { super((Pointer)null); allocate(op); }
   private native void allocate(@Const @ByRef ForwardOperation op);
-  public native TFE_TensorHandle get(Context ctx,
-                              @ByVal HandleList grad_inputs,
-                              int i);
 }

@@ -15,6 +15,5 @@ public class IncomingGradients extends Pointer {
     /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
     public IncomingGradients(Pointer p) { super(p); }
 
-  public native @Name("operator []") TFE_TensorHandle get(int i);
   public native @Cast("size_t") long size();
 }

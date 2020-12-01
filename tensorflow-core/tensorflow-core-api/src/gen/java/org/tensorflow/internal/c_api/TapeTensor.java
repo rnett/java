@@ -27,21 +27,15 @@ import static org.tensorflow.internal.c_api.global.tensorflow.*;
 // TODO(srbs): We need to define `ZerosLike` here to keep the compiler happy.
 // Figure out a way to avoid this.
 // TODO(srbs): Should ZerosLike check-fail instead of returning nullptr?
-@Namespace("tensorflow::gradients") @NoOffset @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
+@Namespace("tensorflow::gradients") @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class TapeTensor extends Pointer {
     static { Loader.load(); }
     /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
     public TapeTensor(Pointer p) { super(p); }
 
-  public TapeTensor(TFE_TensorHandle handle) { super((Pointer)null); allocate(handle); }
-  private native void allocate(TFE_TensorHandle handle);
   public TapeTensor(@Const @ByRef TapeTensor other) { super((Pointer)null); allocate(other); }
   private native void allocate(@Const @ByRef TapeTensor other);
 
   public native long GetID();
   public native @Cast("tensorflow::DataType") int GetDType();
-
-  public native TFE_TensorHandle ZerosLike();
-
-  public native TFE_TensorHandle GetHandle();
 }

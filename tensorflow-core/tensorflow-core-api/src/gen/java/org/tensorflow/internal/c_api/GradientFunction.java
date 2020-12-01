@@ -17,8 +17,4 @@ public class GradientFunction extends Pointer {
 
   // TODO(srbs): How we support CompositeTensors e.g. IndexedSlices in
   // `grad_inputs`.
-  public native @ByVal TF_Status Compute(Context ctx, @Const @ByRef IncomingGradients grad_inputs,
-                           @Cast("AbstractTensorHandle**") @StdVector PointerPointer grad_outputs);
-  public native @ByVal TF_Status Compute(Context ctx, @Const @ByRef IncomingGradients grad_inputs,
-                           @StdVector @ByPtrPtr TFE_TensorHandle grad_outputs);
 }

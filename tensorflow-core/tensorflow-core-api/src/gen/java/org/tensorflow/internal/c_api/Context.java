@@ -53,5 +53,4 @@ public class Context extends Pointer {
         return new Context(this).position(position + i);
     }
 
-  public native TFE_Context ctx(); public native Context ctx(TFE_Context setter);
 }

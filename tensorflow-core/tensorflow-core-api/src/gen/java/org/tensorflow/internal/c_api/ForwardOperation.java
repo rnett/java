@@ -30,7 +30,5 @@ public class ForwardOperation extends Pointer {
     }
 
   public native @StdString BytePointer op_name(); public native ForwardOperation op_name(BytePointer setter);
-  public native @Cast("AbstractTensorHandle**") @StdVector PointerPointer inputs(); public native ForwardOperation inputs(PointerPointer setter);
-  public native @Cast("AbstractTensorHandle**") @StdVector PointerPointer outputs(); public native ForwardOperation outputs(PointerPointer setter);
   
 }

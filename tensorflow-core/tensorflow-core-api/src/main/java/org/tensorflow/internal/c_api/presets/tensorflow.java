@@ -49,7 +49,9 @@ import org.bytedeco.javacpp.tools.InfoMapper;
                 "tensorflow/c/ops.h",
                 "tensorflow/c/eager/c_api.h",
                 "tensorflow/c/eager/gradients.h",
-                "tensorflow/core/lib/gtl/array_slice.h",
+//                "tensorflow/c/eager/abstract_context.h",
+//                "tensorflow/c/eager/abstract_tensor_handle.h",
+//                "tensorflow/core/lib/gtl/array_slice.h",
 //                "tensorflow/c/eager/tape.h",
 //                "absl/types/span.h"
             },
@@ -189,7 +191,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
     public void map(InfoMap infoMap) {
         infoMap.put(new Info("TF_CAPI_EXPORT").cppTypes().annotations())
                .put(new Info("TF_Buffer::data").javaText("public native @Const Pointer data(); public native TF_Buffer data(Pointer data);"))
-               .put(new Info("TF_Status", "Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
+               .put(new Info("TF_Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
                .put(new Info("TF_Buffer").pointerTypes("TF_Buffer").base("org.tensorflow.internal.c_api.AbstractTF_Buffer"))
                .put(new Info("TF_Tensor").pointerTypes("TF_Tensor").base("org.tensorflow.internal.c_api.AbstractTF_Tensor"))
                .put(new Info("TF_Session").pointerTypes("TF_Session").base("org.tensorflow.internal.c_api.AbstractTF_Session"))
@@ -218,16 +220,22 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                .put(new Info("TFE_Op::operation").javaText("@MemberGetter public native @ByRef EagerOperation operation();"))
                .put(new Info("TFE_TensorHandle").pointerTypes("TFE_TensorHandle").base("org.tensorflow.internal.c_api.AbstractTFE_TensorHandle"))
                .put(new Info("TF_ShapeInferenceContextDimValueKnown", "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)").skip())
-                .put(new Info("AbstractTensorHandle").javaNames("TFE_TensorHandle").cppText("TFE_TensorHandle"))
-                .put(new Info("AbstractContext").javaNames("TFE_Context").cppText("TFE_Context"))
-                .put(new Info("absl::Span<AbstractTensorHandleconst *>").cppTypes("gtl::ArraySlice<AbstractTensorHandle*>"))
-                .put(new Info("gtl::ArraySlice<AbstractTensorHandle*>").pointerTypes("HandleList"))
-                .put(new Info("gtl::ArraySlice<int64>").pointerTypes("LongList"))
+//                .put(new Info("AbstractTensorHandle").pointerTypes("AbstractTensorHandle").base("Pointer"))
+//                .put(new Info("AbstractContext").pointerTypes("AbstractContext"))
+                .put(new Info("gtl::ArraySlice<AbstractTensorHandle*>", "gtl::ArraySlice<TFE_TensorHandle*>").cppTypes("absl::Span<TFE_TensorHandleconst *>"))
+                .put(new Info("AbstractTensorHandle").cppText("TFE_TensorHandle").skip())
+                .put(new Info("AbstractContext").cppText("TFE_Context").skip())
+                .put(new Info("Status").cppText("TF_Status").skip())
+                .put(new Info("absl::Span<TFE_TensorHandleconst *>", "absl::Span<TFE_TensorHandle*>").cppTypes("std::vector<TFE_TensorHandle*>").pointerTypes("HandleList").define())
+//                .put(new Info("gtl::ArraySlice<int64>").pointerTypes("LongList"))
 //                .put(new Info("Tape").pointerTypes("GradientTape"))
-                .put(new Info("std::unordered_map<string,std::unordered_set<int> >", "std::unordered_map<std::string,std::unordered_set<int> >").pointerTypes("UnorderedMapOfStringsToSetInt").define())
-                .put(new Info("std::unordered_set<int>").pointerTypes("UnorderedSetInt").define())
+//                .put(new Info("std::unordered_map<string,std::unordered_set<int> >", "std::unordered_map<std::string,std::unordered_set<int> >").pointerTypes("UnorderedMapOfStringsToSetInt").define())
+//                .put(new Info("std::unordered_set<int>").pointerTypes("UnorderedSetInt").define())
+//                .put(new Info("int").cppText("std::int"))
+                .put(new Info("absl::Span").skip())
                 .put(new Info("string", "std::string").cppTypes("std::string").cppText("std::string").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("@Cast({\"char*\", \"std::string*\"}) BytePointer"))
-                .put(new Info("tensorflow::gradients::GradientRegistry::Register").skip()).put(new Info("string", "std::string").cppTypes("std::string").cppText("std::string").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("@Cast({\"char*\", \"std::string*\"}) BytePointer"))
+                .put(new Info("tensorflow::gradients::GradientRegistry::Register").skip())
+                .put(new Info("tensorflow::gradients::DefaultGradientFunction", "tensorflow::gradients::GradientFunction").purify())
                 .put(new Info("tensorflow::DataType").cast().valueTypes("int").pointerTypes("IntPointer"))
                 .put(new Info("int64", "tensorflow::int64").valueTypes("long"))
                 .put(new Info("tensorflow::gradients::ForwardOperation::attrs").skip()) //TODO handle
