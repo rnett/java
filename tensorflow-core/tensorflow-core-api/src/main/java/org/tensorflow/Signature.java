@@ -15,8 +15,11 @@
  */
 package org.tensorflow;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.proto.framework.SignatureDef;
 import org.tensorflow.proto.framework.TensorInfo;
@@ -24,12 +27,14 @@ import org.tensorflow.proto.framework.TensorShapeProto;
 import org.tensorflow.proto.framework.TensorShapeProto.Dim;
 
 /**
- * Describe the inputs and outputs of an executable entity, such as a {@link ConcreteFunction}, among
- * other useful metadata.
+ * Describe the inputs and outputs of an executable entity, such as a {@link ConcreteFunction}, among other useful
+ * metadata.
  */
-public class Signature  {
+public class Signature {
 
-  /** The default signature key, when not provided */
+  /**
+   * The default signature key, when not provided
+   */
   public static final String DEFAULT_KEY = "serving_default";
 
   /**
@@ -87,8 +92,8 @@ public class Signature  {
     }
 
     /**
-     * Provide extensible name information enabling third-party users to mark a signature as
-     * supporting a particular method
+     * Provide extensible name information enabling third-party users to mark a signature as supporting a particular
+     * method
      *
      * @param methodName method name or null for none (default)
      * @return this builder
@@ -157,9 +162,24 @@ public class Signature  {
     return signatureDef.getOutputsMap().keySet();
   }
 
+  /**
+   * Gets the inputs to the function, and their metadata.
+   */
+  public Map<String, Tensor.Metadata> getInputs() {
+    return this.inputs;
+  }
+
+
+  /**
+   * Gets the outputs to the function, and their metadata.
+   */
+  public Map<String, Tensor.Metadata> getOutputs() {
+    return this.outputs;
+  }
+
   @Override
   public String toString() {
-    StringBuilder strBuilder = new StringBuilder("Signature for \"" + key +"\":\n");
+    StringBuilder strBuilder = new StringBuilder("Signature for \"" + key + "\":\n");
     if (!methodName().isEmpty()) {
       strBuilder.append("\tMethod: \"").append(methodName()).append("\"\n");
     }
@@ -174,9 +194,25 @@ public class Signature  {
     return strBuilder.toString();
   }
 
+  private static Tensor.Metadata toTensorMetadata(TensorInfo info) {
+    long[] dims = new long[info.getTensorShape().getDimCount()];
+    for (int i = 0; i < dims.length; i++) {
+      dims[i] = info.getTensorShape().getDim(i).getSize();
+    }
+    return new Tensor.Metadata(Shape.of(dims), info.getDtype());
+  }
+
   Signature(String key, SignatureDef signatureDef) {
     this.key = key;
     this.signatureDef = signatureDef;
+
+    this.inputs = Collections.unmodifiableMap(
+        asSignatureDef().getInputsMap().entrySet()
+            .stream().collect(Collectors.toMap(Entry::getKey, e -> toTensorMetadata(e.getValue()))));
+
+    this.outputs = Collections.unmodifiableMap(
+        asSignatureDef().getOutputsMap().entrySet()
+            .stream().collect(Collectors.toMap(Entry::getKey, e -> toTensorMetadata(e.getValue()))));
   }
 
   SignatureDef asSignatureDef() {
@@ -185,6 +221,8 @@ public class Signature  {
 
   private final String key;
   private final SignatureDef signatureDef;
+  private final Map<String, Tensor.Metadata> inputs;
+  private final Map<String, Tensor.Metadata> outputs;
 
   private static void printTensorInfo(Map<String, TensorInfo> tensorMap, StringBuilder strBuilder) {
     tensorMap.forEach((key, tensorInfo) -> {

@@ -15,9 +15,11 @@ limitations under the License.
 
 package org.tensorflow;
 
+import org.tensorflow.Tensor.Metadata;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.ndarray.Shaped;
 import org.tensorflow.op.Op;
+import org.tensorflow.proto.framework.DataType;
 import org.tensorflow.types.family.TType;
 
 /**
@@ -78,5 +80,19 @@ public interface Operand<T extends TType> extends Op, Shaped {
   @Override
   default Shape shape() {
     return asOutput().shape();
+  }
+
+  /**
+   * Returns the data type of this operand.
+   */
+  default DataType dataType() {
+    return asOutput().dataType();
+  }
+
+  /**
+   * Returns the metadata of this operand.
+   */
+  default Tensor.Metadata metadata() {
+    return asOutput().metadata();
   }
 }

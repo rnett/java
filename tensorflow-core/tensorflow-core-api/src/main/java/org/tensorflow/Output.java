@@ -17,6 +17,7 @@ package org.tensorflow;
 
 import java.util.Objects;
 import org.bytedeco.javacpp.Pointer;
+import org.tensorflow.Tensor.Metadata;
 import org.tensorflow.internal.types.registry.TensorTypeRegistry;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.proto.framework.DataType;
@@ -33,31 +34,37 @@ import org.tensorflow.types.family.TType;
  */
 public final class Output<T extends TType> implements Operand<T> {
 
-  /** Returns the index into the outputs of the Operation. */
+  /**
+   * Returns the index into the outputs of the Operation.
+   */
   public int index() {
     return index;
   }
 
-  /** Returns the DataType of the tensor referred to by this Output. */
+  /**
+   * Returns the DataType of the tensor referred to by this Output.
+   */
   @SuppressWarnings("unchecked")
+  @Override
   public DataType dataType() {
     return operation.dtype(index);
   }
 
-  /** Returns the type of the tensor referred to by this Output. */
+  /**
+   * Returns the type of the tensor referred to by this Output.
+   */
   @SuppressWarnings("unchecked")
   @Override
   public Class<T> type() {
-    return (Class<T>)TensorTypeRegistry.find(dataType()).type();
+    return (Class<T>) TensorTypeRegistry.find(dataType()).type();
   }
 
   /**
-   * Returns this Output object with the type {@code Output<U>}. This method is useful when given a
-   * value of type {@code Output<?>}.
+   * Returns this Output object with the type {@code Output<U>}. This method is useful when given a value of type {@code
+   * Output<?>}.
    *
    * @param type any supported tensor type
-   * @throws IllegalArgumentException if the actual data type of this object does not match the type
-   *     {@code U}.
+   * @throws IllegalArgumentException if the actual data type of this object does not match the type {@code U}.
    */
   @SuppressWarnings("unchecked")
   public <U extends TType> Output<U> expect(Class<U> type) {
@@ -72,8 +79,7 @@ public final class Output<T extends TType> implements Operand<T> {
    * Returns the tensor at this output.
    *
    * <p>This operation is only supported on the outputs of an operation executed eagerly. For graph
-   * environments, output tensors must be fetched by running a session, using {@link
-   * Session.Runner#fetch(Output)}.
+   * environments, output tensors must be fetched by running a session, using {@link Session.Runner#fetch(Output)}.
    *
    * <p>It is recommended to close explicitly the returned tensor as soon as possible, since the
    * garbage collector is not aware of the amount of memory it consumes, which can be significant.
@@ -85,7 +91,7 @@ public final class Output<T extends TType> implements Operand<T> {
    */
   @SuppressWarnings("unchecked")
   public T asTensor() {
-    return (T)operation.tensor(index);
+    return (T) operation.tensor(index);
   }
 
   /**
@@ -94,6 +100,11 @@ public final class Output<T extends TType> implements Operand<T> {
   @Override
   public Shape shape() {
     return operation.shape(index);
+  }
+
+  @Override
+  public Metadata metadata() {
+    return new Metadata(shape(), dataType());
   }
 
   @Override
@@ -130,7 +141,9 @@ public final class Output<T extends TType> implements Operand<T> {
         operation.type(), operation.name(), index, shape().toString(), dataType());
   }
 
-  /** Handle to the idx-th output of the Operation {@code op}. */
+  /**
+   * Handle to the idx-th output of the Operation {@code op}.
+   */
   Output(AbstractOperation op, int idx) {
     operation = op;
     index = idx;

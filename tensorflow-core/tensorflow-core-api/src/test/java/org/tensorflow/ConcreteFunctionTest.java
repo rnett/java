@@ -18,11 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
+import org.tensorflow.ndarray.Shape;
 import org.tensorflow.op.Ops;
 import org.tensorflow.op.core.Init;
 import org.tensorflow.op.core.Placeholder;
 import org.tensorflow.op.math.Add;
 import org.tensorflow.op.math.Sub;
+import org.tensorflow.proto.framework.DataType;
 import org.tensorflow.types.TFloat32;
 
 public class ConcreteFunctionTest {
@@ -38,6 +40,12 @@ public class ConcreteFunctionTest {
     Placeholder<TFloat32> input = tf.placeholder(TFloat32.class);
     Sub<TFloat32> output = tf.math.sub(input, tf.constant(2.0f));
     return Signature.builder().key("minusTwo").input("x", input).output("y", output).build();
+  }
+
+  private static Signature plusOneWithShape(Ops tf) {
+    Placeholder<TFloat32> input = tf.placeholder(TFloat32.class, Placeholder.shape(Shape.of(10, 10)));
+    Add<TFloat32> output = tf.math.add(input, tf.constant(1f));
+    return Signature.builder().key("plusOneWithShape").input("x", input).output("y", output).build();
   }
 
   @Test
@@ -69,6 +77,14 @@ public class ConcreteFunctionTest {
           assertEquals(8.0f, ((TFloat32)f.call(x)).getFloat());
         }
       }
+    }
+  }
+
+  @Test
+  public void getInputs(){
+    try (ConcreteFunction f = ConcreteFunction.create(ConcreteFunctionTest::plusOneWithShape)){
+      assertEquals(new Tensor.Metadata(Shape.of(10, 10), DataType.DT_FLOAT), f.getInputs().get("x"));
+      assertEquals(new Tensor.Metadata(Shape.of(10, 10), DataType.DT_FLOAT), f.getOutputs().get("y"));
     }
   }
 
