@@ -134,7 +134,7 @@ public final class GraphOperation extends AbstractOperation {
   }
 
   @Override
-  public String nativeGetDevice() {
+  public String nativeGetDevice(int index) {
     requireHandle(unsafeNativeHandle);
     return TF_OperationDevice(unsafeNativeHandle).getString();
   }

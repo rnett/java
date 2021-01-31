@@ -35,6 +35,9 @@ import static org.tensorflow.internal.c_api.global.tensorflow.TFE_OpSetDevice;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.bytedeco.javacpp.BooleanPointer;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.IntPointer;
@@ -42,6 +45,7 @@ import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.javacpp.PointerPointer;
 import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacpp.SizeTPointer;
+import org.tensorflow.exceptions.TFResourceExhaustedException;
 import org.tensorflow.internal.c_api.TFE_Context;
 import org.tensorflow.internal.c_api.TFE_Op;
 import org.tensorflow.internal.c_api.TFE_TensorHandle;
@@ -70,12 +74,15 @@ final class EagerOperationBuilder implements OperationBuilder {
     // Release our reference to the native op handle now that we transferred its
     // ownership to the EagerOperation
     session.detach(opHandle);
+    inputs.clear();
     return operation;
   }
 
   @Override
   public EagerOperationBuilder addInput(Output<?> input) {
-    addInput(opHandle, (TFE_TensorHandle) input.getUnsafeNativeHandle());
+    TFE_TensorHandle tensorHandle = (TFE_TensorHandle) input.getUnsafeNativeHandle();
+    addInput(opHandle, tensorHandle);
+    inputs.add(tensorHandle);
     return this;
   }
 
@@ -86,6 +93,7 @@ final class EagerOperationBuilder implements OperationBuilder {
       inputHandles[i] = (TFE_TensorHandle) inputs[i].getUnsafeNativeHandle();
     }
     addInputList(opHandle, inputHandles);
+    this.inputs.addAll(Arrays.asList(inputHandles));
     return this;
   }
 
@@ -221,6 +229,8 @@ final class EagerOperationBuilder implements OperationBuilder {
   }
 
   private TFE_Op opHandle;
+  // necessary to keep them from getting GC'd
+  private List<TFE_TensorHandle> inputs = new ArrayList<>();
 
   private final EagerSession session;
   private final String type;
@@ -266,7 +276,7 @@ final class EagerOperationBuilder implements OperationBuilder {
     }
   }
 
-  private static TFE_TensorHandle[] execute(TFE_Op opHandle, EagerSession session) {
+  private static TFE_TensorHandle[] doExecute(TFE_Op opHandle, EagerSession session) {
     requireOp(opHandle);
     try (PointerScope scope = new PointerScope()) {
       IntPointer numRetvals = new IntPointer(1).put(MAX_OUTPUTS_PER_OP);
@@ -278,10 +288,25 @@ final class EagerOperationBuilder implements OperationBuilder {
       TFE_TensorHandle[] rethandles = new TFE_TensorHandle[numRetvals.get()];
       for (int i = 0; i < rethandles.length; ++i) {
         rethandles[i] = retvals.get(TFE_TensorHandle.class, i).withDeallocator();
-        session.attach(rethandles[i]);
+        scope.detach(rethandles[i].retainReference());
       }
       return rethandles;
     }
+  }
+
+  private static TFE_TensorHandle[] execute(TFE_Op opHandle, EagerSession session) {
+    requireOp(opHandle);
+    int count = 0;
+    TFResourceExhaustedException exception = null;
+    while (count++ < 10) {
+      try {
+        return doExecute(opHandle, session);
+      } catch (TFResourceExhaustedException e) {
+        exception = e;
+        EagerTensorManager.cleanup();
+      }
+    }
+    throw exception;
   }
 
   private static void addInput(TFE_Op opHandle, TFE_TensorHandle tensorHandle) {

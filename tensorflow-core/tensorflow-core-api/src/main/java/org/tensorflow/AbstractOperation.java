@@ -50,14 +50,14 @@ abstract class AbstractOperation implements Operation {
   private String device = null;
 
   @Override
-  public final String getDevice() {
+  public final String getDevice(int index) {
     if (device == null) {
-      device = nativeGetDevice();
+      device = nativeGetDevice(index);
     }
     return device;
   }
 
-  protected abstract String nativeGetDevice();
+  protected abstract String nativeGetDevice(int index);
 
   /**
    * Returns the native handle of the {@code outputIdx}th output of this operation.

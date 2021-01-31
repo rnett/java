@@ -23,9 +23,12 @@ import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleDa
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleNumElements;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_DataTypeSize;
 
+import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacpp.annotation.Properties;
+import org.tensorflow.EagerTensorManager;
+import org.tensorflow.internal.c_api.global.tensorflow;
 
 @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public abstract class AbstractTFE_TensorHandle extends Pointer {
@@ -36,12 +39,19 @@ public abstract class AbstractTFE_TensorHandle extends Pointer {
             super(s);
             try (PointerScope scope = new PointerScope()) {
                 TF_Status status = TF_Status.newStatus();
+                BytePointer tensorDevice = tensorflow.TFE_TensorHandleBackingDeviceName(s, status);
+                status.throwExceptionIfNotOK();
+                s.device = tensorDevice.getString();
+            }
+            try (PointerScope scope = new PointerScope()) {
+                TF_Status status = TF_Status.newStatus();
                 s.capacity = TFE_TensorHandleNumElements(s, status);
                 status.throwExceptionIfNotOK();
 
                 int dtype = TFE_TensorHandleDataType(s);
                 s.capacity *= TF_DataTypeSize(dtype);
             }
+            EagerTensorManager.register(s);
         }
 
         @Override
@@ -57,6 +67,25 @@ public abstract class AbstractTFE_TensorHandle extends Pointer {
      * A reference to prevent deallocation.
      */
     protected TF_Tensor tensor;
+
+    protected String device = null;
+
+    public String getDevice() {
+        return device;
+    }
+
+    public boolean isCPU() {
+        return getDevice() == null || getDevice().contains("/device:CPU");
+    }
+
+    @Override
+    public int sizeof() {
+        if (isCPU()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 
     public AbstractTFE_TensorHandle(Pointer p) {
         super(p);

@@ -90,7 +90,7 @@ public final class Output<T extends TType> implements Operand<T> {
 
   @Override
   public String getDevice() {
-    return operation.getDevice();
+    return operation.getDevice(index);
   }
 
   /**

@@ -86,5 +86,5 @@ public interface Operation {
    */
   int inputListLength(final String name);
 
-  String getDevice();
+  String getDevice(int index);
 }
