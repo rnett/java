@@ -15,6 +15,7 @@ limitations under the License.
 
 package org.tensorflow;
 
+import static org.tensorflow.internal.c_api.global.tensorflow.TFE_OpGetDevice;
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_OpGetInputLength;
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_OpGetOutputLength;
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleDataType;
@@ -23,6 +24,7 @@ import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleNu
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleResolve;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.PointerScope;
 import org.tensorflow.internal.c_api.TFE_Op;
 import org.tensorflow.internal.c_api.TFE_TensorHandle;
@@ -55,6 +57,11 @@ class EagerOperation extends AbstractOperation {
     this.outputHandles = outputNativeHandles;
     session.attach(opNativeHandle);
     session.attach(outputNativeHandles);
+
+    for (TFE_TensorHandle handle : outputNativeHandles) {
+      EagerTensorManager.register(getDevice(), handle);
+    }
+
     this.outputTensors = new AtomicReferenceArray<>(outputNativeHandles.length);
   }
 
@@ -81,6 +88,16 @@ class EagerOperation extends AbstractOperation {
   @Override
   public int inputListLength(final String name) {
     return inputListLength(opHandle, name);
+  }
+
+  @Override
+  public String nativeGetDevice() {
+    try (PointerScope scope = new PointerScope()) {
+      TF_Status status = TF_Status.newStatus();
+      BytePointer result = TFE_OpGetDevice(opHandle, status);
+      status.throwExceptionIfNotOK();
+      return result.getString();
+    }
   }
 
   @Override

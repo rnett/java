@@ -79,4 +79,8 @@ public interface Operand<T extends TType> extends Op, Shaped {
   default Shape shape() {
     return asOutput().shape();
   }
+
+  default String getDevice() {
+    return asOutput().getDevice();
+  }
 }

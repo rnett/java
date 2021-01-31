@@ -47,6 +47,18 @@ abstract class AbstractOperation implements Operation {
     return String.format("<%s '%s'>", type(), name());
   }
 
+  private String device = null;
+
+  @Override
+  public final String getDevice() {
+    if (device == null) {
+      device = nativeGetDevice();
+    }
+    return device;
+  }
+
+  protected abstract String nativeGetDevice();
+
   /**
    * Returns the native handle of the {@code outputIdx}th output of this operation.
    *

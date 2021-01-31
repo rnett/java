@@ -17,6 +17,7 @@ package org.tensorflow;
 
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_GraphGetTensorNumDims;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_GraphGetTensorShape;
+import static org.tensorflow.internal.c_api.global.tensorflow.TF_OperationDevice;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_OperationInputListLength;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_OperationName;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_OperationNumOutputs;
@@ -130,6 +131,12 @@ public final class GraphOperation extends AbstractOperation {
     } finally {
       r.close();
     }
+  }
+
+  @Override
+  public String nativeGetDevice() {
+    requireHandle(unsafeNativeHandle);
+    return TF_OperationDevice(unsafeNativeHandle).getString();
   }
 
   @Override

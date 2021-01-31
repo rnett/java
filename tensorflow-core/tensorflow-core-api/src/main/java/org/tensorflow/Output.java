@@ -85,7 +85,12 @@ public final class Output<T extends TType> implements Operand<T> {
    */
   @SuppressWarnings("unchecked")
   public T asTensor() {
-    return (T)operation.tensor(index);
+    return (T) operation.tensor(index);
+  }
+
+  @Override
+  public String getDevice() {
+    return operation.getDevice();
   }
 
   /**

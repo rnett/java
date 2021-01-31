@@ -19,24 +19,57 @@ package org.tensorflow.internal.c_api;
 
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_DeleteTensorHandle;
 import static org.tensorflow.internal.c_api.global.tensorflow.TFE_NewTensorHandle;
+import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleDataType;
+import static org.tensorflow.internal.c_api.global.tensorflow.TFE_TensorHandleNumElements;
+import static org.tensorflow.internal.c_api.global.tensorflow.TF_DataTypeSize;
 
 import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacpp.annotation.Properties;
 
 @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public abstract class AbstractTFE_TensorHandle extends Pointer {
+
     protected static class DeleteDeallocator extends TFE_TensorHandle implements Pointer.Deallocator {
-        DeleteDeallocator(TFE_TensorHandle s) { super(s); }
-        @Override public void deallocate() { if (!isNull()) TFE_DeleteTensorHandle(this); setNull(); }
+
+        DeleteDeallocator(TFE_TensorHandle s) {
+            super(s);
+            try (PointerScope scope = new PointerScope()) {
+                TF_Status status = TF_Status.newStatus();
+                s.capacity = TFE_TensorHandleNumElements(s, status);
+                status.throwExceptionIfNotOK();
+
+                int dtype = TFE_TensorHandleDataType(s);
+                s.capacity *= TF_DataTypeSize(dtype);
+            }
+        }
+
+        @Override
+        public void deallocate() {
+            if (!isNull()) {
+                TFE_DeleteTensorHandle(this);
+            }
+            setNull();
+        }
     }
 
-    /** A reference to prevent deallocation. */
+    /**
+     * A reference to prevent deallocation.
+     */
     protected TF_Tensor tensor;
 
-    public AbstractTFE_TensorHandle(Pointer p) { super(p); }
+    public AbstractTFE_TensorHandle(Pointer p) {
+        super(p);
+    }
+
+    @Override
+    public int sizeof() {
+        return 1;
+    }
 
     /**
      * Calls TFE_NewTensorHandle(), and registers a deallocator.
+     *
      * @return TFE_TensorHandle created. Do not call TFE_DeleteTensorHandle() on it.
      */
     public static TFE_TensorHandle newTensor(TF_Tensor t, TF_Status status) {

@@ -85,4 +85,6 @@ public interface Operation {
    * @throws IllegalArgumentException if this operation has no input with the provided name.
    */
   int inputListLength(final String name);
+
+  String getDevice();
 }
