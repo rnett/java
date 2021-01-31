@@ -62,11 +62,6 @@ public abstract class AbstractTFE_TensorHandle extends Pointer {
         super(p);
     }
 
-    @Override
-    public int sizeof() {
-        return 1;
-    }
-
     /**
      * Calls TFE_NewTensorHandle(), and registers a deallocator.
      *
