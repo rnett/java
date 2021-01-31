@@ -18,20 +18,9 @@ package org.tensorflow.op.core;
 import java.nio.charset.Charset;
 import org.tensorflow.Operand;
 import org.tensorflow.Operation;
+import org.tensorflow.OperationBuilder;
 import org.tensorflow.Output;
 import org.tensorflow.Tensor;
-import org.tensorflow.op.RawOp;
-import org.tensorflow.op.Scope;
-import org.tensorflow.op.annotation.Endpoint;
-import org.tensorflow.op.annotation.Operator;
-import org.tensorflow.ndarray.Shape;
-import org.tensorflow.ndarray.buffer.BooleanDataBuffer;
-import org.tensorflow.ndarray.buffer.ByteDataBuffer;
-import org.tensorflow.ndarray.buffer.DataBuffer;
-import org.tensorflow.ndarray.buffer.DoubleDataBuffer;
-import org.tensorflow.ndarray.buffer.FloatDataBuffer;
-import org.tensorflow.ndarray.buffer.IntDataBuffer;
-import org.tensorflow.ndarray.buffer.LongDataBuffer;
 import org.tensorflow.ndarray.BooleanNdArray;
 import org.tensorflow.ndarray.ByteNdArray;
 import org.tensorflow.ndarray.DoubleNdArray;
@@ -40,7 +29,19 @@ import org.tensorflow.ndarray.IntNdArray;
 import org.tensorflow.ndarray.LongNdArray;
 import org.tensorflow.ndarray.NdArray;
 import org.tensorflow.ndarray.NdArrays;
+import org.tensorflow.ndarray.Shape;
 import org.tensorflow.ndarray.StdArrays;
+import org.tensorflow.ndarray.buffer.BooleanDataBuffer;
+import org.tensorflow.ndarray.buffer.ByteDataBuffer;
+import org.tensorflow.ndarray.buffer.DataBuffer;
+import org.tensorflow.ndarray.buffer.DoubleDataBuffer;
+import org.tensorflow.ndarray.buffer.FloatDataBuffer;
+import org.tensorflow.ndarray.buffer.IntDataBuffer;
+import org.tensorflow.ndarray.buffer.LongDataBuffer;
+import org.tensorflow.op.RawOp;
+import org.tensorflow.op.Scope;
+import org.tensorflow.op.annotation.Endpoint;
+import org.tensorflow.op.annotation.Operator;
 import org.tensorflow.types.TBool;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TFloat64;
@@ -1290,13 +1291,16 @@ public final class Constant<T extends TType> extends RawOp implements Operand<T>
    */
   @Endpoint(name = "constantOf")
   public static <T extends TType> Constant<T> create(Scope scope, T tensor) {
-    return new Constant<>(
-        scope
-            .env()
-            .opBuilder("Const", scope.makeOpName("Const"))
-            .setAttr("value", tensor)
-            .setAttr("dtype", tensor.dataType())
-            .build());
+
+    OperationBuilder builder = scope
+        .env()
+        .opBuilder("Const", scope.makeOpName("Const"))
+        .setAttr("value", tensor)
+        .setAttr("dtype", tensor.dataType());
+
+    scope.apply(builder);
+
+    return new Constant<>(builder.build());
   }
 
   @Override
