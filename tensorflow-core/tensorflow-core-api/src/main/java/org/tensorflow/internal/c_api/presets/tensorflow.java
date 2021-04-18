@@ -197,19 +197,20 @@ public class tensorflow implements LoadEnabled, InfoMapper {
 
   @Override  public void map(InfoMap infoMap) {
         infoMap
-                .put(new Info("TF_OperationDescription").pointerTypes("TF_OperationDescription").purify())
                 .put(new Info("c_api_internal.h")
-                        .linePatterns("struct TF_OperationDescription \\{", "\\};"))
-                .put(new Info("TF_CAPI_EXPORT", "TF_Bool").cppTypes().annotations())
+                        .linePatterns("struct TF_OperationDescription \\{", "\\};",
+                                "struct TF_Graph \\{", "\\};"))
+                .put(new Info("TF_CAPI_EXPORT", "TF_Bool", "TF_GUARDED_BY").cppTypes().annotations())
                 .put(new Info("TF_Buffer::data").javaText("public native @Const Pointer data(); public native TF_Buffer data(Pointer data);"))
                 .put(new Info("TF_Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
                 .put(new Info("TF_Buffer").pointerTypes("TF_Buffer").base("org.tensorflow.internal.c_api.AbstractTF_Buffer"))
                 .put(new Info("TF_Tensor").pointerTypes("TF_Tensor").base("org.tensorflow.internal.c_api.AbstractTF_Tensor"))
                 .put(new Info("TF_Session").pointerTypes("TF_Session").base("org.tensorflow.internal.c_api.AbstractTF_Session"))
                 .put(new Info("TF_SessionOptions").pointerTypes("TF_SessionOptions").base("org.tensorflow.internal.c_api.AbstractTF_SessionOptions"))
-                .put(new Info("TF_Graph").pointerTypes("TF_Graph").base("org.tensorflow.internal.c_api.AbstractTF_Graph"))
-                .put(new Info("TF_Graph::graph").javaText("public native @MemberGetter @ByRef Graph graph();"))
-                .put(new Info("TF_Graph::refiner").javaText("public native @MemberGetter @ByRef ShapeRefiner refiner();"))
+                .put(new Info("TF_Graph").pointerTypes("TF_Graph").base("org.tensorflow.internal.c_api.AbstractTF_Graph").purify())
+                .put(new Info("tensorflow::Graph").javaNames("NativeGraphPointer"))
+                .put(new Info("TF_Graph::graph").javaText("public native @MemberGetter @ByRef NativeGraphPointer graph();"))
+                .put(new Info("TF_Graph::refiner", "TF_Graph::mu", "TF_Graph::name_map", "TF_Graph::sessions", "TF_Graph::delete_requested").skip())
                 .put(new Info("TF_Function")
                 .pointerTypes("TF_Function")
                 .base("org.tensorflow.internal.c_api.AbstractTF_Function"))
@@ -240,6 +241,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                     "TFE_NewTensorHandle(const tensorflow::Tensor&, TF_Status*)",
                     "TF_InitKernel")
                 .skip())
+                .put(new Info("TF_OperationDescription").pointerTypes("TF_OperationDescription").purify())
                 .put(new Info("tensorflow::Scope").javaNames("TF_Scope").pointerTypes("TF_Scope"))
                 .put(new Info("tensorflow::NodeBuilder").pointerTypes("NodeBuilder"))
                 .put(new Info("tensorflow::string", "absl::string_view", "tensorflow::StringPiece").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("BytePointer"))
@@ -247,9 +249,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                 .put(new Info("tensorflow::Output").javaNames("TF_Output").cast())
                 .put(new Info("tensorflow::Operation").javaNames("TF_Operation").cast())
                 .put(new Info("tensorflow::CompositeOpScopes",
-                        "tensorflow::Graph",
                         "tensorflow::GraphDef",
-                        "tensorflow::Scope::graph",
                         "tensorflow::Scope::graph_as_shared_ptr",
                         "tensorflow::Scope::ToGraphDef",
                         "tensorflow::Scope::ToGraph",

@@ -167,7 +167,7 @@ public class TF_Scope extends Pointer {
   public native @Cast("bool") boolean ok();
 
   // TODO(skyewm): Graph is not part of public API
-  
+  public native NativeGraphPointer graph();
 
   // TODO(skyewm): Graph is not part of public API
   

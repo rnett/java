@@ -30,15 +30,8 @@ import static org.tensorflow.internal.c_api.global.tensorflow.TF_NewGraph;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_NewWhile;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.Pointer;
@@ -81,7 +74,7 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
 
   /** Create an empty Graph. */
   public Graph() {
-    nativeHandle = allocate();
+    this(allocate());
     this.baseScope = new Scope(this);
   }
 
@@ -89,6 +82,7 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
   Graph(TF_Graph nativeHandle) {
     this.nativeHandle = nativeHandle;
     this.baseScope = new Scope(this);
+    allGraphs.add(this);
   }
 
   Graph(TF_Graph nativeHandle, SaverDef saverDef) {
@@ -1202,6 +1196,21 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
         .setSaveTensorName(id.op().name())
         .setRestoreOpName(restoreAll.op().name())
         .build();
+  }
+
+  private static Set<Graph> allGraphs = Collections.newSetFromMap(new WeakHashMap<>());
+
+  /**
+   * Find the graph with the matching underlying native pointer.
+   * @return the graph if there is one, else null.
+   */
+  Graph findGraphForPointer(NativeGraphPointer pointer){
+    for(Graph g : allGraphs){
+      if(g.nativeHandle.graph().equals(pointer)){
+        return g;
+      }
+    }
+    return null;
   }
 
   static {

@@ -977,9 +977,15 @@ public static native void TF_SetConfig(TF_SessionOptions options,
 
 // Destroy an options object.
 public static native void TF_DeleteSessionOptions(TF_SessionOptions arg0);
-// Targeting ../TF_Graph.java
 
+// TODO(jeff,sanjay):
+// - export functions to set Config fields
 
+// --------------------------------------------------------------------------
+// The new graph construction API, still under development.
+
+// Represents a computation graph.  Graphs may be shared between sessions.
+// Graphs are thread-safe when used as directed below.
 
 // Return a new graph object.
 public static native TF_Graph TF_NewGraph();
@@ -4789,6 +4795,9 @@ limitations under the License.
 // #include "tensorflow/core/common_runtime/graph_constructor.h"
 // #include "tensorflow/core/lib/core/status.h"
 // #include "tensorflow/core/lib/gtl/array_slice.h"
+// Targeting ../NativeGraphPointer.java
+
+
 // Targeting ../NodeBuilder.java
 
 
@@ -4808,6 +4817,9 @@ limitations under the License.
   // namespace tensorflow
 
 // #endif  // TENSORFLOW_CC_FRAMEWORK_SCOPE_H_
+
+
+// Targeting ../TF_Graph.java
 
 
 // Targeting ../TF_OperationDescription.java

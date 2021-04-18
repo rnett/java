@@ -8,8 +8,6 @@ import org.bytedeco.javacpp.annotation.*;
 
 import static org.tensorflow.internal.c_api.global.tensorflow.*;
 
-// Parsed from tensorflow/c/c_api_internal.h
-
 @NoOffset @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class TF_OperationDescription extends Pointer {
     static { Loader.load(); }
