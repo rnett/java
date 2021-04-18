@@ -49,6 +49,9 @@ import org.bytedeco.javacpp.tools.InfoMapper;
                                 "tensorflow_adapters.h",
                                 "tensorflow/c/eager/c_api.h",
                                 "tensorflow/cc/framework/scope.h",
+                                "tensorflow/cc/framework/grad_op_registry.h",
+                                "tensorflow/core/platform/status.h",
+                                "tensorflow/c/tf_status_helper.h",
 //                                "tensorflow/cc/framework/ops.h",
                                 "tensorflow/c/c_api_internal.h",
                         },
@@ -200,7 +203,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                 .put(new Info("c_api_internal.h")
                         .linePatterns("struct TF_OperationDescription \\{", "\\};",
                                 "struct TF_Graph \\{", "\\};"))
-                .put(new Info("TF_CAPI_EXPORT", "TF_Bool", "TF_GUARDED_BY").cppTypes().annotations())
+                .put(new Info("TF_CAPI_EXPORT", "TF_Bool", "TF_GUARDED_BY", "TF_MUST_USE_RESULT").cppTypes().annotations())
                 .put(new Info("TF_Buffer::data").javaText("public native @Const Pointer data(); public native TF_Buffer data(Pointer data);"))
                 .put(new Info("TF_Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
                 .put(new Info("TF_Buffer").pointerTypes("TF_Buffer").base("org.tensorflow.internal.c_api.AbstractTF_Buffer"))
@@ -248,7 +251,11 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                 .put(new Info("absl::Span", "tensorflow::gtl::ArraySlice").annotations("@Span"))
                 .put(new Info("tensorflow::Output").javaNames("TF_Output").cast())
                 .put(new Info("tensorflow::Operation").javaNames("TF_Operation").cast())
+                .put(new Info("tensorflow::Status").pointerTypes("NativeStatus").purify())
                 .put(new Info("tensorflow::CompositeOpScopes",
+                        "tensorflow::StackFrame",
+                        "tensorflow::StatusGroup",
+                        "tensorflow::internal::TF_StatusDeleter",
                         "tensorflow::GraphDef",
                         "tensorflow::Scope::graph_as_shared_ptr",
                         "tensorflow::Scope::ToGraphDef",
@@ -264,6 +271,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                         "tensorflow::Scope::WithAssignedDevice",
                         "tensorflow::Scope::status",
                         "tensorflow::Scope::UpdateStatus",
+                        "tensorflow::Status::code",
                         "tensorflow::CreateOutputWithScope",
                         "TF_OperationDescription::colocation_constraints"
                 ).skip());
