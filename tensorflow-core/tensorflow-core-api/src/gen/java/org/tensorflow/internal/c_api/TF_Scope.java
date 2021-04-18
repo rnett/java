@@ -161,7 +161,7 @@ public class TF_Scope extends Pointer {
   /** Update the builder with properties accumulated in this scope. Does not set
    *  status(). */
   // TODO(skyewm): NodeBuilder is not part of public API
-  public native void UpdateBuilder(TF_OperationDescription builder);
+  public native void UpdateBuilder(NodeBuilder builder);
   // END_SKIP_DOXYGEN
 
   public native @Cast("bool") boolean ok();

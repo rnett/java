@@ -44,11 +44,15 @@ import org.bytedeco.javacpp.tools.InfoMapper;
                                 "tensorflow/c/tf_tensor.h",
                                 "tensorflow/c/tf_tstring.h",
                                 "tensorflow/c/c_api.h",
+                                "tensorflow/c/c_api_internal.h",
 //                "tensorflow/c/env.h",
                                 "tensorflow/c/kernels.h",
                                 "tensorflow/c/ops.h",
                                 "tensorflow/c/eager/c_api.h",
                                 "tensorflow/cc/framework/scope.h"
+                        },
+                        exclude = {
+                                "tensorflow/c/c_api_internal.h"
                         },
                         link = "tensorflow_cc@.2",
                         preload = {"iomp5", "mklml", "mklml_intel", "tensorflow_framework@.2"},
@@ -194,7 +198,11 @@ public class tensorflow implements LoadEnabled, InfoMapper {
     }
 
   @Override  public void map(InfoMap infoMap) {
-        infoMap.put(new Info("TF_CAPI_EXPORT", "TF_Bool").cppTypes().annotations())
+        infoMap
+                .put(new Info("c_api_internal.h")
+                        .linePatterns("struct TF_OperationDescription \\{", "\\};"))
+                .put(new Info("TF_CAPI_EXPORT", "TF_Bool").cppTypes().annotations())
+                .put(new Info("tensorflow::string", "string").cppTypes("std::string"))
                 .put(new Info("TF_Buffer::data").javaText("public native @Const Pointer data(); public native TF_Buffer data(Pointer data);"))
                 .put(new Info("TF_Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
                 .put(new Info("TF_Buffer").pointerTypes("TF_Buffer").base("org.tensorflow.internal.c_api.AbstractTF_Buffer"))
@@ -235,14 +243,13 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                     "TF_InitKernel")
                 .skip())
                 .put(new Info("tensorflow::Scope").javaNames("TF_Scope").pointerTypes("TF_Scope"))
-                .put(new Info("tensorflow::NodeBuilder").cppTypes("TF_OperationDescription"))
+                .put(new Info("TF_OperationDescription").pointerTypes("TF_OperationDescription"))
+                .put(new Info("tensorflow::NodeBuilder").pointerTypes("NodeBuilder"))
                 .put(new Info("tensorflow::Status").cppTypes("TF_Status"))
-                .put(new Info("tensorflow::Graph").cppTypes("TF_Graph"))
-                .put(new Info("string").cppTypes("std::string"))
                 .put(new Info("gtl::ArraySlice<TF_Operation>").cppTypes("std::vector<TF_Operation>"))
                 .put(new Info("Output").cppTypes("TF_Output"))
                 .put(new Info("Operation").cppTypes("TF_Operation"))
-                .put(new Info("tensorflow::CompositeOpScopes", "tensorflow::GraphDef", "tensorflow::Scope::graph",
+                .put(new Info("tensorflow::CompositeOpScopes", "tensorflow::Graph", "tensorflow::GraphDef", "tensorflow::Scope::graph",
                         "tensorflow::Scope::graph_as_shared_ptr",
                         "tensorflow::Scope::ToGraphDef",
                         "tensorflow::Scope::ToGraph",
@@ -255,7 +262,8 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                         "tensorflow::Scope::ColocateWith",
                         "tensorflow::Scope::WithXlaCluster",
                         "tensorflow::Scope::WithAssignedDevice",
-                        "tensorflow::CreateOutputWithScope"
+                        "tensorflow::CreateOutputWithScope",
+                        "TF_OperationDescription::colocation_constraints"
                 ).skip());
     }
 }

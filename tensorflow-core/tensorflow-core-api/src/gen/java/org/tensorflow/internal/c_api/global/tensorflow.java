@@ -987,9 +987,8 @@ public static native TF_Graph TF_NewGraph();
 // Destroy an options object.  Graph will be deleted once no more
 // TFSession's are referencing it.
 public static native void TF_DeleteGraph(TF_Graph arg0);
-// Targeting ../TF_OperationDescription.java
 
-
+// Operation being built. The underlying graph must outlive this.
 // Targeting ../TF_Operation.java
 
 
@@ -3088,6 +3087,11 @@ public static native void TF_RegisterFilesystemPlugin(
 // #endif  // TENSORFLOW_C_C_API_H_
 
 
+// Targeting ../TF_OperationDescription.java
+
+
+
+
 // Parsed from tensorflow/c/kernels.h
 
 /* Copyright 2018 The TensorFlow Authors. All Rights Reserved.
@@ -4770,6 +4774,9 @@ limitations under the License.
 // #include "tensorflow/core/common_runtime/graph_constructor.h"
 // #include "tensorflow/core/lib/core/status.h"
 // #include "tensorflow/core/lib/gtl/array_slice.h"
+// Targeting ../NodeBuilder.java
+
+
 // Targeting ../TF_Scope.java
 
 

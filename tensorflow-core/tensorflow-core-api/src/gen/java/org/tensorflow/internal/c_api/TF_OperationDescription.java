@@ -8,12 +8,24 @@ import org.bytedeco.javacpp.annotation.*;
 
 import static org.tensorflow.internal.c_api.global.tensorflow.*;
 
+// Parsed from tensorflow/c/c_api_internal.h
 
-// Operation being built. The underlying graph must outlive this.
-@Opaque @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
+@NoOffset @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class TF_OperationDescription extends Pointer {
-    /** Empty constructor. Calls {@code super((Pointer)null)}. */
-    public TF_OperationDescription() { super((Pointer)null); }
+    static { Loader.load(); }
     /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
     public TF_OperationDescription(Pointer p) { super(p); }
+
+  public TF_OperationDescription(TF_Graph g, @Cast("const char*") BytePointer op_type,
+                            @Cast("const char*") BytePointer node_name) { super((Pointer)null); allocate(g, op_type, node_name); }
+  private native void allocate(TF_Graph g, @Cast("const char*") BytePointer op_type,
+                            @Cast("const char*") BytePointer node_name);
+  public TF_OperationDescription(TF_Graph g, String op_type,
+                            String node_name) { super((Pointer)null); allocate(g, op_type, node_name); }
+  private native void allocate(TF_Graph g, String op_type,
+                            String node_name);
+
+  public native @ByRef NodeBuilder node_builder(); public native TF_OperationDescription node_builder(NodeBuilder setter);
+  public native TF_Graph graph(); public native TF_OperationDescription graph(TF_Graph setter);
+  
 }
