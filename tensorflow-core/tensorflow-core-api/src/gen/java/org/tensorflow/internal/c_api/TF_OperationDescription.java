@@ -16,14 +16,6 @@ public class TF_OperationDescription extends Pointer {
     /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
     public TF_OperationDescription(Pointer p) { super(p); }
 
-  public TF_OperationDescription(TF_Graph g, @Cast("const char*") BytePointer op_type,
-                            @Cast("const char*") BytePointer node_name) { super((Pointer)null); allocate(g, op_type, node_name); }
-  private native void allocate(TF_Graph g, @Cast("const char*") BytePointer op_type,
-                            @Cast("const char*") BytePointer node_name);
-  public TF_OperationDescription(TF_Graph g, String op_type,
-                            String node_name) { super((Pointer)null); allocate(g, op_type, node_name); }
-  private native void allocate(TF_Graph g, String op_type,
-                            String node_name);
 
   public native @ByRef NodeBuilder node_builder(); public native TF_OperationDescription node_builder(NodeBuilder setter);
   public native TF_Graph graph(); public native TF_OperationDescription graph(TF_Graph setter);

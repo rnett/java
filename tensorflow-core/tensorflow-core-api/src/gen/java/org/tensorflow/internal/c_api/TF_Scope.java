@@ -91,8 +91,8 @@ public class TF_Scope extends Pointer {
    *  {@code name/child_scope_name} as the prefix. The actual name will be unique
    *  in the current scope. All other properties are inherited from the current
    *  scope. If {@code child_scope_name} is empty, the {@code /} is elided. */
-  public native @ByVal TF_Scope NewSubScope(BytePointer child_scope_name);
-  public native @ByVal TF_Scope NewSubScope(String child_scope_name);
+  public native @ByVal TF_Scope NewSubScope(@StdString BytePointer child_scope_name);
+  public native @ByVal TF_Scope NewSubScope(@StdString String child_scope_name);
 
   /** Return a new scope. All ops created within the returned scope will have
    *  names of the form {@code name/StrCat(fragments...)[_suffix]} */
@@ -101,10 +101,10 @@ public class TF_Scope extends Pointer {
    *  control dependencies the union of operations in the control_deps vector
    *  and the control dependencies of the current scope. */
   public native @ByVal TF_Scope WithControlDependencies(
-        @StdVector TF_Operation control_deps);
+        @Cast("tensorflow::Operation*") @Span TF_Operation control_deps);
   /** Same as above, but convenient to add control dependency on the operation
    *  producing the control_dep output. */
-  public native @ByVal TF_Scope WithControlDependencies(@Const @ByRef TF_Output control_dep);
+  public native @ByVal TF_Scope WithControlDependencies(@Cast("const tensorflow::Output*") @ByRef TF_Output control_dep);
 
   /** Return a new scope. All ops created within the returned scope will have no
    *  control dependencies on other operations. */
@@ -112,8 +112,8 @@ public class TF_Scope extends Pointer {
 
   /** Return a new scope. All ops created within the returned scope will have
    *  the device field set to 'device'. */
-  public native @ByVal TF_Scope WithDevice(BytePointer device);
-  public native @ByVal TF_Scope WithDevice(String device);
+  public native @ByVal TF_Scope WithDevice(@StdString BytePointer device);
+  public native @ByVal TF_Scope WithDevice(@StdString String device);
 
   /** Returns a new scope.  All ops created within the returned scope will have
    *  their assigned device set to {@code assigned_device}. */
@@ -147,14 +147,14 @@ public class TF_Scope extends Pointer {
 
   /** Return a unique name, using default_name if an op name has not been
    *  specified. */
-  public native BytePointer GetUniqueNameForOp(BytePointer default_name);
-  public native String GetUniqueNameForOp(String default_name);
+  public native @StdString BytePointer GetUniqueNameForOp(@StdString BytePointer default_name);
+  public native @StdString String GetUniqueNameForOp(@StdString String default_name);
 
   /** Update the status on this scope.
    *  Note: The status object is shared between all children of this scope.
    *  If the resulting status is not Status::OK() and exit_on_error_ is set on
    *  this scope, this function exits by calling LOG(FATAL). */
-  public native void UpdateStatus(@Const @ByRef TF_Status s);
+  
 
   // START_SKIP_DOXYGEN
 
@@ -172,7 +172,7 @@ public class TF_Scope extends Pointer {
   // TODO(skyewm): Graph is not part of public API
   
 
-  public native @ByVal TF_Status status();
+  
 
   /** If status() is Status::OK(), convert the Graph object stored in this scope
    *  to a GraphDef proto and return Status::OK(). Otherwise, return the error

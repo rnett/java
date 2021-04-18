@@ -15,14 +15,13 @@ limitations under the License.
 */
 package org.tensorflow.internal.c_api.presets;
 
+import java.lang.annotation.*;
 import java.util.List;
 
 import org.bytedeco.javacpp.ClassProperties;
 import org.bytedeco.javacpp.LoadEnabled;
 import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.annotation.NoException;
-import org.bytedeco.javacpp.annotation.Platform;
-import org.bytedeco.javacpp.annotation.Properties;
+import org.bytedeco.javacpp.annotation.*;
 import org.bytedeco.javacpp.tools.Info;
 import org.bytedeco.javacpp.tools.InfoMap;
 import org.bytedeco.javacpp.tools.InfoMapper;
@@ -44,15 +43,14 @@ import org.bytedeco.javacpp.tools.InfoMapper;
                                 "tensorflow/c/tf_tensor.h",
                                 "tensorflow/c/tf_tstring.h",
                                 "tensorflow/c/c_api.h",
-                                "tensorflow/c/c_api_internal.h",
 //                "tensorflow/c/env.h",
                                 "tensorflow/c/kernels.h",
                                 "tensorflow/c/ops.h",
+                                "tensorflow_adapters.h",
                                 "tensorflow/c/eager/c_api.h",
-                                "tensorflow/cc/framework/scope.h"
-                        },
-                        exclude = {
-                                "tensorflow/c/c_api_internal.h"
+                                "tensorflow/cc/framework/scope.h",
+//                                "tensorflow/cc/framework/ops.h",
+                                "tensorflow/c/c_api_internal.h",
                         },
                         link = "tensorflow_cc@.2",
                         preload = {"iomp5", "mklml", "mklml_intel", "tensorflow_framework@.2"},
@@ -199,10 +197,10 @@ public class tensorflow implements LoadEnabled, InfoMapper {
 
   @Override  public void map(InfoMap infoMap) {
         infoMap
+                .put(new Info("TF_OperationDescription").pointerTypes("TF_OperationDescription").purify())
                 .put(new Info("c_api_internal.h")
                         .linePatterns("struct TF_OperationDescription \\{", "\\};"))
                 .put(new Info("TF_CAPI_EXPORT", "TF_Bool").cppTypes().annotations())
-                .put(new Info("tensorflow::string", "string").cppTypes("std::string"))
                 .put(new Info("TF_Buffer::data").javaText("public native @Const Pointer data(); public native TF_Buffer data(Pointer data);"))
                 .put(new Info("TF_Status").pointerTypes("TF_Status").base("org.tensorflow.internal.c_api.AbstractTF_Status"))
                 .put(new Info("TF_Buffer").pointerTypes("TF_Buffer").base("org.tensorflow.internal.c_api.AbstractTF_Buffer"))
@@ -243,13 +241,15 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                     "TF_InitKernel")
                 .skip())
                 .put(new Info("tensorflow::Scope").javaNames("TF_Scope").pointerTypes("TF_Scope"))
-                .put(new Info("TF_OperationDescription").pointerTypes("TF_OperationDescription"))
                 .put(new Info("tensorflow::NodeBuilder").pointerTypes("NodeBuilder"))
-                .put(new Info("tensorflow::Status").cppTypes("TF_Status"))
-                .put(new Info("gtl::ArraySlice<TF_Operation>").cppTypes("std::vector<TF_Operation>"))
-                .put(new Info("Output").cppTypes("TF_Output"))
-                .put(new Info("Operation").cppTypes("TF_Operation"))
-                .put(new Info("tensorflow::CompositeOpScopes", "tensorflow::Graph", "tensorflow::GraphDef", "tensorflow::Scope::graph",
+                .put(new Info("tensorflow::string", "absl::string_view", "tensorflow::StringPiece").annotations("@StdString").valueTypes("BytePointer", "String").pointerTypes("BytePointer"))
+                .put(new Info("absl::Span", "tensorflow::gtl::ArraySlice").annotations("@Span"))
+                .put(new Info("tensorflow::Output").javaNames("TF_Output").cast())
+                .put(new Info("tensorflow::Operation").javaNames("TF_Operation").cast())
+                .put(new Info("tensorflow::CompositeOpScopes",
+                        "tensorflow::Graph",
+                        "tensorflow::GraphDef",
+                        "tensorflow::Scope::graph",
                         "tensorflow::Scope::graph_as_shared_ptr",
                         "tensorflow::Scope::ToGraphDef",
                         "tensorflow::Scope::ToGraph",
@@ -262,8 +262,16 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                         "tensorflow::Scope::ColocateWith",
                         "tensorflow::Scope::WithXlaCluster",
                         "tensorflow::Scope::WithAssignedDevice",
+                        "tensorflow::Scope::status",
+                        "tensorflow::Scope::UpdateStatus",
                         "tensorflow::CreateOutputWithScope",
                         "TF_OperationDescription::colocation_constraints"
                 ).skip());
     }
+
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.PARAMETER})
+    @Cast({"absl::Span", "&"}) @Adapter("SpanAdapter")
+    public @interface Span { String value() default ""; }
 }
