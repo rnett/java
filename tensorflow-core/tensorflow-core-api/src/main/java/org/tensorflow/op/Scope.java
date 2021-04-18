@@ -237,7 +237,7 @@ public final class Scope {
    *
    * @param builder OperationBuilder to add control inputs to
    */
-  public OperationBuilder applyControlDependencies(OperationBuilder builder) {
+  private OperationBuilder applyControlDependencies(OperationBuilder builder) {
     for (Op control : controlDependencies) {
       builder = builder.addControlInput(control.op());
     }
