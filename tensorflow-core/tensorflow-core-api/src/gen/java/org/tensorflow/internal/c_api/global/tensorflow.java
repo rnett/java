@@ -4739,4 +4739,53 @@ public static native void TFE_ContextEndStep(TFE_Context ctx);
 // #endif  // TENSORFLOW_C_EAGER_C_API_H_
 
 
+// Parsed from tensorflow/cc/framework/scope.h
+
+/* Copyright 2016 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
+// #ifndef TENSORFLOW_CC_FRAMEWORK_SCOPE_H_
+// #define TENSORFLOW_CC_FRAMEWORK_SCOPE_H_
+
+// #include <memory>
+// #include <string>
+// #include <unordered_map>
+// #include <unordered_set>
+// #include <vector>
+
+// #include "absl/strings/str_cat.h"
+// #include "tensorflow/cc/framework/ops.h"
+// #include "tensorflow/core/common_runtime/graph_constructor.h"
+// #include "tensorflow/core/lib/core/status.h"
+// #include "tensorflow/core/lib/gtl/array_slice.h"
+// Targeting ../TF_Scope.java
+
+
+
+/** A helper struct to hold the scopes that would be used by a function
+ *  constructing a composite op. */
+
+// Creates a node of the given operation, with the given inputs, and assigns the
+// result to output. This does not support the ability to add additional
+// attributes.
+
+/** \} */
+
+  // namespace tensorflow
+
+// #endif  // TENSORFLOW_CC_FRAMEWORK_SCOPE_H_
+
+
 }
