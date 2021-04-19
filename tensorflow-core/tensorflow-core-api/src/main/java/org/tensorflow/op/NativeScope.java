@@ -16,79 +16,88 @@
  */
 package org.tensorflow.op;
 
-import org.bytedeco.javacpp.PointerPointer;
-import org.tensorflow.*;
-import org.tensorflow.internal.c_api.TF_Operation;
-import org.tensorflow.internal.c_api.TF_Scope;
-
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.tensorflow.DeviceSpec;
+import org.tensorflow.ExecutionEnvironment;
+import org.tensorflow.Graph;
+import org.tensorflow.GraphOperation;
+import org.tensorflow.Operation;
+import org.tensorflow.OperationBuilder;
+import org.tensorflow.internal.c_api.NativeOperation;
+import org.tensorflow.internal.c_api.TF_Scope;
 
-public final class NativeScope implements IScope {
+/**
+ * A {@link Scope} implementation backed by a native scope.  Only used for gradient declarations.
+ */
+public final class NativeScope implements Scope {
 
-    @Override
-    public ExecutionEnvironment env() {
-        return graph;
+  @Override
+  public ExecutionEnvironment env() {
+    return graph;
+  }
+
+  @Override
+  public NativeScope withSubScope(String childScopeName) {
+    return new NativeScope(nativeScope.NewSubScope(childScopeName), graph);
+  }
+
+  @Override
+  public NativeScope withName(String opName) {
+    return new NativeScope(nativeScope, graph, opName);
+  }
+
+  @Override
+  public NativeScope withNameAsSubScope(String defaultName) {
+    return withSubScope(opName);
+  }
+
+  @Override
+  public NativeScope withDevice(DeviceSpec deviceSpec) {
+    return new NativeScope(nativeScope.WithDevice(deviceSpec.toString()), graph);
+  }
+
+  @Override
+  public String makeOpName(String defaultName) {
+    String name = opName != null ? opName : defaultName;
+    return nativeScope.GetUniqueNameForOp(name);
+  }
+
+  @Override
+  public NativeScope withControlDependencies(Iterable<Op> controls) {
+    List<Op> controlDeps = StreamSupport.stream(controls.spliterator(), false)
+        .collect(Collectors.toList());
+    NativeOperation ops = new NativeOperation(controlDeps.size());
+
+    for (int i = 0; i < controlDeps.size(); i++) {
+      Operation op = controlDeps.get(i).op();
+      if (!(op instanceof GraphOperation)) {
+        throw new IllegalArgumentException("Can only add graph ops as control dependencies");
+      }
+      ops.position(i)
+          .put(new NativeOperation(((GraphOperation) op).getUnsafeNativeHandle().node()));
     }
 
-    @Override
-    public NativeScope withSubScope(String childScopeName) {
-        return new NativeScope(nativeScope.NewSubScope(childScopeName), graph);
-    }
+    return new NativeScope(nativeScope.WithControlDependencies(new NativeOperation(ops)), graph);
+  }
 
-    @Override
-    public NativeScope withName(String opName) {
-        return new NativeScope(nativeScope, graph, opName);
-    }
+  @Override
+  public OperationBuilder apply(OperationBuilder builder) {
+    return builder;
+  }
 
-    @Override
-    public NativeScope withNameAsSubScope(String defaultName) {
-        return withSubScope(opName);
-    }
+  NativeScope(TF_Scope nativeScope, Graph graph) {
+    this(nativeScope, graph, null);
+  }
 
-    @Override
-    public NativeScope withDevice(DeviceSpec deviceSpec) {
-        return new NativeScope(nativeScope.WithDevice(deviceSpec.toString()), graph);
-    }
+  private NativeScope(TF_Scope nativeScope, Graph graph, String opName) {
+    this.graph = graph;
+    this.nativeScope = nativeScope;
+    this.opName = opName;
+  }
 
-    @Override
-    public String makeOpName(String defaultName) {
-        String name = opName != null ? opName : defaultName;
-        return nativeScope.GetUniqueNameForOp(name);
-    }
-
-    @Override
-    public NativeScope withControlDependencies(Iterable<Op> controls) {
-        List<Op> controlDeps = StreamSupport.stream(controls.spliterator(), false).collect(Collectors.toList());
-        PointerPointer<TF_Operation> ops = new PointerPointer<TF_Operation>(controlDeps.size());
-
-        for(int i = 0 ; i < controlDeps.size() ; i++){
-            Operation op = controlDeps.get(i).op();
-            if(!(op instanceof GraphOperation))
-                throw new IllegalArgumentException("Can only add graph ops as control dependencies");
-            ops.put(i, (((GraphOperation) op).getUnsafeNativeHandle()));
-        }
-
-        return new NativeScope(nativeScope.WithControlDependencies(new TF_Operation(ops)), graph);
-    }
-
-    @Override
-    public OperationBuilder apply(OperationBuilder builder) {
-        return builder;
-    }
-
-    NativeScope(TF_Scope nativeScope, Graph graph){
-        this(nativeScope, graph, null);
-    }
-
-    private NativeScope(TF_Scope nativeScope, Graph graph, String opName){
-        this.graph = graph;
-        this.nativeScope = nativeScope;
-        this.opName = opName;
-    }
-
-    private final Graph graph;
-    private final TF_Scope nativeScope;
-    private final String opName;
+  private final Graph graph;
+  private final TF_Scope nativeScope;
+  private final String opName;
 }

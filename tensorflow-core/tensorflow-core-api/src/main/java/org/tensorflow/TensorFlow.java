@@ -27,15 +27,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.bytedeco.javacpp.PointerScope;
 import org.tensorflow.exceptions.TensorFlowException;
+import org.tensorflow.internal.c_api.GradOpRegistry;
 import org.tensorflow.internal.c_api.TF_Buffer;
 import org.tensorflow.internal.c_api.TF_Library;
 import org.tensorflow.internal.c_api.TF_Status;
+import org.tensorflow.op.CustomGradient;
+import org.tensorflow.op.RawCustomGradient;
+import org.tensorflow.op.RawGradientAdapter;
+import org.tensorflow.op.RawOp;
+import org.tensorflow.op.TypedGradientAdapter;
+import org.tensorflow.op.math.Add;
 import org.tensorflow.proto.framework.OpList;
 
-/** Static utility methods describing the TensorFlow runtime. */
+/**
+ * Static utility methods describing the TensorFlow runtime.
+ */
 public final class TensorFlow {
 
-  /** Returns the version of the underlying TensorFlow runtime. */
+  /**
+   * Returns the version of the underlying TensorFlow runtime.
+   */
   public static String version() {
     return TF_Version().getString();
   }
@@ -43,9 +54,8 @@ public final class TensorFlow {
   /**
    * All the TensorFlow operations available in this address space.
    *
-   * @return A <a
-   *     href="https://www.tensorflow.org/code/tensorflow/core/framework/op_def.proto">OpList</a>
-   *     protocol buffer, which lists all the available TensorFlow operations.
+   * @return A <a href="https://www.tensorflow.org/code/tensorflow/core/framework/op_def.proto">OpList</a>
+   * protocol buffer, which lists all the available TensorFlow operations.
    */
   public static OpList registeredOpList() {
     TF_Buffer buf = TF_GetAllOpList();
@@ -77,9 +87,8 @@ public final class TensorFlow {
    * library.
    *
    * @param filename Path of the dynamic library containing operations and kernels to load.
-   * @return A <a
-   *     href="https://www.tensorflow.org/code/tensorflow/core/framework/op_def.proto">OpList</a>
-   *     protocol buffer message defining the operations defined in the library.
+   * @return A <a href="https://www.tensorflow.org/code/tensorflow/core/framework/op_def.proto">OpList</a>
+   * protocol buffer message defining the operations defined in the library.
    * @throws UnsatisfiedLinkError if filename cannot be loaded.
    */
   public static OpList loadLibrary(String filename) {
@@ -120,9 +129,12 @@ public final class TensorFlow {
     }
   }
 
-  private TensorFlow() {}
+  private TensorFlow() {
+  }
 
-  /** Load the TensorFlow runtime C library. */
+  /**
+   * Load the TensorFlow runtime C library.
+   */
   static {
     try {
       NativeLibrary.load();
@@ -136,6 +148,39 @@ public final class TensorFlow {
       System.err.println("Failed to load TensorFlow native library");
       e.printStackTrace();
       throw e;
+    }
+  }
+
+  /**
+   * Register a custom gradient function for ops of {@code opType} type.
+   * <p>
+   * Note that this only works with graph gradients, and will eventually be deprecated in favor of
+   * unified gradient support once it is fully supported by tensorflow core.
+   *
+   * @param opType   the type of op to register the gradient for. Should usually be an {@code
+   *                 OP_NAME} field, i.e. {@link Add#OP_NAME}.
+   * @param gradient the gradient function to use
+   */
+  public static void registerCustomGradient(String opType, RawCustomGradient gradient) {
+    GradOpRegistry.Global().Register(opType, new RawGradientAdapter(gradient));
+  }
+
+  /**
+   * Register a custom gradient function for ops of {@code opClass} type. The actual op type is
+   * detected from the class's {@code OP_NAME} field.
+   *
+   * @param opClass  the class of op to register the gradient for.
+   * @param gradient the gradient function to use
+   */
+  public static <T extends RawOp> void registerCustomGradient(Class<T> opClass,
+      CustomGradient<T> gradient) {
+    try {
+      String opName = (String) opClass.getDeclaredField("OP_NAME").get(null);
+      GradOpRegistry.Global().Register(opName, new TypedGradientAdapter<>(gradient, opClass));
+    } catch (IllegalAccessException | NoSuchFieldException e) {
+      throw new IllegalArgumentException(
+          "Could not get OP_NAME field for class " + opClass
+              + ", ensure it is a generated op class", e);
     }
   }
 }

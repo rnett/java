@@ -2,14 +2,77 @@
 
 package org.tensorflow.internal.c_api.global;
 
-import org.tensorflow.internal.c_api.*;
-
-import java.nio.*;
-import org.bytedeco.javacpp.*;
-import org.bytedeco.javacpp.annotation.*;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.FloatPointer;
+import org.bytedeco.javacpp.IntPointer;
+import org.bytedeco.javacpp.Loader;
+import org.bytedeco.javacpp.LongPointer;
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.PointerPointer;
+import org.bytedeco.javacpp.SizeTPointer;
+import org.bytedeco.javacpp.annotation.ByPtrPtr;
+import org.bytedeco.javacpp.annotation.ByRef;
+import org.bytedeco.javacpp.annotation.ByVal;
+import org.bytedeco.javacpp.annotation.Cast;
+import org.bytedeco.javacpp.annotation.Const;
+import org.bytedeco.javacpp.annotation.MemberGetter;
+import org.bytedeco.javacpp.annotation.Name;
+import org.bytedeco.javacpp.annotation.Namespace;
+import org.bytedeco.javacpp.annotation.StdString;
+import org.tensorflow.internal.c_api.Compute_func_Pointer_TF_OpKernelContext;
+import org.tensorflow.internal.c_api.Create_func_TF_OpKernelConstruction;
+import org.tensorflow.internal.c_api.Deallocator_Pointer_long_Pointer;
+import org.tensorflow.internal.c_api.Delete_func_Pointer;
+import org.tensorflow.internal.c_api.Listener_BytePointer;
+import org.tensorflow.internal.c_api.Listener_String;
+import org.tensorflow.internal.c_api.NativeStatus;
+import org.tensorflow.internal.c_api.Shape_inference_func_TF_ShapeInferenceContext_TF_Status;
+import org.tensorflow.internal.c_api.TFE_Context;
+import org.tensorflow.internal.c_api.TFE_ContextOptions;
+import org.tensorflow.internal.c_api.TFE_Op;
+import org.tensorflow.internal.c_api.TFE_TensorDebugInfo;
+import org.tensorflow.internal.c_api.TFE_TensorHandle;
+import org.tensorflow.internal.c_api.TF_AllocatorAttributes;
+import org.tensorflow.internal.c_api.TF_ApiDefMap;
+import org.tensorflow.internal.c_api.TF_AttrMetadata;
+import org.tensorflow.internal.c_api.TF_Buffer;
+import org.tensorflow.internal.c_api.TF_DeprecatedSession;
+import org.tensorflow.internal.c_api.TF_DeviceList;
+import org.tensorflow.internal.c_api.TF_DimensionHandle;
+import org.tensorflow.internal.c_api.TF_Function;
+import org.tensorflow.internal.c_api.TF_FunctionOptions;
+import org.tensorflow.internal.c_api.TF_Graph;
+import org.tensorflow.internal.c_api.TF_ImportGraphDefOptions;
+import org.tensorflow.internal.c_api.TF_ImportGraphDefResults;
+import org.tensorflow.internal.c_api.TF_Input;
+import org.tensorflow.internal.c_api.TF_KernelBuilder;
+import org.tensorflow.internal.c_api.TF_Library;
+import org.tensorflow.internal.c_api.TF_OpDefinitionBuilder;
+import org.tensorflow.internal.c_api.TF_OpKernelConstruction;
+import org.tensorflow.internal.c_api.TF_OpKernelContext;
+import org.tensorflow.internal.c_api.TF_Operation;
+import org.tensorflow.internal.c_api.TF_OperationDescription;
+import org.tensorflow.internal.c_api.TF_Output;
+import org.tensorflow.internal.c_api.TF_Server;
+import org.tensorflow.internal.c_api.TF_Session;
+import org.tensorflow.internal.c_api.TF_SessionOptions;
+import org.tensorflow.internal.c_api.TF_ShapeHandle;
+import org.tensorflow.internal.c_api.TF_ShapeInferenceContext;
+import org.tensorflow.internal.c_api.TF_Status;
+import org.tensorflow.internal.c_api.TF_StringView;
+import org.tensorflow.internal.c_api.TF_TString;
+import org.tensorflow.internal.c_api.TF_Tensor;
+import org.tensorflow.internal.c_api.TF_WhileParams;
 
 public class tensorflow extends org.tensorflow.internal.c_api.presets.tensorflow {
-    static { Loader.load(); }
+
+    static {
+        Loader.load();
+    }
 
 // Parsed from tensorflow/core/platform/ctstring_internal.h
 
@@ -36,20 +99,21 @@ limitations under the License.
 // #include <stdlib.h>
 // #include <string.h>
 
-// #if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) &&
+    // #if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) &&
 //      __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) ||
 //     defined(_WIN32)
-public static final int TF_TSTRING_LITTLE_ENDIAN = 1;
+    public static final int TF_TSTRING_LITTLE_ENDIAN = 1;
 // #elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) &&
 //     __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 // #else
 // #error "Unable to detect endianness."
 // #endif
 
-// #if defined(__clang__) ||
+    // #if defined(__clang__) ||
 //     (defined(__GNUC__) &&
 //      ((__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || __GNUC__ >= 5))
-public static native @Cast("uint32_t") int TF_swap32(@Cast("uint32_t") int host_int);
+    public static native @Cast("uint32_t")
+    int TF_swap32(@Cast("uint32_t") int host_int);
 
 // #elif defined(_MSC_VER)
 
@@ -63,104 +127,119 @@ public static native @Cast("uint32_t") int TF_swap32(@Cast("uint32_t") int host_
 // #else  // TF_TSTRING_LITTLE_ENDIAN
 // #endif  // TF_TSTRING_LITTLE_ENDIAN
 
-public static native @Cast("size_t") long TF_align16(@Cast("size_t") long i);
+    public static native @Cast("size_t")
+    long TF_align16(@Cast("size_t") long i);
 
-public static native @Cast("size_t") long TF_max(@Cast("size_t") long a, @Cast("size_t") long b);
-public static native @Cast("size_t") long TF_min(@Cast("size_t") long a, @Cast("size_t") long b);
+    public static native @Cast("size_t")
+    long TF_max(@Cast("size_t") long a, @Cast("size_t") long b);
 
-/** enum TF_TString_Type */
-public static final int  // NOLINT
-  TF_TSTR_SMALL = 0x00,
-  TF_TSTR_LARGE = 0x01,
-  TF_TSTR_OFFSET = 0x02,
-  TF_TSTR_VIEW = 0x03,
-  TF_TSTR_TYPE_MASK = 0x03;
+    public static native @Cast("size_t")
+    long TF_min(@Cast("size_t") long a, @Cast("size_t") long b);
+
+    /**
+     * enum TF_TString_Type
+     */
+    public static final int  // NOLINT
+        TF_TSTR_SMALL = 0x00,
+        TF_TSTR_LARGE = 0x01,
+        TF_TSTR_OFFSET = 0x02,
+        TF_TSTR_VIEW = 0x03,
+        TF_TSTR_TYPE_MASK = 0x03;
 // Targeting ../TF_TString_Large.java
-
 
 // Targeting ../TF_TString_Offset.java
 
-
 // Targeting ../TF_TString_View.java
 
-
 // Targeting ../TF_TString_Raw.java
-
 
 // Targeting ../TF_TString_Union.java
 
 
+    /**
+     * enum
+     */
 
-/** enum  */
+    public static native @MemberGetter
+    int TF_TString_SmallCapacity();
 
-public static native @MemberGetter int TF_TString_SmallCapacity();
-public static final int
-  TF_TString_SmallCapacity = TF_TString_SmallCapacity();
+    public static final int
+        TF_TString_SmallCapacity = TF_TString_SmallCapacity();
 // Targeting ../TF_TString_Small.java
 
-
 // Targeting ../TF_TString.java
-
-
 
 // TODO(dero): Fix for OSS, and add C only build test.
 // _Static_assert(CHAR_BIT == 8);
 // _Static_assert(sizeof(TF_TString) == 24);
 
-public static native @Cast("TF_TString_Type") int TF_TString_GetType(@Const TF_TString str);
+    public static native @Cast("TF_TString_Type")
+    int TF_TString_GetType(@Const TF_TString str);
 
-// XXX(dero): For the big-endian case, this function could potentially be more
+    // XXX(dero): For the big-endian case, this function could potentially be more
 // performant and readable by always storing the string size as little-endian
 // and always byte-swapping on big endian, resulting in a simple 'bswap'+'shr'
 // (for architectures that have a bswap op).
-public static native @Cast("size_t") long TF_TString_ToActualSizeT(@Cast("size_t") long size);
+    public static native @Cast("size_t")
+    long TF_TString_ToActualSizeT(@Cast("size_t") long size);
 
-public static native @Cast("size_t") long TF_TString_ToInternalSizeT(@Cast("size_t") long size,
-                                                @Cast("TF_TString_Type") int type);
+    public static native @Cast("size_t")
+    long TF_TString_ToInternalSizeT(@Cast("size_t") long size,
+        @Cast("TF_TString_Type") int type);
 
-public static native void TF_TString_Init(TF_TString str);
+    public static native void TF_TString_Init(TF_TString str);
 
-public static native void TF_TString_Dealloc(TF_TString str);
+    public static native void TF_TString_Dealloc(TF_TString str);
 
-public static native @Cast("size_t") long TF_TString_GetSize(@Const TF_TString str);
+    public static native @Cast("size_t")
+    long TF_TString_GetSize(@Const TF_TString str);
 
-public static native @Cast("size_t") long TF_TString_GetCapacity(@Const TF_TString str);
+    public static native @Cast("size_t")
+    long TF_TString_GetCapacity(@Const TF_TString str);
 
-public static native @Cast("const char*") BytePointer TF_TString_GetDataPointer(@Const TF_TString str);
+    public static native @Cast("const char*")
+    BytePointer TF_TString_GetDataPointer(@Const TF_TString str);
 
-public static native @Cast("char*") BytePointer TF_TString_ResizeUninitialized(TF_TString str,
-                                                   @Cast("size_t") long new_size);
+    public static native @Cast("char*")
+    BytePointer TF_TString_ResizeUninitialized(TF_TString str,
+        @Cast("size_t") long new_size);
 
-public static native @Cast("char*") BytePointer TF_TString_GetMutableDataPointer(TF_TString str);
+    public static native @Cast("char*")
+    BytePointer TF_TString_GetMutableDataPointer(TF_TString str);
 
-public static native void TF_TString_Reserve(TF_TString str, @Cast("size_t") long new_cap);
+    public static native void TF_TString_Reserve(TF_TString str, @Cast("size_t") long new_cap);
 
-public static native @Cast("char*") BytePointer TF_TString_Resize(TF_TString str, @Cast("size_t") long new_size,
-                                      @Cast("char") byte c);
+    public static native @Cast("char*")
+    BytePointer TF_TString_Resize(TF_TString str, @Cast("size_t") long new_size,
+        @Cast("char") byte c);
 
-public static native void TF_TString_AssignView(TF_TString dst, @Cast("const char*") BytePointer src,
-                                         @Cast("size_t") long size);
-public static native void TF_TString_AssignView(TF_TString dst, String src,
-                                         @Cast("size_t") long size);
+    public static native void TF_TString_AssignView(TF_TString dst,
+        @Cast("const char*") BytePointer src,
+        @Cast("size_t") long size);
 
-public static native void TF_TString_AppendN(TF_TString dst, @Cast("const char*") BytePointer src,
-                                      @Cast("size_t") long src_size);
-public static native void TF_TString_AppendN(TF_TString dst, String src,
-                                      @Cast("size_t") long src_size);
+    public static native void TF_TString_AssignView(TF_TString dst, String src,
+        @Cast("size_t") long size);
 
-public static native void TF_TString_Append(TF_TString dst, @Const TF_TString src);
+    public static native void TF_TString_AppendN(TF_TString dst,
+        @Cast("const char*") BytePointer src,
+        @Cast("size_t") long src_size);
 
-public static native void TF_TString_Copy(TF_TString dst, @Cast("const char*") BytePointer src,
-                                   @Cast("size_t") long size);
-public static native void TF_TString_Copy(TF_TString dst, String src,
-                                   @Cast("size_t") long size);
+    public static native void TF_TString_AppendN(TF_TString dst, String src,
+        @Cast("size_t") long src_size);
 
-public static native void TF_TString_Assign(TF_TString dst, @Const TF_TString src);
+    public static native void TF_TString_Append(TF_TString dst, @Const TF_TString src);
 
-public static native void TF_TString_Move(TF_TString dst, TF_TString src);
+    public static native void TF_TString_Copy(TF_TString dst, @Cast("const char*") BytePointer src,
+        @Cast("size_t") long size);
+
+    public static native void TF_TString_Copy(TF_TString dst, String src,
+        @Cast("size_t") long size);
+
+    public static native void TF_TString_Assign(TF_TString dst, @Const TF_TString src);
+
+    public static native void TF_TString_Move(TF_TString dst, TF_TString src);
 
 // #endif  // TENSORFLOW_CORE_PLATFORM_CTSTRING_INTERNAL_H_
-
 
 // Parsed from tensorflow/core/platform/ctstring.h
 
@@ -268,7 +347,6 @@ limitations under the License.
 
 // #endif  // TENSORFLOW_CORE_PLATFORM_CTSTRING_H_
 
-
 // Parsed from tensorflow/core/util/port.h
 
 /* Copyright 2015 The TensorFlow Authors. All Rights Reserved.
@@ -289,19 +367,27 @@ limitations under the License.
 // #ifndef TENSORFLOW_CORE_UTIL_PORT_H_
 // #define TENSORFLOW_CORE_UTIL_PORT_H_
 
-// Returns true if GOOGLE_CUDA is defined.
-@Namespace("tensorflow") public static native @Cast("bool") boolean IsGoogleCudaEnabled();
+    // Returns true if GOOGLE_CUDA is defined.
+    @Namespace("tensorflow")
+    public static native @Cast("bool")
+    boolean IsGoogleCudaEnabled();
 
-// Returns true if TENSORFLOW_USE_ROCM is defined. (i.e. TF is built with ROCm)
-@Namespace("tensorflow") public static native @Cast("bool") boolean IsBuiltWithROCm();
+    // Returns true if TENSORFLOW_USE_ROCM is defined. (i.e. TF is built with ROCm)
+    @Namespace("tensorflow")
+    public static native @Cast("bool")
+    boolean IsBuiltWithROCm();
 
-// Returns true if TENSORFLOW_USE_XLA is defined. (i.e. TF is built with XLA)
-@Namespace("tensorflow") public static native @Cast("bool") boolean IsBuiltWithXLA();
+    // Returns true if TENSORFLOW_USE_XLA is defined. (i.e. TF is built with XLA)
+    @Namespace("tensorflow")
+    public static native @Cast("bool")
+    boolean IsBuiltWithXLA();
 
-// Returns true if TENSORFLOW_USE_NVCC is defined. (i.e. TF is built with nvcc)
-@Namespace("tensorflow") public static native @Cast("bool") boolean IsBuiltWithNvcc();
+    // Returns true if TENSORFLOW_USE_NVCC is defined. (i.e. TF is built with nvcc)
+    @Namespace("tensorflow")
+    public static native @Cast("bool")
+    boolean IsBuiltWithNvcc();
 
-// Returns true if either
+    // Returns true if either
 //
 //   GOOGLE_CUDA is defined, and the given CUDA version supports
 //   half-precision matrix multiplications and convolution operations.
@@ -310,15 +396,18 @@ limitations under the License.
 //
 //   TENSORFLOW_USE_ROCM is defined
 //
-@Namespace("tensorflow") public static native @Cast("bool") boolean GpuSupportsHalfMatMulAndConv();
+    @Namespace("tensorflow")
+    public static native @Cast("bool")
+    boolean GpuSupportsHalfMatMulAndConv();
 
-// Returns true if INTEL_MKL is defined
-@Namespace("tensorflow") public static native @Cast("bool") boolean IsMklEnabled();
+    // Returns true if INTEL_MKL is defined
+    @Namespace("tensorflow")
+    public static native @Cast("bool")
+    boolean IsMklEnabled();
 
-  // end namespace tensorflow
+    // end namespace tensorflow
 
 // #endif  // TENSORFLOW_CORE_UTIL_PORT_H_
-
 
 // Parsed from tensorflow/c/tf_attrtype.h
 
@@ -343,23 +432,24 @@ limitations under the License.
 // #endif
 
 // TF_AttrType describes the type of the value of an attribute on an operation.
-/** enum TF_AttrType */
-public static final int
-  TF_ATTR_STRING = 0,
-  TF_ATTR_INT = 1,
-  TF_ATTR_FLOAT = 2,
-  TF_ATTR_BOOL = 3,
-  TF_ATTR_TYPE = 4,
-  TF_ATTR_SHAPE = 5,
-  TF_ATTR_TENSOR = 6,
-  TF_ATTR_PLACEHOLDER = 7,
-  TF_ATTR_FUNC = 8;
+    /**
+     * enum TF_AttrType
+     */
+    public static final int
+        TF_ATTR_STRING = 0,
+        TF_ATTR_INT = 1,
+        TF_ATTR_FLOAT = 2,
+        TF_ATTR_BOOL = 3,
+        TF_ATTR_TYPE = 4,
+        TF_ATTR_SHAPE = 5,
+        TF_ATTR_TENSOR = 6,
+        TF_ATTR_PLACEHOLDER = 7,
+        TF_ATTR_FUNC = 8;
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_TF_ATTRTYPE_H_
-
 
 // Parsed from tensorflow/c/c_api_macros.h
 
@@ -410,7 +500,6 @@ limitations under the License.
 
 // #endif  // TENSORFLOW_C_C_API_MACROS_H_
 
-
 // Parsed from tensorflow/c/tf_datatype.h
 
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
@@ -458,43 +547,45 @@ limitations under the License.
 // --------------------------------------------------------------------------
 // TF_DataType holds the type for a scalar value.  E.g., one slot in a tensor.
 // The enum values here are identical to corresponding values in types.proto.
-/** enum TF_DataType */
-public static final int
-  TF_FLOAT = 1,
-  TF_DOUBLE = 2,
-  TF_INT32 = 3,  // Int32 tensors are always in 'host' memory.
-  TF_UINT8 = 4,
-  TF_INT16 = 5,
-  TF_INT8 = 6,
-  TF_STRING = 7,
-  TF_COMPLEX64 = 8,  // Single-precision complex
-  TF_COMPLEX = 8,    // Old identifier kept for API backwards compatibility
-  TF_INT64 = 9,
-  TF_BOOL = 10,
-  TF_QINT8 = 11,     // Quantized int8
-  TF_QUINT8 = 12,    // Quantized uint8
-  TF_QINT32 = 13,    // Quantized int32
-  TF_BFLOAT16 = 14,  // Float32 truncated to 16 bits.  Only for cast ops.
-  TF_QINT16 = 15,    // Quantized int16
-  TF_QUINT16 = 16,   // Quantized uint16
-  TF_UINT16 = 17,
-  TF_COMPLEX128 = 18,  // Double-precision complex
-  TF_HALF = 19,
-  TF_RESOURCE = 20,
-  TF_VARIANT = 21,
-  TF_UINT32 = 22,
-  TF_UINT64 = 23;
+    /**
+     * enum TF_DataType
+     */
+    public static final int
+        TF_FLOAT = 1,
+        TF_DOUBLE = 2,
+        TF_INT32 = 3,  // Int32 tensors are always in 'host' memory.
+        TF_UINT8 = 4,
+        TF_INT16 = 5,
+        TF_INT8 = 6,
+        TF_STRING = 7,
+        TF_COMPLEX64 = 8,  // Single-precision complex
+        TF_COMPLEX = 8,    // Old identifier kept for API backwards compatibility
+        TF_INT64 = 9,
+        TF_BOOL = 10,
+        TF_QINT8 = 11,     // Quantized int8
+        TF_QUINT8 = 12,    // Quantized uint8
+        TF_QINT32 = 13,    // Quantized int32
+        TF_BFLOAT16 = 14,  // Float32 truncated to 16 bits.  Only for cast ops.
+        TF_QINT16 = 15,    // Quantized int16
+        TF_QUINT16 = 16,   // Quantized uint16
+        TF_UINT16 = 17,
+        TF_COMPLEX128 = 18,  // Double-precision complex
+        TF_HALF = 19,
+        TF_RESOURCE = 20,
+        TF_VARIANT = 21,
+        TF_UINT32 = 22,
+        TF_UINT64 = 23;
 
-// TF_DataTypeSize returns the sizeof() for the underlying type corresponding
+    // TF_DataTypeSize returns the sizeof() for the underlying type corresponding
 // to the given TF_DataType enum value. Returns 0 for variable length types
 // (eg. TF_STRING) or on failure.
-public static native @Cast("size_t") long TF_DataTypeSize(@Cast("TF_DataType") int dt);
+    public static native @Cast("size_t")
+    long TF_DataTypeSize(@Cast("TF_DataType") int dt);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_TF_DATATYPE_H_
-
 
 // Parsed from tensorflow/c/tf_status.h
 
@@ -533,68 +624,71 @@ limitations under the License.
 // #ifdef __cplusplus
 // Targeting ../TF_Status.java
 
-
-
 // --------------------------------------------------------------------------
 // TF_Code holds an error code.  The enum values here are identical to
 // corresponding values in error_codes.proto.
-/** enum TF_Code */
-public static final int
-  TF_OK = 0,
-  TF_CANCELLED = 1,
-  TF_UNKNOWN = 2,
-  TF_INVALID_ARGUMENT = 3,
-  TF_DEADLINE_EXCEEDED = 4,
-  TF_NOT_FOUND = 5,
-  TF_ALREADY_EXISTS = 6,
-  TF_PERMISSION_DENIED = 7,
-  TF_UNAUTHENTICATED = 16,
-  TF_RESOURCE_EXHAUSTED = 8,
-  TF_FAILED_PRECONDITION = 9,
-  TF_ABORTED = 10,
-  TF_OUT_OF_RANGE = 11,
-  TF_UNIMPLEMENTED = 12,
-  TF_INTERNAL = 13,
-  TF_UNAVAILABLE = 14,
-  TF_DATA_LOSS = 15;
+    /**
+     * enum TF_Code
+     */
+    public static final int
+        TF_OK = 0,
+        TF_CANCELLED = 1,
+        TF_UNKNOWN = 2,
+        TF_INVALID_ARGUMENT = 3,
+        TF_DEADLINE_EXCEEDED = 4,
+        TF_NOT_FOUND = 5,
+        TF_ALREADY_EXISTS = 6,
+        TF_PERMISSION_DENIED = 7,
+        TF_UNAUTHENTICATED = 16,
+        TF_RESOURCE_EXHAUSTED = 8,
+        TF_FAILED_PRECONDITION = 9,
+        TF_ABORTED = 10,
+        TF_OUT_OF_RANGE = 11,
+        TF_UNIMPLEMENTED = 12,
+        TF_INTERNAL = 13,
+        TF_UNAVAILABLE = 14,
+        TF_DATA_LOSS = 15;
 
 // --------------------------------------------------------------------------
 
-// Return a new status object.
-public static native TF_Status TF_NewStatus();
+    // Return a new status object.
+    public static native TF_Status TF_NewStatus();
 
-// Delete a previously created status object.
-public static native void TF_DeleteStatus(TF_Status arg0);
+    // Delete a previously created status object.
+    public static native void TF_DeleteStatus(TF_Status arg0);
 
-// Record <code, msg> in *s.  Any previous information is lost.
+    // Record <code, msg> in *s.  Any previous information is lost.
 // A common use is to clear a status: TF_SetStatus(s, TF_OK, "");
-public static native void TF_SetStatus(TF_Status s, @Cast("TF_Code") int code,
-                                        @Cast("const char*") BytePointer msg);
-public static native void TF_SetStatus(TF_Status s, @Cast("TF_Code") int code,
-                                        String msg);
+    public static native void TF_SetStatus(TF_Status s, @Cast("TF_Code") int code,
+        @Cast("const char*") BytePointer msg);
 
-// Convert from an I/O error code (e.g., errno) to a TF_Status value.
+    public static native void TF_SetStatus(TF_Status s, @Cast("TF_Code") int code,
+        String msg);
+
+    // Convert from an I/O error code (e.g., errno) to a TF_Status value.
 // Any previous information is lost. Prefer to use this instead of TF_SetStatus
 // when the error comes from I/O operations.
-public static native void TF_SetStatusFromIOError(TF_Status s, int error_code,
-                                                   @Cast("const char*") BytePointer context);
-public static native void TF_SetStatusFromIOError(TF_Status s, int error_code,
-                                                   String context);
+    public static native void TF_SetStatusFromIOError(TF_Status s, int error_code,
+        @Cast("const char*") BytePointer context);
 
-// Return the code record in *s.
-public static native @Cast("TF_Code") int TF_GetCode(@Const TF_Status s);
+    public static native void TF_SetStatusFromIOError(TF_Status s, int error_code,
+        String context);
 
-// Return a pointer to the (null-terminated) error message in *s.  The
+    // Return the code record in *s.
+    public static native @Cast("TF_Code")
+    int TF_GetCode(@Const TF_Status s);
+
+    // Return a pointer to the (null-terminated) error message in *s.  The
 // return value points to memory that is only usable until the next
 // mutation to *s.  Always returns an empty string if TF_GetCode(s) is
 // TF_OK.
-public static native @Cast("const char*") BytePointer TF_Message(@Const TF_Status s);
+    public static native @Cast("const char*")
+    BytePointer TF_Message(@Const TF_Status s);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_TF_STATUS_H_
-
 
 // Parsed from tensorflow/c/tf_tensor.h
 
@@ -646,29 +740,34 @@ limitations under the License.
 // Targeting ../TF_AllocatorAttributes.java
 
 
+    public static native @MemberGetter
+    int TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE();
 
-public static native @MemberGetter int TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE();
-public static final int TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE = TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE();
+    public static final int TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE = TF_ALLOCATOR_ATTRIBUTES_STRUCT_SIZE();
 // Targeting ../TF_Tensor.java
-
 
 // Targeting ../Deallocator_Pointer_long_Pointer.java
 
 
-public static native TF_Tensor TF_NewTensor(
-    @Cast("TF_DataType") int arg0, @Cast("const int64_t*") LongPointer dims, int num_dims, Pointer data, @Cast("size_t") long len,
-    Deallocator_Pointer_long_Pointer deallocator,
-    Pointer deallocator_arg);
-public static native TF_Tensor TF_NewTensor(
-    @Cast("TF_DataType") int arg0, @Cast("const int64_t*") LongBuffer dims, int num_dims, Pointer data, @Cast("size_t") long len,
-    Deallocator_Pointer_long_Pointer deallocator,
-    Pointer deallocator_arg);
-public static native TF_Tensor TF_NewTensor(
-    @Cast("TF_DataType") int arg0, @Cast("const int64_t*") long[] dims, int num_dims, Pointer data, @Cast("size_t") long len,
-    Deallocator_Pointer_long_Pointer deallocator,
-    Pointer deallocator_arg);
+    public static native TF_Tensor TF_NewTensor(
+        @Cast("TF_DataType") int arg0, @Cast("const int64_t*") LongPointer dims, int num_dims,
+        Pointer data, @Cast("size_t") long len,
+        Deallocator_Pointer_long_Pointer deallocator,
+        Pointer deallocator_arg);
 
-// Allocate and return a new Tensor.
+    public static native TF_Tensor TF_NewTensor(
+        @Cast("TF_DataType") int arg0, @Cast("const int64_t*") LongBuffer dims, int num_dims,
+        Pointer data, @Cast("size_t") long len,
+        Deallocator_Pointer_long_Pointer deallocator,
+        Pointer deallocator_arg);
+
+    public static native TF_Tensor TF_NewTensor(
+        @Cast("TF_DataType") int arg0, @Cast("const int64_t*") long[] dims, int num_dims,
+        Pointer data, @Cast("size_t") long len,
+        Deallocator_Pointer_long_Pointer deallocator,
+        Pointer deallocator_arg);
+
+    // Allocate and return a new Tensor.
 //
 // This function is an alternative to TF_NewTensor and should be used when
 // memory is allocated to pass the Tensor to the C API. The allocated memory
@@ -677,43 +776,49 @@ public static native TF_Tensor TF_NewTensor(
 //
 // The caller must set the Tensor values by writing them to the pointer returned
 // by TF_TensorData with length TF_TensorByteSize.
-public static native TF_Tensor TF_AllocateTensor(@Cast("TF_DataType") int arg0,
-                                                   @Cast("const int64_t*") LongPointer dims,
-                                                   int num_dims, @Cast("size_t") long len);
-public static native TF_Tensor TF_AllocateTensor(@Cast("TF_DataType") int arg0,
-                                                   @Cast("const int64_t*") LongBuffer dims,
-                                                   int num_dims, @Cast("size_t") long len);
-public static native TF_Tensor TF_AllocateTensor(@Cast("TF_DataType") int arg0,
-                                                   @Cast("const int64_t*") long[] dims,
-                                                   int num_dims, @Cast("size_t") long len);
+    public static native TF_Tensor TF_AllocateTensor(@Cast("TF_DataType") int arg0,
+        @Cast("const int64_t*") LongPointer dims,
+        int num_dims, @Cast("size_t") long len);
 
-// Deletes `tensor` and returns a new TF_Tensor with the same content if
+    public static native TF_Tensor TF_AllocateTensor(@Cast("TF_DataType") int arg0,
+        @Cast("const int64_t*") LongBuffer dims,
+        int num_dims, @Cast("size_t") long len);
+
+    public static native TF_Tensor TF_AllocateTensor(@Cast("TF_DataType") int arg0,
+        @Cast("const int64_t*") long[] dims,
+        int num_dims, @Cast("size_t") long len);
+
+    // Deletes `tensor` and returns a new TF_Tensor with the same content if
 // possible. Returns nullptr and leaves `tensor` untouched if not.
-public static native TF_Tensor TF_TensorMaybeMove(TF_Tensor tensor);
+    public static native TF_Tensor TF_TensorMaybeMove(TF_Tensor tensor);
 
-// Destroy a tensor.
-public static native void TF_DeleteTensor(TF_Tensor arg0);
+    // Destroy a tensor.
+    public static native void TF_DeleteTensor(TF_Tensor arg0);
 
-// Return the type of a tensor element.
-public static native @Cast("TF_DataType") int TF_TensorType(@Const TF_Tensor arg0);
+    // Return the type of a tensor element.
+    public static native @Cast("TF_DataType")
+    int TF_TensorType(@Const TF_Tensor arg0);
 
-// Return the number of dimensions that the tensor has.
-public static native int TF_NumDims(@Const TF_Tensor arg0);
+    // Return the number of dimensions that the tensor has.
+    public static native int TF_NumDims(@Const TF_Tensor arg0);
 
-// Return the length of the tensor in the "dim_index" dimension.
+    // Return the length of the tensor in the "dim_index" dimension.
 // REQUIRES: 0 <= dim_index < TF_NumDims(tensor)
-public static native @Cast("int64_t") long TF_Dim(@Const TF_Tensor tensor, int dim_index);
+    public static native @Cast("int64_t")
+    long TF_Dim(@Const TF_Tensor tensor, int dim_index);
 
-// Return the size of the underlying data in bytes.
-public static native @Cast("size_t") long TF_TensorByteSize(@Const TF_Tensor arg0);
+    // Return the size of the underlying data in bytes.
+    public static native @Cast("size_t")
+    long TF_TensorByteSize(@Const TF_Tensor arg0);
 
-// Return a pointer to the underlying data buffer.
-public static native Pointer TF_TensorData(@Const TF_Tensor arg0);
+    // Return a pointer to the underlying data buffer.
+    public static native Pointer TF_TensorData(@Const TF_Tensor arg0);
 
-// Returns the number of elements in the tensor.
-public static native @Cast("int64_t") long TF_TensorElementCount(@Const TF_Tensor tensor);
+    // Returns the number of elements in the tensor.
+    public static native @Cast("int64_t")
+    long TF_TensorElementCount(@Const TF_Tensor tensor);
 
-// Copy the internal data representation of `from` to `to`. `new_dims` and
+    // Copy the internal data representation of `from` to `to`. `new_dims` and
 // `num_new_dims` specify the new shape of the `to` tensor, `type` specifies its
 // data type. On success, *status is set to TF_OK and the two tensors share the
 // same data buffer.
@@ -737,30 +842,32 @@ public static native @Cast("int64_t") long TF_TensorElementCount(@Const TF_Tenso
 //
 // If any of the requirements are not met, *status is set to
 // TF_INVALID_ARGUMENT.
-public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
-                                                @Cast("TF_DataType") int type, TF_Tensor to,
-                                                @Cast("const int64_t*") LongPointer new_dims,
-                                                int num_new_dims,
-                                                TF_Status status);
-public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
-                                                @Cast("TF_DataType") int type, TF_Tensor to,
-                                                @Cast("const int64_t*") LongBuffer new_dims,
-                                                int num_new_dims,
-                                                TF_Status status);
-public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
-                                                @Cast("TF_DataType") int type, TF_Tensor to,
-                                                @Cast("const int64_t*") long[] new_dims,
-                                                int num_new_dims,
-                                                TF_Status status);
+    public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
+        @Cast("TF_DataType") int type, TF_Tensor to,
+        @Cast("const int64_t*") LongPointer new_dims,
+        int num_new_dims,
+        TF_Status status);
 
-// Returns bool iff this tensor is aligned.
-public static native @Cast("bool") boolean TF_TensorIsAligned(@Const TF_Tensor arg0);
+    public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
+        @Cast("TF_DataType") int type, TF_Tensor to,
+        @Cast("const int64_t*") LongBuffer new_dims,
+        int num_new_dims,
+        TF_Status status);
+
+    public static native void TF_TensorBitcastFrom(@Const TF_Tensor from,
+        @Cast("TF_DataType") int type, TF_Tensor to,
+        @Cast("const int64_t*") long[] new_dims,
+        int num_new_dims,
+        TF_Status status);
+
+    // Returns bool iff this tensor is aligned.
+    public static native @Cast("bool")
+    boolean TF_TensorIsAligned(@Const TF_Tensor arg0);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_TF_TENSOR_H_
-
 
 // Parsed from tensorflow/c/tf_tstring.h
 
@@ -828,7 +935,6 @@ public static native void TF_StringDealloc(TF_TString tstr);
 // #endif
 
 // #endif  // THIRD_PARTY_TENSORFLOW_C_TF_TSTRING_H_
-
 
 // Parsed from tensorflow/c/c_api.h
 
@@ -927,56 +1033,56 @@ limitations under the License.
 // #ifdef __cplusplus
 // #endif
 
-// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 // TF_Version returns a string describing version information of the
 // TensorFlow library. TensorFlow using semantic versioning.
-public static native @Cast("const char*") BytePointer TF_Version();
+    public static native @Cast("const char*")
+    BytePointer TF_Version();
 // Targeting ../TF_Buffer.java
 
 
-
-// Makes a copy of the input and sets an appropriate deallocator.  Useful for
+    // Makes a copy of the input and sets an appropriate deallocator.  Useful for
 // passing in read-only, input protobufs.
-public static native TF_Buffer TF_NewBufferFromString(@Const Pointer proto,
-                                                        @Cast("size_t") long proto_len);
+    public static native TF_Buffer TF_NewBufferFromString(@Const Pointer proto,
+        @Cast("size_t") long proto_len);
 
-// Useful for passing *out* a protobuf.
-public static native TF_Buffer TF_NewBuffer();
+    // Useful for passing *out* a protobuf.
+    public static native TF_Buffer TF_NewBuffer();
 
-public static native void TF_DeleteBuffer(TF_Buffer arg0);
+    public static native void TF_DeleteBuffer(TF_Buffer arg0);
 
-public static native @ByVal TF_Buffer TF_GetBuffer(TF_Buffer buffer);
+    public static native @ByVal
+    TF_Buffer TF_GetBuffer(TF_Buffer buffer);
 // Targeting ../TF_StringView.java
-
 
 // Targeting ../TF_SessionOptions.java
 
 
+    // Return a new options object.
+    public static native TF_SessionOptions TF_NewSessionOptions();
 
-// Return a new options object.
-public static native TF_SessionOptions TF_NewSessionOptions();
-
-// Set the target in TF_SessionOptions.options.
+    // Set the target in TF_SessionOptions.options.
 // target can be empty, a single entry, or a comma separated list of entries.
 // Each entry is in one of the following formats :
 // "local"
 // ip:port
 // host:port
-public static native void TF_SetTarget(TF_SessionOptions options,
-                                        @Cast("const char*") BytePointer target);
-public static native void TF_SetTarget(TF_SessionOptions options,
-                                        String target);
+    public static native void TF_SetTarget(TF_SessionOptions options,
+        @Cast("const char*") BytePointer target);
 
-// Set the config in TF_SessionOptions.options.
+    public static native void TF_SetTarget(TF_SessionOptions options,
+        String target);
+
+    // Set the config in TF_SessionOptions.options.
 // config should be a serialized tensorflow.ConfigProto proto.
 // If config was not parsed successfully as a ConfigProto, record the
 // error information in *status.
-public static native void TF_SetConfig(TF_SessionOptions options,
-                                        @Const Pointer proto, @Cast("size_t") long proto_len,
-                                        TF_Status status);
+    public static native void TF_SetConfig(TF_SessionOptions options,
+        @Const Pointer proto, @Cast("size_t") long proto_len,
+        TF_Status status);
 
-// Destroy an options object.
-public static native void TF_DeleteSessionOptions(TF_SessionOptions arg0);
+    // Destroy an options object.
+    public static native void TF_DeleteSessionOptions(TF_SessionOptions arg0);
 
 // TODO(jeff,sanjay):
 // - export functions to set Config fields
@@ -987,31 +1093,28 @@ public static native void TF_DeleteSessionOptions(TF_SessionOptions arg0);
 // Represents a computation graph.  Graphs may be shared between sessions.
 // Graphs are thread-safe when used as directed below.
 
-// Return a new graph object.
-public static native TF_Graph TF_NewGraph();
+    // Return a new graph object.
+    public static native TF_Graph TF_NewGraph();
 
-// Destroy an options object.  Graph will be deleted once no more
+    // Destroy an options object.  Graph will be deleted once no more
 // TFSession's are referencing it.
-public static native void TF_DeleteGraph(TF_Graph arg0);
+    public static native void TF_DeleteGraph(TF_Graph arg0);
 
 // Operation being built. The underlying graph must outlive this.
-// Targeting ../TF_Operation.java
 
-
+// Operation that has been added to the graph. Valid until the graph is
+// deleted -- in particular adding a new operation to the graph does not
+// invalidate old TF_Operation* pointers.
 // Targeting ../TF_Input.java
-
 
 // Targeting ../TF_Output.java
 
-
 // Targeting ../TF_Function.java
-
 
 // Targeting ../TF_FunctionOptions.java
 
 
-
-// Sets the shape of the Tensor referenced by `output` in `graph` to
+    // Sets the shape of the Tensor referenced by `output` in `graph` to
 // the shape described by `dims` and `num_dims`.
 //
 // If the number of dimensions is unknown, `num_dims` must be set to
@@ -1027,34 +1130,36 @@ public static native void TF_DeleteGraph(TF_Graph arg0);
 //   * `output` is not in `graph`.
 //   * An invalid shape is being set (e.g., the shape being set
 //     is incompatible with the existing shape).
-public static native void TF_GraphSetTensorShape(TF_Graph graph,
-                                                  @ByVal TF_Output output,
-                                                  @Cast("const int64_t*") LongPointer dims,
-                                                  int num_dims,
-                                                  TF_Status status);
-public static native void TF_GraphSetTensorShape(TF_Graph graph,
-                                                  @ByVal TF_Output output,
-                                                  @Cast("const int64_t*") LongBuffer dims,
-                                                  int num_dims,
-                                                  TF_Status status);
-public static native void TF_GraphSetTensorShape(TF_Graph graph,
-                                                  @ByVal TF_Output output,
-                                                  @Cast("const int64_t*") long[] dims,
-                                                  int num_dims,
-                                                  TF_Status status);
+    public static native void TF_GraphSetTensorShape(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("const int64_t*") LongPointer dims,
+        int num_dims,
+        TF_Status status);
 
-// Returns the number of dimensions of the Tensor referenced by `output`
+    public static native void TF_GraphSetTensorShape(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("const int64_t*") LongBuffer dims,
+        int num_dims,
+        TF_Status status);
+
+    public static native void TF_GraphSetTensorShape(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("const int64_t*") long[] dims,
+        int num_dims,
+        TF_Status status);
+
+    // Returns the number of dimensions of the Tensor referenced by `output`
 // in `graph`.
 //
 // If the number of dimensions in the shape is unknown, returns -1.
 //
 // Returns an error into `status` if:
 //   * `output` is not in `graph`.
-public static native int TF_GraphGetTensorNumDims(TF_Graph graph,
-                                                   @ByVal TF_Output output,
-                                                   TF_Status status);
+    public static native int TF_GraphGetTensorNumDims(TF_Graph graph,
+        @ByVal TF_Output output,
+        TF_Status status);
 
-// Returns the shape of the Tensor referenced by `output` in `graph`
+    // Returns the shape of the Tensor referenced by `output` in `graph`
 // into `dims`. `dims` must be an array large enough to hold `num_dims`
 // entries (e.g., the return value of TF_GraphGetTensorNumDims).
 //
@@ -1066,33 +1171,38 @@ public static native int TF_GraphGetTensorNumDims(TF_Graph graph,
 // Returns an error into `status` if:
 //   * `output` is not in `graph`.
 //   * `num_dims` does not match the actual number of dimensions.
-public static native void TF_GraphGetTensorShape(TF_Graph graph,
-                                                  @ByVal TF_Output output,
-                                                  @Cast("int64_t*") LongPointer dims, int num_dims,
-                                                  TF_Status status);
-public static native void TF_GraphGetTensorShape(TF_Graph graph,
-                                                  @ByVal TF_Output output,
-                                                  @Cast("int64_t*") LongBuffer dims, int num_dims,
-                                                  TF_Status status);
-public static native void TF_GraphGetTensorShape(TF_Graph graph,
-                                                  @ByVal TF_Output output,
-                                                  @Cast("int64_t*") long[] dims, int num_dims,
-                                                  TF_Status status);
+    public static native void TF_GraphGetTensorShape(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("int64_t*") LongPointer dims, int num_dims,
+        TF_Status status);
 
-// Operation will only be added to *graph when TF_FinishOperation() is
+    public static native void TF_GraphGetTensorShape(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("int64_t*") LongBuffer dims, int num_dims,
+        TF_Status status);
+
+    public static native void TF_GraphGetTensorShape(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("int64_t*") long[] dims, int num_dims,
+        TF_Status status);
+
+    // Operation will only be added to *graph when TF_FinishOperation() is
 // called (assuming TF_FinishOperation() does not return an error).
 // *graph must not be deleted until after TF_FinishOperation() is
 // called.
-public static native TF_OperationDescription TF_NewOperation(
-    TF_Graph graph, @Cast("const char*") BytePointer op_type, @Cast("const char*") BytePointer oper_name);
-public static native TF_OperationDescription TF_NewOperation(
-    TF_Graph graph, String op_type, String oper_name);
+    public static native TF_OperationDescription TF_NewOperation(
+        TF_Graph graph, @Cast("const char*") BytePointer op_type,
+        @Cast("const char*") BytePointer oper_name);
 
-// Specify the device for `desc`.  Defaults to empty, meaning unconstrained.
-public static native void TF_SetDevice(TF_OperationDescription desc,
-                                        @Cast("const char*") BytePointer device);
-public static native void TF_SetDevice(TF_OperationDescription desc,
-                                        String device);
+    public static native TF_OperationDescription TF_NewOperation(
+        TF_Graph graph, String op_type, String oper_name);
+
+    // Specify the device for `desc`.  Defaults to empty, meaning unconstrained.
+    public static native void TF_SetDevice(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer device);
+
+    public static native void TF_SetDevice(TF_OperationDescription desc,
+        String device);
 
 // The calls to TF_AddInput and TF_AddInputList must match (in number,
 // order, and type) the op declaration.  For example, the "Concat" op
@@ -1114,311 +1224,376 @@ public static native void TF_SetDevice(TF_OperationDescription desc,
 //   TF_Output values_inputs[5] = {{...}, ..., {...}};
 //   TF_AddInputList(desc, values_inputs, 5);
 
-// For inputs that take a single tensor.
-public static native void TF_AddInput(TF_OperationDescription desc,
-                                       @ByVal TF_Output input);
+    // For inputs that take a single tensor.
+    public static native void TF_AddInput(TF_OperationDescription desc,
+        @ByVal TF_Output input);
 
-// For inputs that take a list of tensors.
+    // For inputs that take a list of tensors.
 // inputs must point to TF_Output[num_inputs].
-public static native void TF_AddInputList(TF_OperationDescription desc,
-                                           @Const TF_Output inputs,
-                                           int num_inputs);
+    public static native void TF_AddInputList(TF_OperationDescription desc,
+        @Const TF_Output inputs,
+        int num_inputs);
 
-// Call once per control input to `desc`.
-public static native void TF_AddControlInput(TF_OperationDescription desc,
-                                              TF_Operation input);
+    // Call once per control input to `desc`.
+    public static native void TF_AddControlInput(TF_OperationDescription desc,
+        TF_Operation input);
 
-// Request that `desc` be co-located on the device where `op`
+    // Request that `desc` be co-located on the device where `op`
 // is placed.
 //
 // Use of this is discouraged since the implementation of device placement is
 // subject to change. Primarily intended for internal libraries
-public static native void TF_ColocateWith(TF_OperationDescription desc,
-                                           TF_Operation op);
+    public static native void TF_ColocateWith(TF_OperationDescription desc,
+        TF_Operation op);
 
 // Call some TF_SetAttr*() function for every attr that is not
 // inferred from an input and doesn't have a default value you wish to
 // keep.
 
-// `value` must point to a string of length `length` bytes.
-public static native void TF_SetAttrString(TF_OperationDescription desc,
-                                            @Cast("const char*") BytePointer attr_name,
-                                            @Const Pointer value, @Cast("size_t") long length);
-public static native void TF_SetAttrString(TF_OperationDescription desc,
-                                            String attr_name,
-                                            @Const Pointer value, @Cast("size_t") long length);
-// `values` and `lengths` each must have lengths `num_values`.
+    // `value` must point to a string of length `length` bytes.
+    public static native void TF_SetAttrString(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Const Pointer value, @Cast("size_t") long length);
+
+    public static native void TF_SetAttrString(TF_OperationDescription desc,
+        String attr_name,
+        @Const Pointer value, @Cast("size_t") long length);
+
+    // `values` and `lengths` each must have lengths `num_values`.
 // `values[i]` must point to a string of length `lengths[i]` bytes.
-public static native void TF_SetAttrStringList(TF_OperationDescription desc,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Cast("const void*const*") PointerPointer values,
-                                                @Cast("const size_t*") SizeTPointer lengths,
-                                                int num_values);
-public static native void TF_SetAttrStringList(TF_OperationDescription desc,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Cast("const void*const*") @ByPtrPtr Pointer values,
-                                                @Cast("const size_t*") SizeTPointer lengths,
-                                                int num_values);
-public static native void TF_SetAttrStringList(TF_OperationDescription desc,
-                                                String attr_name,
-                                                @Cast("const void*const*") @ByPtrPtr Pointer values,
-                                                @Cast("const size_t*") SizeTPointer lengths,
-                                                int num_values);
-public static native void TF_SetAttrInt(TF_OperationDescription desc,
-                                         @Cast("const char*") BytePointer attr_name, @Cast("int64_t") long value);
-public static native void TF_SetAttrInt(TF_OperationDescription desc,
-                                         String attr_name, @Cast("int64_t") long value);
-public static native void TF_SetAttrIntList(TF_OperationDescription desc,
-                                             @Cast("const char*") BytePointer attr_name,
-                                             @Cast("const int64_t*") LongPointer values,
-                                             int num_values);
-public static native void TF_SetAttrIntList(TF_OperationDescription desc,
-                                             String attr_name,
-                                             @Cast("const int64_t*") LongBuffer values,
-                                             int num_values);
-public static native void TF_SetAttrIntList(TF_OperationDescription desc,
-                                             @Cast("const char*") BytePointer attr_name,
-                                             @Cast("const int64_t*") long[] values,
-                                             int num_values);
-public static native void TF_SetAttrIntList(TF_OperationDescription desc,
-                                             String attr_name,
-                                             @Cast("const int64_t*") LongPointer values,
-                                             int num_values);
-public static native void TF_SetAttrIntList(TF_OperationDescription desc,
-                                             @Cast("const char*") BytePointer attr_name,
-                                             @Cast("const int64_t*") LongBuffer values,
-                                             int num_values);
-public static native void TF_SetAttrIntList(TF_OperationDescription desc,
-                                             String attr_name,
-                                             @Cast("const int64_t*") long[] values,
-                                             int num_values);
-public static native void TF_SetAttrFloat(TF_OperationDescription desc,
-                                           @Cast("const char*") BytePointer attr_name, float value);
-public static native void TF_SetAttrFloat(TF_OperationDescription desc,
-                                           String attr_name, float value);
-public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Const FloatPointer values,
-                                               int num_values);
-public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
-                                               String attr_name,
-                                               @Const FloatBuffer values,
-                                               int num_values);
-public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Const float[] values,
-                                               int num_values);
-public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
-                                               String attr_name,
-                                               @Const FloatPointer values,
-                                               int num_values);
-public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Const FloatBuffer values,
-                                               int num_values);
-public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
-                                               String attr_name,
-                                               @Const float[] values,
-                                               int num_values);
-public static native void TF_SetAttrBool(TF_OperationDescription desc,
-                                          @Cast("const char*") BytePointer attr_name,
-                                          @Cast("unsigned char") byte value);
-public static native void TF_SetAttrBool(TF_OperationDescription desc,
-                                          String attr_name,
-                                          @Cast("unsigned char") byte value);
-public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const unsigned char*") BytePointer values,
-                                              int num_values);
-public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
-                                              String attr_name,
-                                              @Cast("const unsigned char*") ByteBuffer values,
-                                              int num_values);
-public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const unsigned char*") byte[] values,
-                                              int num_values);
-public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
-                                              String attr_name,
-                                              @Cast("const unsigned char*") BytePointer values,
-                                              int num_values);
-public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const unsigned char*") ByteBuffer values,
-                                              int num_values);
-public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
-                                              String attr_name,
-                                              @Cast("const unsigned char*") byte[] values,
-                                              int num_values);
-public static native void TF_SetAttrType(TF_OperationDescription desc,
-                                          @Cast("const char*") BytePointer attr_name,
-                                          @Cast("TF_DataType") int value);
-public static native void TF_SetAttrType(TF_OperationDescription desc,
-                                          String attr_name,
-                                          @Cast("TF_DataType") int value);
-public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const TF_DataType*") IntPointer values,
-                                              int num_values);
-public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
-                                              String attr_name,
-                                              @Cast("const TF_DataType*") IntBuffer values,
-                                              int num_values);
-public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const TF_DataType*") int[] values,
-                                              int num_values);
-public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
-                                              String attr_name,
-                                              @Cast("const TF_DataType*") IntPointer values,
-                                              int num_values);
-public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const TF_DataType*") IntBuffer values,
-                                              int num_values);
-public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
-                                              String attr_name,
-                                              @Cast("const TF_DataType*") int[] values,
-                                              int num_values);
-public static native void TF_SetAttrPlaceholder(TF_OperationDescription desc,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const char*") BytePointer placeholder);
-public static native void TF_SetAttrPlaceholder(TF_OperationDescription desc,
-                                                 String attr_name,
-                                                 String placeholder);
+    public static native void TF_SetAttrStringList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const void*const*") PointerPointer values,
+        @Cast("const size_t*") SizeTPointer lengths,
+        int num_values);
 
-// Set a 'func' attribute to the specified name.
+    public static native void TF_SetAttrStringList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const void*const*") @ByPtrPtr Pointer values,
+        @Cast("const size_t*") SizeTPointer lengths,
+        int num_values);
+
+    public static native void TF_SetAttrStringList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const void*const*") @ByPtrPtr Pointer values,
+        @Cast("const size_t*") SizeTPointer lengths,
+        int num_values);
+
+    public static native void TF_SetAttrInt(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name, @Cast("int64_t") long value);
+
+    public static native void TF_SetAttrInt(TF_OperationDescription desc,
+        String attr_name, @Cast("int64_t") long value);
+
+    public static native void TF_SetAttrIntList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongPointer values,
+        int num_values);
+
+    public static native void TF_SetAttrIntList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*") LongBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrIntList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") long[] values,
+        int num_values);
+
+    public static native void TF_SetAttrIntList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*") LongPointer values,
+        int num_values);
+
+    public static native void TF_SetAttrIntList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrIntList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*") long[] values,
+        int num_values);
+
+    public static native void TF_SetAttrFloat(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name, float value);
+
+    public static native void TF_SetAttrFloat(TF_OperationDescription desc,
+        String attr_name, float value);
+
+    public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Const FloatPointer values,
+        int num_values);
+
+    public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
+        String attr_name,
+        @Const FloatBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Const float[] values,
+        int num_values);
+
+    public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
+        String attr_name,
+        @Const FloatPointer values,
+        int num_values);
+
+    public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Const FloatBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrFloatList(TF_OperationDescription desc,
+        String attr_name,
+        @Const float[] values,
+        int num_values);
+
+    public static native void TF_SetAttrBool(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char") byte value);
+
+    public static native void TF_SetAttrBool(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("unsigned char") byte value);
+
+    public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const unsigned char*") BytePointer values,
+        int num_values);
+
+    public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const unsigned char*") ByteBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const unsigned char*") byte[] values,
+        int num_values);
+
+    public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const unsigned char*") BytePointer values,
+        int num_values);
+
+    public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const unsigned char*") ByteBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrBoolList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const unsigned char*") byte[] values,
+        int num_values);
+
+    public static native void TF_SetAttrType(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType") int value);
+
+    public static native void TF_SetAttrType(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("TF_DataType") int value);
+
+    public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType*") IntPointer values,
+        int num_values);
+
+    public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const TF_DataType*") IntBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType*") int[] values,
+        int num_values);
+
+    public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const TF_DataType*") IntPointer values,
+        int num_values);
+
+    public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType*") IntBuffer values,
+        int num_values);
+
+    public static native void TF_SetAttrTypeList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const TF_DataType*") int[] values,
+        int num_values);
+
+    public static native void TF_SetAttrPlaceholder(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const char*") BytePointer placeholder);
+
+    public static native void TF_SetAttrPlaceholder(TF_OperationDescription desc,
+        String attr_name,
+        String placeholder);
+
+    // Set a 'func' attribute to the specified name.
 // `value` must point to a string of length `length` bytes.
-public static native void TF_SetAttrFuncName(TF_OperationDescription desc,
-                                              @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const char*") BytePointer value, @Cast("size_t") long length);
-public static native void TF_SetAttrFuncName(TF_OperationDescription desc,
-                                              String attr_name,
-                                              String value, @Cast("size_t") long length);
+    public static native void TF_SetAttrFuncName(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const char*") BytePointer value, @Cast("size_t") long length);
 
-// Set `num_dims` to -1 to represent "unknown rank".  Otherwise,
+    public static native void TF_SetAttrFuncName(TF_OperationDescription desc,
+        String attr_name,
+        String value, @Cast("size_t") long length);
+
+    // Set `num_dims` to -1 to represent "unknown rank".  Otherwise,
 // `dims` points to an array of length `num_dims`.  `dims[i]` must be
 // >= -1, with -1 meaning "unknown dimension".
-public static native void TF_SetAttrShape(TF_OperationDescription desc,
-                                           @Cast("const char*") BytePointer attr_name,
-                                           @Cast("const int64_t*") LongPointer dims, int num_dims);
-public static native void TF_SetAttrShape(TF_OperationDescription desc,
-                                           String attr_name,
-                                           @Cast("const int64_t*") LongBuffer dims, int num_dims);
-public static native void TF_SetAttrShape(TF_OperationDescription desc,
-                                           @Cast("const char*") BytePointer attr_name,
-                                           @Cast("const int64_t*") long[] dims, int num_dims);
-public static native void TF_SetAttrShape(TF_OperationDescription desc,
-                                           String attr_name,
-                                           @Cast("const int64_t*") LongPointer dims, int num_dims);
-public static native void TF_SetAttrShape(TF_OperationDescription desc,
-                                           @Cast("const char*") BytePointer attr_name,
-                                           @Cast("const int64_t*") LongBuffer dims, int num_dims);
-public static native void TF_SetAttrShape(TF_OperationDescription desc,
-                                           String attr_name,
-                                           @Cast("const int64_t*") long[] dims, int num_dims);
-// `dims` and `num_dims` must point to arrays of length `num_shapes`.
+    public static native void TF_SetAttrShape(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongPointer dims, int num_dims);
+
+    public static native void TF_SetAttrShape(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*") LongBuffer dims, int num_dims);
+
+    public static native void TF_SetAttrShape(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") long[] dims, int num_dims);
+
+    public static native void TF_SetAttrShape(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*") LongPointer dims, int num_dims);
+
+    public static native void TF_SetAttrShape(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongBuffer dims, int num_dims);
+
+    public static native void TF_SetAttrShape(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*") long[] dims, int num_dims);
+
+    // `dims` and `num_dims` must point to arrays of length `num_shapes`.
 // Set `num_dims[i]` to -1 to represent "unknown rank".  Otherwise,
 // `dims[i]` points to an array of length `num_dims[i]`.  `dims[i][j]`
 // must be >= -1, with -1 meaning "unknown dimension".
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Cast("const int64_t*const*") PointerPointer dims,
-                                               @Const IntPointer num_dims,
-                                               int num_shapes);
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Cast("const int64_t*const*") @ByPtrPtr LongPointer dims,
-                                               @Const IntPointer num_dims,
-                                               int num_shapes);
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               String attr_name,
-                                               @Cast("const int64_t*const*") @ByPtrPtr LongBuffer dims,
-                                               @Const IntBuffer num_dims,
-                                               int num_shapes);
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Cast("const int64_t*const*") @ByPtrPtr long[] dims,
-                                               @Const int[] num_dims,
-                                               int num_shapes);
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               String attr_name,
-                                               @Cast("const int64_t*const*") @ByPtrPtr LongPointer dims,
-                                               @Const IntPointer num_dims,
-                                               int num_shapes);
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Cast("const int64_t*const*") @ByPtrPtr LongBuffer dims,
-                                               @Const IntBuffer num_dims,
-                                               int num_shapes);
-public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
-                                               String attr_name,
-                                               @Cast("const int64_t*const*") @ByPtrPtr long[] dims,
-                                               @Const int[] num_dims,
-                                               int num_shapes);
-// `proto` must point to an array of `proto_len` bytes representing a
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*const*") PointerPointer dims,
+        @Const IntPointer num_dims,
+        int num_shapes);
+
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*const*") @ByPtrPtr LongPointer dims,
+        @Const IntPointer num_dims,
+        int num_shapes);
+
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*const*") @ByPtrPtr LongBuffer dims,
+        @Const IntBuffer num_dims,
+        int num_shapes);
+
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*const*") @ByPtrPtr long[] dims,
+        @Const int[] num_dims,
+        int num_shapes);
+
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*const*") @ByPtrPtr LongPointer dims,
+        @Const IntPointer num_dims,
+        int num_shapes);
+
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*const*") @ByPtrPtr LongBuffer dims,
+        @Const IntBuffer num_dims,
+        int num_shapes);
+
+    public static native void TF_SetAttrShapeList(TF_OperationDescription desc,
+        String attr_name,
+        @Cast("const int64_t*const*") @ByPtrPtr long[] dims,
+        @Const int[] num_dims,
+        int num_shapes);
+
+    // `proto` must point to an array of `proto_len` bytes representing a
 // binary-serialized TensorShapeProto.
-public static native void TF_SetAttrTensorShapeProto(
-    TF_OperationDescription desc, @Cast("const char*") BytePointer attr_name, @Const Pointer proto,
-    @Cast("size_t") long proto_len, TF_Status status);
-public static native void TF_SetAttrTensorShapeProto(
-    TF_OperationDescription desc, String attr_name, @Const Pointer proto,
-    @Cast("size_t") long proto_len, TF_Status status);
-// `protos` and `proto_lens` must point to arrays of length `num_shapes`.
+    public static native void TF_SetAttrTensorShapeProto(
+        TF_OperationDescription desc, @Cast("const char*") BytePointer attr_name,
+        @Const Pointer proto,
+        @Cast("size_t") long proto_len, TF_Status status);
+
+    public static native void TF_SetAttrTensorShapeProto(
+        TF_OperationDescription desc, String attr_name, @Const Pointer proto,
+        @Cast("size_t") long proto_len, TF_Status status);
+
+    // `protos` and `proto_lens` must point to arrays of length `num_shapes`.
 // `protos[i]` must point to an array of `proto_lens[i]` bytes
 // representing a binary-serialized TensorShapeProto.
-public static native void TF_SetAttrTensorShapeProtoList(
-    TF_OperationDescription desc, @Cast("const char*") BytePointer attr_name,
-    @Cast("const void*const*") PointerPointer protos, @Cast("const size_t*") SizeTPointer proto_lens, int num_shapes,
-    TF_Status status);
-public static native void TF_SetAttrTensorShapeProtoList(
-    TF_OperationDescription desc, @Cast("const char*") BytePointer attr_name,
-    @Cast("const void*const*") @ByPtrPtr Pointer protos, @Cast("const size_t*") SizeTPointer proto_lens, int num_shapes,
-    TF_Status status);
-public static native void TF_SetAttrTensorShapeProtoList(
-    TF_OperationDescription desc, String attr_name,
-    @Cast("const void*const*") @ByPtrPtr Pointer protos, @Cast("const size_t*") SizeTPointer proto_lens, int num_shapes,
-    TF_Status status);
+    public static native void TF_SetAttrTensorShapeProtoList(
+        TF_OperationDescription desc, @Cast("const char*") BytePointer attr_name,
+        @Cast("const void*const*") PointerPointer protos,
+        @Cast("const size_t*") SizeTPointer proto_lens, int num_shapes,
+        TF_Status status);
 
-public static native void TF_SetAttrTensor(TF_OperationDescription desc,
-                                            @Cast("const char*") BytePointer attr_name,
-                                            TF_Tensor value,
-                                            TF_Status status);
-public static native void TF_SetAttrTensor(TF_OperationDescription desc,
-                                            String attr_name,
-                                            TF_Tensor value,
-                                            TF_Status status);
-public static native void TF_SetAttrTensorList(TF_OperationDescription desc,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Cast("TF_Tensor*const*") PointerPointer values,
-                                                int num_values,
-                                                TF_Status status);
-public static native void TF_SetAttrTensorList(TF_OperationDescription desc,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @ByPtrPtr TF_Tensor values,
-                                                int num_values,
-                                                TF_Status status);
-public static native void TF_SetAttrTensorList(TF_OperationDescription desc,
-                                                String attr_name,
-                                                @ByPtrPtr TF_Tensor values,
-                                                int num_values,
-                                                TF_Status status);
+    public static native void TF_SetAttrTensorShapeProtoList(
+        TF_OperationDescription desc, @Cast("const char*") BytePointer attr_name,
+        @Cast("const void*const*") @ByPtrPtr Pointer protos,
+        @Cast("const size_t*") SizeTPointer proto_lens, int num_shapes,
+        TF_Status status);
 
-// `proto` should point to a sequence of bytes of length `proto_len`
+    public static native void TF_SetAttrTensorShapeProtoList(
+        TF_OperationDescription desc, String attr_name,
+        @Cast("const void*const*") @ByPtrPtr Pointer protos,
+        @Cast("const size_t*") SizeTPointer proto_lens, int num_shapes,
+        TF_Status status);
+
+    public static native void TF_SetAttrTensor(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        TF_Tensor value,
+        TF_Status status);
+
+    public static native void TF_SetAttrTensor(TF_OperationDescription desc,
+        String attr_name,
+        TF_Tensor value,
+        TF_Status status);
+
+    public static native void TF_SetAttrTensorList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_Tensor*const*") PointerPointer values,
+        int num_values,
+        TF_Status status);
+
+    public static native void TF_SetAttrTensorList(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @ByPtrPtr TF_Tensor values,
+        int num_values,
+        TF_Status status);
+
+    public static native void TF_SetAttrTensorList(TF_OperationDescription desc,
+        String attr_name,
+        @ByPtrPtr TF_Tensor values,
+        int num_values,
+        TF_Status status);
+
+    // `proto` should point to a sequence of bytes of length `proto_len`
 // representing a binary serialization of an AttrValue protocol
 // buffer.
-public static native void TF_SetAttrValueProto(TF_OperationDescription desc,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Const Pointer proto,
-                                                @Cast("size_t") long proto_len,
-                                                TF_Status status);
-public static native void TF_SetAttrValueProto(TF_OperationDescription desc,
-                                                String attr_name,
-                                                @Const Pointer proto,
-                                                @Cast("size_t") long proto_len,
-                                                TF_Status status);
+    public static native void TF_SetAttrValueProto(TF_OperationDescription desc,
+        @Cast("const char*") BytePointer attr_name,
+        @Const Pointer proto,
+        @Cast("size_t") long proto_len,
+        TF_Status status);
 
-// If this function succeeds:
+    public static native void TF_SetAttrValueProto(TF_OperationDescription desc,
+        String attr_name,
+        @Const Pointer proto,
+        @Cast("size_t") long proto_len,
+        TF_Status status);
+
+    // If this function succeeds:
 //   * *status is set to an OK value,
 //   * a TF_Operation is added to the graph,
 //   * a non-null value pointing to the added operation is returned --
@@ -1428,121 +1603,141 @@ public static native void TF_SetAttrValueProto(TF_OperationDescription desc,
 //   * the graph is not modified,
 //   * a null value is returned.
 // In either case, it deletes `desc`.
-public static native TF_Operation TF_FinishOperation(
-    TF_OperationDescription desc, TF_Status status);
+    public static native TF_Operation TF_FinishOperation(
+        TF_OperationDescription desc, TF_Status status);
 
 // TF_Operation functions.  Operations are immutable once created, so
 // these are all query functions.
 
-public static native @Cast("const char*") BytePointer TF_OperationName(TF_Operation oper);
-public static native @Cast("const char*") BytePointer TF_OperationOpType(TF_Operation oper);
-public static native @Cast("const char*") BytePointer TF_OperationDevice(TF_Operation oper);
+    public static native @Cast("const char*")
+    BytePointer TF_OperationName(TF_Operation oper);
 
-public static native int TF_OperationNumOutputs(TF_Operation oper);
-public static native @Cast("TF_DataType") int TF_OperationOutputType(@ByVal TF_Output oper_out);
-public static native int TF_OperationOutputListLength(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer arg_name,
-                                                       TF_Status status);
-public static native int TF_OperationOutputListLength(TF_Operation oper,
-                                                       String arg_name,
-                                                       TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TF_OperationOpType(TF_Operation oper);
 
-public static native int TF_OperationNumInputs(TF_Operation oper);
-public static native @Cast("TF_DataType") int TF_OperationInputType(@ByVal TF_Input oper_in);
-public static native int TF_OperationInputListLength(TF_Operation oper,
-                                                      @Cast("const char*") BytePointer arg_name,
-                                                      TF_Status status);
-public static native int TF_OperationInputListLength(TF_Operation oper,
-                                                      String arg_name,
-                                                      TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TF_OperationDevice(TF_Operation oper);
 
-// In this code:
+    public static native int TF_OperationNumOutputs(TF_Operation oper);
+
+    public static native @Cast("TF_DataType")
+    int TF_OperationOutputType(@ByVal TF_Output oper_out);
+
+    public static native int TF_OperationOutputListLength(TF_Operation oper,
+        @Cast("const char*") BytePointer arg_name,
+        TF_Status status);
+
+    public static native int TF_OperationOutputListLength(TF_Operation oper,
+        String arg_name,
+        TF_Status status);
+
+    public static native int TF_OperationNumInputs(TF_Operation oper);
+
+    public static native @Cast("TF_DataType")
+    int TF_OperationInputType(@ByVal TF_Input oper_in);
+
+    public static native int TF_OperationInputListLength(TF_Operation oper,
+        @Cast("const char*") BytePointer arg_name,
+        TF_Status status);
+
+    public static native int TF_OperationInputListLength(TF_Operation oper,
+        String arg_name,
+        TF_Status status);
+
+    // In this code:
 //   TF_Output producer = TF_OperationInput(consumer);
 // There is an edge from producer.oper's output (given by
 // producer.index) to consumer.oper's input (given by consumer.index).
-public static native @ByVal TF_Output TF_OperationInput(@ByVal TF_Input oper_in);
+    public static native @ByVal
+    TF_Output TF_OperationInput(@ByVal TF_Input oper_in);
 
-// Get list of all inputs of a specific operation.  `inputs` must point to
+    // Get list of all inputs of a specific operation.  `inputs` must point to
 // an array of length at least `max_inputs` (ideally set to
 // TF_OperationNumInputs(oper)).  Beware that a concurrent
 // modification of the graph can increase the number of inputs of
 // an operation.
-public static native void TF_OperationAllInputs(TF_Operation oper,
-                                                 TF_Output inputs,
-                                                 int max_inputs);
+    public static native void TF_OperationAllInputs(TF_Operation oper,
+        TF_Output inputs,
+        int max_inputs);
 
-// Get the number of current consumers of a specific output of an
+    // Get the number of current consumers of a specific output of an
 // operation.  Note that this number can change when new operations
 // are added to the graph.
-public static native int TF_OperationOutputNumConsumers(@ByVal TF_Output oper_out);
+    public static native int TF_OperationOutputNumConsumers(@ByVal TF_Output oper_out);
 
-// Get list of all current consumers of a specific output of an
+    // Get list of all current consumers of a specific output of an
 // operation.  `consumers` must point to an array of length at least
 // `max_consumers` (ideally set to
 // TF_OperationOutputNumConsumers(oper_out)).  Beware that a concurrent
 // modification of the graph can increase the number of consumers of
 // an operation.  Returns the number of output consumers (should match
 // TF_OperationOutputNumConsumers(oper_out)).
-public static native int TF_OperationOutputConsumers(@ByVal TF_Output oper_out,
-                                                      TF_Input consumers,
-                                                      int max_consumers);
+    public static native int TF_OperationOutputConsumers(@ByVal TF_Output oper_out,
+        TF_Input consumers,
+        int max_consumers);
 
-// Get the number of control inputs to an operation.
-public static native int TF_OperationNumControlInputs(TF_Operation oper);
+    // Get the number of control inputs to an operation.
+    public static native int TF_OperationNumControlInputs(TF_Operation oper);
 
-// Get list of all control inputs to an operation.  `control_inputs` must
+    // Get list of all control inputs to an operation.  `control_inputs` must
 // point to an array of length `max_control_inputs` (ideally set to
 // TF_OperationNumControlInputs(oper)).  Returns the number of control
 // inputs (should match TF_OperationNumControlInputs(oper)).
-public static native int TF_OperationGetControlInputs(
-    TF_Operation oper, @Cast("TF_Operation**") PointerPointer control_inputs, int max_control_inputs);
-public static native int TF_OperationGetControlInputs(
-    TF_Operation oper, @ByPtrPtr TF_Operation control_inputs, int max_control_inputs);
+    public static native int TF_OperationGetControlInputs(
+        TF_Operation oper, @Cast("TF_Operation**") PointerPointer control_inputs,
+        int max_control_inputs);
 
-// Get the number of operations that have `*oper` as a control input.
+    public static native int TF_OperationGetControlInputs(
+        TF_Operation oper, @ByPtrPtr TF_Operation control_inputs, int max_control_inputs);
+
+    // Get the number of operations that have `*oper` as a control input.
 // Note that this number can change when new operations are added to
 // the graph.
-public static native int TF_OperationNumControlOutputs(TF_Operation oper);
+    public static native int TF_OperationNumControlOutputs(TF_Operation oper);
 
-// Get the list of operations that have `*oper` as a control input.
+    // Get the list of operations that have `*oper` as a control input.
 // `control_outputs` must point to an array of length at least
 // `max_control_outputs` (ideally set to
 // TF_OperationNumControlOutputs(oper)). Beware that a concurrent
 // modification of the graph can increase the number of control
 // outputs.  Returns the number of control outputs (should match
 // TF_OperationNumControlOutputs(oper)).
-public static native int TF_OperationGetControlOutputs(
-    TF_Operation oper, @Cast("TF_Operation**") PointerPointer control_outputs,
-    int max_control_outputs);
-public static native int TF_OperationGetControlOutputs(
-    TF_Operation oper, @ByPtrPtr TF_Operation control_outputs,
-    int max_control_outputs);
+    public static native int TF_OperationGetControlOutputs(
+        TF_Operation oper, @Cast("TF_Operation**") PointerPointer control_outputs,
+        int max_control_outputs);
+
+    public static native int TF_OperationGetControlOutputs(
+        TF_Operation oper, @ByPtrPtr TF_Operation control_outputs,
+        int max_control_outputs);
 // Targeting ../TF_AttrMetadata.java
 
 
+    // Returns metadata about the value of the attribute `attr_name` of `oper`.
+    public static native @ByVal
+    TF_AttrMetadata TF_OperationGetAttrMetadata(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name, TF_Status status);
 
-// Returns metadata about the value of the attribute `attr_name` of `oper`.
-public static native @ByVal TF_AttrMetadata TF_OperationGetAttrMetadata(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, TF_Status status);
-public static native @ByVal TF_AttrMetadata TF_OperationGetAttrMetadata(
-    TF_Operation oper, String attr_name, TF_Status status);
+    public static native @ByVal
+    TF_AttrMetadata TF_OperationGetAttrMetadata(
+        TF_Operation oper, String attr_name, TF_Status status);
 
-// Fills in `value` with the value of the attribute `attr_name`.  `value` must
+    // Fills in `value` with the value of the attribute `attr_name`.  `value` must
 // point to an array of length at least `max_length` (ideally set to
 // TF_AttrMetadata.total_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
-public static native void TF_OperationGetAttrString(TF_Operation oper,
-                                                     @Cast("const char*") BytePointer attr_name,
-                                                     Pointer value,
-                                                     @Cast("size_t") long max_length,
-                                                     TF_Status status);
-public static native void TF_OperationGetAttrString(TF_Operation oper,
-                                                     String attr_name,
-                                                     Pointer value,
-                                                     @Cast("size_t") long max_length,
-                                                     TF_Status status);
+    public static native void TF_OperationGetAttrString(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        Pointer value,
+        @Cast("size_t") long max_length,
+        TF_Status status);
 
-// Get the list of strings in the value of the attribute `attr_name`.  Fills in
+    public static native void TF_OperationGetAttrString(TF_Operation oper,
+        String attr_name,
+        Pointer value,
+        @Cast("size_t") long max_length,
+        TF_Status status);
+
+    // Get the list of strings in the value of the attribute `attr_name`.  Fills in
 // `values` and `lengths`, each of which must point to an array of length at
 // least `max_values`.
 //
@@ -1553,291 +1748,341 @@ public static native void TF_OperationGetAttrString(TF_Operation oper,
 // attr_name).
 //
 // Fails if storage_size is too small to hold the requested number of strings.
-public static native void TF_OperationGetAttrStringList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("void**") PointerPointer values, @Cast("size_t*") SizeTPointer lengths,
-    int max_values, Pointer storage, @Cast("size_t") long storage_size, TF_Status status);
-public static native void TF_OperationGetAttrStringList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("void**") @ByPtrPtr Pointer values, @Cast("size_t*") SizeTPointer lengths,
-    int max_values, Pointer storage, @Cast("size_t") long storage_size, TF_Status status);
-public static native void TF_OperationGetAttrStringList(
-    TF_Operation oper, String attr_name, @Cast("void**") @ByPtrPtr Pointer values, @Cast("size_t*") SizeTPointer lengths,
-    int max_values, Pointer storage, @Cast("size_t") long storage_size, TF_Status status);
+    public static native void TF_OperationGetAttrStringList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("void**") PointerPointer values, @Cast("size_t*") SizeTPointer lengths,
+        int max_values, Pointer storage, @Cast("size_t") long storage_size, TF_Status status);
 
-public static native void TF_OperationGetAttrInt(TF_Operation oper,
-                                                  @Cast("const char*") BytePointer attr_name,
-                                                  @Cast("int64_t*") LongPointer value,
-                                                  TF_Status status);
-public static native void TF_OperationGetAttrInt(TF_Operation oper,
-                                                  String attr_name,
-                                                  @Cast("int64_t*") LongBuffer value,
-                                                  TF_Status status);
-public static native void TF_OperationGetAttrInt(TF_Operation oper,
-                                                  @Cast("const char*") BytePointer attr_name,
-                                                  @Cast("int64_t*") long[] value,
-                                                  TF_Status status);
-public static native void TF_OperationGetAttrInt(TF_Operation oper,
-                                                  String attr_name,
-                                                  @Cast("int64_t*") LongPointer value,
-                                                  TF_Status status);
-public static native void TF_OperationGetAttrInt(TF_Operation oper,
-                                                  @Cast("const char*") BytePointer attr_name,
-                                                  @Cast("int64_t*") LongBuffer value,
-                                                  TF_Status status);
-public static native void TF_OperationGetAttrInt(TF_Operation oper,
-                                                  String attr_name,
-                                                  @Cast("int64_t*") long[] value,
-                                                  TF_Status status);
+    public static native void TF_OperationGetAttrStringList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("void**") @ByPtrPtr Pointer values, @Cast("size_t*") SizeTPointer lengths,
+        int max_values, Pointer storage, @Cast("size_t") long storage_size, TF_Status status);
 
-// Fills in `values` with the value of the attribute `attr_name` of `oper`.
+    public static native void TF_OperationGetAttrStringList(
+        TF_Operation oper, String attr_name, @Cast("void**") @ByPtrPtr Pointer values,
+        @Cast("size_t*") SizeTPointer lengths,
+        int max_values, Pointer storage, @Cast("size_t") long storage_size, TF_Status status);
+
+    public static native void TF_OperationGetAttrInt(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") LongPointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrInt(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") LongBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrInt(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") long[] value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrInt(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") LongPointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrInt(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") LongBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrInt(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") long[] value,
+        TF_Status status);
+
+    // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
-public static native void TF_OperationGetAttrIntList(TF_Operation oper,
-                                                      @Cast("const char*") BytePointer attr_name,
-                                                      @Cast("int64_t*") LongPointer values,
-                                                      int max_values,
-                                                      TF_Status status);
-public static native void TF_OperationGetAttrIntList(TF_Operation oper,
-                                                      String attr_name,
-                                                      @Cast("int64_t*") LongBuffer values,
-                                                      int max_values,
-                                                      TF_Status status);
-public static native void TF_OperationGetAttrIntList(TF_Operation oper,
-                                                      @Cast("const char*") BytePointer attr_name,
-                                                      @Cast("int64_t*") long[] values,
-                                                      int max_values,
-                                                      TF_Status status);
-public static native void TF_OperationGetAttrIntList(TF_Operation oper,
-                                                      String attr_name,
-                                                      @Cast("int64_t*") LongPointer values,
-                                                      int max_values,
-                                                      TF_Status status);
-public static native void TF_OperationGetAttrIntList(TF_Operation oper,
-                                                      @Cast("const char*") BytePointer attr_name,
-                                                      @Cast("int64_t*") LongBuffer values,
-                                                      int max_values,
-                                                      TF_Status status);
-public static native void TF_OperationGetAttrIntList(TF_Operation oper,
-                                                      String attr_name,
-                                                      @Cast("int64_t*") long[] values,
-                                                      int max_values,
-                                                      TF_Status status);
+    public static native void TF_OperationGetAttrIntList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") LongPointer values,
+        int max_values,
+        TF_Status status);
 
-public static native void TF_OperationGetAttrFloat(TF_Operation oper,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    FloatPointer value,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrFloat(TF_Operation oper,
-                                                    String attr_name,
-                                                    FloatBuffer value,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrFloat(TF_Operation oper,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    float[] value,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrFloat(TF_Operation oper,
-                                                    String attr_name,
-                                                    FloatPointer value,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrFloat(TF_Operation oper,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    FloatBuffer value,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrFloat(TF_Operation oper,
-                                                    String attr_name,
-                                                    float[] value,
-                                                    TF_Status status);
+    public static native void TF_OperationGetAttrIntList(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") LongBuffer values,
+        int max_values,
+        TF_Status status);
 
-// Fills in `values` with the value of the attribute `attr_name` of `oper`.
+    public static native void TF_OperationGetAttrIntList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") long[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrIntList(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") LongPointer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrIntList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") LongBuffer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrIntList(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") long[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloat(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        FloatPointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloat(TF_Operation oper,
+        String attr_name,
+        FloatBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloat(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        float[] value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloat(TF_Operation oper,
+        String attr_name,
+        FloatPointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloat(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        FloatBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloat(TF_Operation oper,
+        String attr_name,
+        float[] value,
+        TF_Status status);
+
+    // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // to TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
-public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
-                                                        @Cast("const char*") BytePointer attr_name,
-                                                        FloatPointer values,
-                                                        int max_values,
-                                                        TF_Status status);
-public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
-                                                        String attr_name,
-                                                        FloatBuffer values,
-                                                        int max_values,
-                                                        TF_Status status);
-public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
-                                                        @Cast("const char*") BytePointer attr_name,
-                                                        float[] values,
-                                                        int max_values,
-                                                        TF_Status status);
-public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
-                                                        String attr_name,
-                                                        FloatPointer values,
-                                                        int max_values,
-                                                        TF_Status status);
-public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
-                                                        @Cast("const char*") BytePointer attr_name,
-                                                        FloatBuffer values,
-                                                        int max_values,
-                                                        TF_Status status);
-public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
-                                                        String attr_name,
-                                                        float[] values,
-                                                        int max_values,
-                                                        TF_Status status);
+    public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        FloatPointer values,
+        int max_values,
+        TF_Status status);
 
-public static native void TF_OperationGetAttrBool(TF_Operation oper,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("unsigned char*") BytePointer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrBool(TF_Operation oper,
-                                                   String attr_name,
-                                                   @Cast("unsigned char*") ByteBuffer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrBool(TF_Operation oper,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("unsigned char*") byte[] value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrBool(TF_Operation oper,
-                                                   String attr_name,
-                                                   @Cast("unsigned char*") BytePointer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrBool(TF_Operation oper,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("unsigned char*") ByteBuffer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrBool(TF_Operation oper,
-                                                   String attr_name,
-                                                   @Cast("unsigned char*") byte[] value,
-                                                   TF_Status status);
+    public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
+        String attr_name,
+        FloatBuffer values,
+        int max_values,
+        TF_Status status);
 
-// Fills in `values` with the value of the attribute `attr_name` of `oper`.
+    public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        float[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
+        String attr_name,
+        FloatPointer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        FloatBuffer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrFloatList(TF_Operation oper,
+        String attr_name,
+        float[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBool(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") BytePointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBool(TF_Operation oper,
+        String attr_name,
+        @Cast("unsigned char*") ByteBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBool(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") byte[] value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBool(TF_Operation oper,
+        String attr_name,
+        @Cast("unsigned char*") BytePointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBool(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") ByteBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBool(TF_Operation oper,
+        String attr_name,
+        @Cast("unsigned char*") byte[] value,
+        TF_Status status);
+
+    // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // to TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
-public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer attr_name,
-                                                       @Cast("unsigned char*") BytePointer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
-                                                       String attr_name,
-                                                       @Cast("unsigned char*") ByteBuffer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer attr_name,
-                                                       @Cast("unsigned char*") byte[] values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
-                                                       String attr_name,
-                                                       @Cast("unsigned char*") BytePointer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer attr_name,
-                                                       @Cast("unsigned char*") ByteBuffer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
-                                                       String attr_name,
-                                                       @Cast("unsigned char*") byte[] values,
-                                                       int max_values,
-                                                       TF_Status status);
+    public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") BytePointer values,
+        int max_values,
+        TF_Status status);
 
-public static native void TF_OperationGetAttrType(TF_Operation oper,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("TF_DataType*") IntPointer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrType(TF_Operation oper,
-                                                   String attr_name,
-                                                   @Cast("TF_DataType*") IntBuffer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrType(TF_Operation oper,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("TF_DataType*") int[] value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrType(TF_Operation oper,
-                                                   String attr_name,
-                                                   @Cast("TF_DataType*") IntPointer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrType(TF_Operation oper,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("TF_DataType*") IntBuffer value,
-                                                   TF_Status status);
-public static native void TF_OperationGetAttrType(TF_Operation oper,
-                                                   String attr_name,
-                                                   @Cast("TF_DataType*") int[] value,
-                                                   TF_Status status);
+    public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
+        String attr_name,
+        @Cast("unsigned char*") ByteBuffer values,
+        int max_values,
+        TF_Status status);
 
-// Fills in `values` with the value of the attribute `attr_name` of `oper`.
+    public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") byte[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
+        String attr_name,
+        @Cast("unsigned char*") BytePointer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") ByteBuffer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrBoolList(TF_Operation oper,
+        String attr_name,
+        @Cast("unsigned char*") byte[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrType(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntPointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrType(TF_Operation oper,
+        String attr_name,
+        @Cast("TF_DataType*") IntBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrType(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") int[] value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrType(TF_Operation oper,
+        String attr_name,
+        @Cast("TF_DataType*") IntPointer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrType(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntBuffer value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrType(TF_Operation oper,
+        String attr_name,
+        @Cast("TF_DataType*") int[] value,
+        TF_Status status);
+
+    // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // to TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
-public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer attr_name,
-                                                       @Cast("TF_DataType*") IntPointer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
-                                                       String attr_name,
-                                                       @Cast("TF_DataType*") IntBuffer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer attr_name,
-                                                       @Cast("TF_DataType*") int[] values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
-                                                       String attr_name,
-                                                       @Cast("TF_DataType*") IntPointer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
-                                                       @Cast("const char*") BytePointer attr_name,
-                                                       @Cast("TF_DataType*") IntBuffer values,
-                                                       int max_values,
-                                                       TF_Status status);
-public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
-                                                       String attr_name,
-                                                       @Cast("TF_DataType*") int[] values,
-                                                       int max_values,
-                                                       TF_Status status);
+    public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntPointer values,
+        int max_values,
+        TF_Status status);
 
-// Fills in `value` with the value of the attribute `attr_name` of `oper`.
+    public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
+        String attr_name,
+        @Cast("TF_DataType*") IntBuffer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") int[] values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
+        String attr_name,
+        @Cast("TF_DataType*") IntPointer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntBuffer values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrTypeList(TF_Operation oper,
+        String attr_name,
+        @Cast("TF_DataType*") int[] values,
+        int max_values,
+        TF_Status status);
+
+    // Fills in `value` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `num_dims` (ideally set to
 // TF_Attr_Meta.size from TF_OperationGetAttrMetadata(oper, attr_name)).
-public static native void TF_OperationGetAttrShape(TF_Operation oper,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    @Cast("int64_t*") LongPointer value,
-                                                    int num_dims,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrShape(TF_Operation oper,
-                                                    String attr_name,
-                                                    @Cast("int64_t*") LongBuffer value,
-                                                    int num_dims,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrShape(TF_Operation oper,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    @Cast("int64_t*") long[] value,
-                                                    int num_dims,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrShape(TF_Operation oper,
-                                                    String attr_name,
-                                                    @Cast("int64_t*") LongPointer value,
-                                                    int num_dims,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrShape(TF_Operation oper,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    @Cast("int64_t*") LongBuffer value,
-                                                    int num_dims,
-                                                    TF_Status status);
-public static native void TF_OperationGetAttrShape(TF_Operation oper,
-                                                    String attr_name,
-                                                    @Cast("int64_t*") long[] value,
-                                                    int num_dims,
-                                                    TF_Status status);
+    public static native void TF_OperationGetAttrShape(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") LongPointer value,
+        int num_dims,
+        TF_Status status);
 
-// Fills in `dims` with the list of shapes in the attribute `attr_name` of
+    public static native void TF_OperationGetAttrShape(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") LongBuffer value,
+        int num_dims,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrShape(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") long[] value,
+        int num_dims,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrShape(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") LongPointer value,
+        int num_dims,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrShape(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t*") LongBuffer value,
+        int num_dims,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrShape(TF_Operation oper,
+        String attr_name,
+        @Cast("int64_t*") long[] value,
+        int num_dims,
+        TF_Status status);
+
+    // Fills in `dims` with the list of shapes in the attribute `attr_name` of
 // `oper` and `num_dims` with the corresponding number of dimensions. On return,
 // for every i where `num_dims[i]` > 0, `dims[i]` will be an array of
 // `num_dims[i]` elements. A value of -1 for `num_dims[i]` indicates that the
@@ -1850,259 +2095,297 @@ public static native void TF_OperationGetAttrShape(TF_Operation oper,
 // attr_name).
 //
 // Fails if storage_size is insufficient to hold the requested shapes.
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("int64_t**") PointerPointer dims, IntPointer num_dims,
-    int num_shapes, @Cast("int64_t*") LongPointer storage, int storage_size, TF_Status status);
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("int64_t**") @ByPtrPtr LongPointer dims, IntPointer num_dims,
-    int num_shapes, @Cast("int64_t*") LongPointer storage, int storage_size, TF_Status status);
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, String attr_name, @Cast("int64_t**") @ByPtrPtr LongBuffer dims, IntBuffer num_dims,
-    int num_shapes, @Cast("int64_t*") LongBuffer storage, int storage_size, TF_Status status);
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("int64_t**") @ByPtrPtr long[] dims, int[] num_dims,
-    int num_shapes, @Cast("int64_t*") long[] storage, int storage_size, TF_Status status);
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, String attr_name, @Cast("int64_t**") @ByPtrPtr LongPointer dims, IntPointer num_dims,
-    int num_shapes, @Cast("int64_t*") LongPointer storage, int storage_size, TF_Status status);
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("int64_t**") @ByPtrPtr LongBuffer dims, IntBuffer num_dims,
-    int num_shapes, @Cast("int64_t*") LongBuffer storage, int storage_size, TF_Status status);
-public static native void TF_OperationGetAttrShapeList(
-    TF_Operation oper, String attr_name, @Cast("int64_t**") @ByPtrPtr long[] dims, int[] num_dims,
-    int num_shapes, @Cast("int64_t*") long[] storage, int storage_size, TF_Status status);
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t**") PointerPointer dims, IntPointer num_dims,
+        int num_shapes, @Cast("int64_t*") LongPointer storage, int storage_size, TF_Status status);
 
-// Sets `value` to the binary-serialized TensorShapeProto of the value of
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t**") @ByPtrPtr LongPointer dims, IntPointer num_dims,
+        int num_shapes, @Cast("int64_t*") LongPointer storage, int storage_size, TF_Status status);
+
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, String attr_name, @Cast("int64_t**") @ByPtrPtr LongBuffer dims,
+        IntBuffer num_dims,
+        int num_shapes, @Cast("int64_t*") LongBuffer storage, int storage_size, TF_Status status);
+
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t**") @ByPtrPtr long[] dims, int[] num_dims,
+        int num_shapes, @Cast("int64_t*") long[] storage, int storage_size, TF_Status status);
+
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, String attr_name, @Cast("int64_t**") @ByPtrPtr LongPointer dims,
+        IntPointer num_dims,
+        int num_shapes, @Cast("int64_t*") LongPointer storage, int storage_size, TF_Status status);
+
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t**") @ByPtrPtr LongBuffer dims, IntBuffer num_dims,
+        int num_shapes, @Cast("int64_t*") LongBuffer storage, int storage_size, TF_Status status);
+
+    public static native void TF_OperationGetAttrShapeList(
+        TF_Operation oper, String attr_name, @Cast("int64_t**") @ByPtrPtr long[] dims,
+        int[] num_dims,
+        int num_shapes, @Cast("int64_t*") long[] storage, int storage_size, TF_Status status);
+
+    // Sets `value` to the binary-serialized TensorShapeProto of the value of
 // `attr_name` attribute of `oper`'.
-public static native void TF_OperationGetAttrTensorShapeProto(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, TF_Buffer value,
-    TF_Status status);
-public static native void TF_OperationGetAttrTensorShapeProto(
-    TF_Operation oper, String attr_name, TF_Buffer value,
-    TF_Status status);
+    public static native void TF_OperationGetAttrTensorShapeProto(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name, TF_Buffer value,
+        TF_Status status);
 
-// Fills in `values` with binary-serialized TensorShapeProto values of the
+    public static native void TF_OperationGetAttrTensorShapeProto(
+        TF_Operation oper, String attr_name, TF_Buffer value,
+        TF_Status status);
+
+    // Fills in `values` with binary-serialized TensorShapeProto values of the
 // attribute `attr_name` of `oper`. `values` must point to an array of length at
 // least `num_values` (ideally set to TF_AttrMetadata.list_size from
 // TF_OperationGetAttrMetadata(oper, attr_name)).
-public static native void TF_OperationGetAttrTensorShapeProtoList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @Cast("TF_Buffer**") PointerPointer values,
-    int max_values, TF_Status status);
-public static native void TF_OperationGetAttrTensorShapeProtoList(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, @ByPtrPtr TF_Buffer values,
-    int max_values, TF_Status status);
-public static native void TF_OperationGetAttrTensorShapeProtoList(
-    TF_Operation oper, String attr_name, @ByPtrPtr TF_Buffer values,
-    int max_values, TF_Status status);
+    public static native void TF_OperationGetAttrTensorShapeProtoList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_Buffer**") PointerPointer values,
+        int max_values, TF_Status status);
 
-// Gets the TF_Tensor valued attribute of `attr_name` of `oper`.
+    public static native void TF_OperationGetAttrTensorShapeProtoList(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name, @ByPtrPtr TF_Buffer values,
+        int max_values, TF_Status status);
+
+    public static native void TF_OperationGetAttrTensorShapeProtoList(
+        TF_Operation oper, String attr_name, @ByPtrPtr TF_Buffer values,
+        int max_values, TF_Status status);
+
+    // Gets the TF_Tensor valued attribute of `attr_name` of `oper`.
 //
 // Allocates a new TF_Tensor which the caller is expected to take
 // ownership of (and can deallocate using TF_DeleteTensor).
-public static native void TF_OperationGetAttrTensor(TF_Operation oper,
-                                                     @Cast("const char*") BytePointer attr_name,
-                                                     @Cast("TF_Tensor**") PointerPointer value,
-                                                     TF_Status status);
-public static native void TF_OperationGetAttrTensor(TF_Operation oper,
-                                                     @Cast("const char*") BytePointer attr_name,
-                                                     @ByPtrPtr TF_Tensor value,
-                                                     TF_Status status);
-public static native void TF_OperationGetAttrTensor(TF_Operation oper,
-                                                     String attr_name,
-                                                     @ByPtrPtr TF_Tensor value,
-                                                     TF_Status status);
+    public static native void TF_OperationGetAttrTensor(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_Tensor**") PointerPointer value,
+        TF_Status status);
 
-// Fills in `values` with the TF_Tensor values of the attribute `attr_name` of
+    public static native void TF_OperationGetAttrTensor(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @ByPtrPtr TF_Tensor value,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrTensor(TF_Operation oper,
+        String attr_name,
+        @ByPtrPtr TF_Tensor value,
+        TF_Status status);
+
+    // Fills in `values` with the TF_Tensor values of the attribute `attr_name` of
 // `oper`. `values` must point to an array of TF_Tensor* of length at least
 // `max_values` (ideally set to TF_AttrMetadata.list_size from
 // TF_OperationGetAttrMetadata(oper, attr_name)).
 //
 // The caller takes ownership of all the non-null TF_Tensor* entries in `values`
 // (which can be deleted using TF_DeleteTensor(values[i])).
-public static native void TF_OperationGetAttrTensorList(TF_Operation oper,
-                                                         @Cast("const char*") BytePointer attr_name,
-                                                         @Cast("TF_Tensor**") PointerPointer values,
-                                                         int max_values,
-                                                         TF_Status status);
-public static native void TF_OperationGetAttrTensorList(TF_Operation oper,
-                                                         @Cast("const char*") BytePointer attr_name,
-                                                         @ByPtrPtr TF_Tensor values,
-                                                         int max_values,
-                                                         TF_Status status);
-public static native void TF_OperationGetAttrTensorList(TF_Operation oper,
-                                                         String attr_name,
-                                                         @ByPtrPtr TF_Tensor values,
-                                                         int max_values,
-                                                         TF_Status status);
+    public static native void TF_OperationGetAttrTensorList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_Tensor**") PointerPointer values,
+        int max_values,
+        TF_Status status);
 
-// Sets `output_attr_value` to the binary-serialized AttrValue proto
+    public static native void TF_OperationGetAttrTensorList(TF_Operation oper,
+        @Cast("const char*") BytePointer attr_name,
+        @ByPtrPtr TF_Tensor values,
+        int max_values,
+        TF_Status status);
+
+    public static native void TF_OperationGetAttrTensorList(TF_Operation oper,
+        String attr_name,
+        @ByPtrPtr TF_Tensor values,
+        int max_values,
+        TF_Status status);
+
+    // Sets `output_attr_value` to the binary-serialized AttrValue proto
 // representation of the value of the `attr_name` attr of `oper`.
-public static native void TF_OperationGetAttrValueProto(
-    TF_Operation oper, @Cast("const char*") BytePointer attr_name, TF_Buffer output_attr_value,
-    TF_Status status);
-public static native void TF_OperationGetAttrValueProto(
-    TF_Operation oper, String attr_name, TF_Buffer output_attr_value,
-    TF_Status status);
+    public static native void TF_OperationGetAttrValueProto(
+        TF_Operation oper, @Cast("const char*") BytePointer attr_name, TF_Buffer output_attr_value,
+        TF_Status status);
 
-// Returns the operation in the graph with `oper_name`. Returns nullptr if
+    public static native void TF_OperationGetAttrValueProto(
+        TF_Operation oper, String attr_name, TF_Buffer output_attr_value,
+        TF_Status status);
+
+    // Returns the operation in the graph with `oper_name`. Returns nullptr if
 // no operation found.
-public static native TF_Operation TF_GraphOperationByName(
-    TF_Graph graph, @Cast("const char*") BytePointer oper_name);
-public static native TF_Operation TF_GraphOperationByName(
-    TF_Graph graph, String oper_name);
+    public static native TF_Operation TF_GraphOperationByName(
+        TF_Graph graph, @Cast("const char*") BytePointer oper_name);
 
-// Iterate through the operations of a graph.  To use:
+    public static native TF_Operation TF_GraphOperationByName(
+        TF_Graph graph, String oper_name);
+
+    // Iterate through the operations of a graph.  To use:
 // size_t pos = 0;
 // TF_Operation* oper;
 // while ((oper = TF_GraphNextOperation(graph, &pos)) != nullptr) {
 //   DoSomethingWithOperation(oper);
 // }
-public static native TF_Operation TF_GraphNextOperation(TF_Graph graph,
-                                                          @Cast("size_t*") SizeTPointer pos);
+    public static native TF_Operation TF_GraphNextOperation(TF_Graph graph,
+        @Cast("size_t*") SizeTPointer pos);
 
-// Write out a serialized representation of `graph` (as a GraphDef protocol
+    // Write out a serialized representation of `graph` (as a GraphDef protocol
 // message) to `output_graph_def` (allocated by TF_NewBuffer()).
 // `output_graph_def`'s underlying buffer will be freed when TF_DeleteBuffer()
 // is called.
 //
 // May fail on very large graphs in the future.
-public static native void TF_GraphToGraphDef(TF_Graph graph,
-                                              TF_Buffer output_graph_def,
-                                              TF_Status status);
+    public static native void TF_GraphToGraphDef(TF_Graph graph,
+        TF_Buffer output_graph_def,
+        TF_Status status);
 
-// Returns the serialized OpDef proto with name `op_name`, or a bad status if no
+    // Returns the serialized OpDef proto with name `op_name`, or a bad status if no
 // such op exists. This can return OpDefs of functions copied into the graph.
-public static native void TF_GraphGetOpDef(TF_Graph graph,
-                                            @Cast("const char*") BytePointer op_name,
-                                            TF_Buffer output_op_def,
-                                            TF_Status status);
-public static native void TF_GraphGetOpDef(TF_Graph graph,
-                                            String op_name,
-                                            TF_Buffer output_op_def,
-                                            TF_Status status);
+    public static native void TF_GraphGetOpDef(TF_Graph graph,
+        @Cast("const char*") BytePointer op_name,
+        TF_Buffer output_op_def,
+        TF_Status status);
 
-// Returns the serialized VersionDef proto for this graph.
-public static native void TF_GraphVersions(TF_Graph graph,
-                                            TF_Buffer output_version_def,
-                                            TF_Status status);
+    public static native void TF_GraphGetOpDef(TF_Graph graph,
+        String op_name,
+        TF_Buffer output_op_def,
+        TF_Status status);
+
+    // Returns the serialized VersionDef proto for this graph.
+    public static native void TF_GraphVersions(TF_Graph graph,
+        TF_Buffer output_version_def,
+        TF_Status status);
 // Targeting ../TF_ImportGraphDefOptions.java
 
 
+    public static native TF_ImportGraphDefOptions TF_NewImportGraphDefOptions();
 
-public static native TF_ImportGraphDefOptions TF_NewImportGraphDefOptions();
-public static native void TF_DeleteImportGraphDefOptions(
-    TF_ImportGraphDefOptions opts);
+    public static native void TF_DeleteImportGraphDefOptions(
+        TF_ImportGraphDefOptions opts);
 
-// Set the prefix to be prepended to the names of nodes in `graph_def` that will
+    // Set the prefix to be prepended to the names of nodes in `graph_def` that will
 // be imported into `graph`. `prefix` is copied and has no lifetime
 // requirements.
-public static native void TF_ImportGraphDefOptionsSetPrefix(
-    TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer prefix);
-public static native void TF_ImportGraphDefOptionsSetPrefix(
-    TF_ImportGraphDefOptions opts, String prefix);
+    public static native void TF_ImportGraphDefOptionsSetPrefix(
+        TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer prefix);
 
-// Set the execution device for nodes in `graph_def`.
+    public static native void TF_ImportGraphDefOptionsSetPrefix(
+        TF_ImportGraphDefOptions opts, String prefix);
+
+    // Set the execution device for nodes in `graph_def`.
 // Only applies to nodes where a device was not already explicitly specified.
 // `device` is copied and has no lifetime requirements.
-public static native void TF_ImportGraphDefOptionsSetDefaultDevice(
-    TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer device);
-public static native void TF_ImportGraphDefOptionsSetDefaultDevice(
-    TF_ImportGraphDefOptions opts, String device);
+    public static native void TF_ImportGraphDefOptionsSetDefaultDevice(
+        TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer device);
 
-// Set whether to uniquify imported operation names. If true, imported operation
+    public static native void TF_ImportGraphDefOptionsSetDefaultDevice(
+        TF_ImportGraphDefOptions opts, String device);
+
+    // Set whether to uniquify imported operation names. If true, imported operation
 // names will be modified if their name already exists in the graph. If false,
 // conflicting names will be treated as an error. Note that this option has no
 // effect if a prefix is set, since the prefix will guarantee all names are
 // unique. Defaults to false.
-public static native void TF_ImportGraphDefOptionsSetUniquifyNames(
-    TF_ImportGraphDefOptions opts, @Cast("unsigned char") byte uniquify_names);
+    public static native void TF_ImportGraphDefOptionsSetUniquifyNames(
+        TF_ImportGraphDefOptions opts, @Cast("unsigned char") byte uniquify_names);
 
-// If true, the specified prefix will be modified if it already exists as an
+    // If true, the specified prefix will be modified if it already exists as an
 // operation name or prefix in the graph. If false, a conflicting prefix will be
 // treated as an error. This option has no effect if no prefix is specified.
-public static native void TF_ImportGraphDefOptionsSetUniquifyPrefix(
-    TF_ImportGraphDefOptions opts, @Cast("unsigned char") byte uniquify_prefix);
+    public static native void TF_ImportGraphDefOptionsSetUniquifyPrefix(
+        TF_ImportGraphDefOptions opts, @Cast("unsigned char") byte uniquify_prefix);
 
-// Set any imported nodes with input `src_name:src_index` to have that input
+    // Set any imported nodes with input `src_name:src_index` to have that input
 // replaced with `dst`. `src_name` refers to a node in the graph to be imported,
 // `dst` references a node already existing in the graph being imported into.
 // `src_name` is copied and has no lifetime requirements.
-public static native void TF_ImportGraphDefOptionsAddInputMapping(
-    TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer src_name, int src_index,
-    @ByVal TF_Output dst);
-public static native void TF_ImportGraphDefOptionsAddInputMapping(
-    TF_ImportGraphDefOptions opts, String src_name, int src_index,
-    @ByVal TF_Output dst);
+    public static native void TF_ImportGraphDefOptionsAddInputMapping(
+        TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer src_name, int src_index,
+        @ByVal TF_Output dst);
 
-// Set any imported nodes with control input `src_name` to have that input
+    public static native void TF_ImportGraphDefOptionsAddInputMapping(
+        TF_ImportGraphDefOptions opts, String src_name, int src_index,
+        @ByVal TF_Output dst);
+
+    // Set any imported nodes with control input `src_name` to have that input
 // replaced with `dst`. `src_name` refers to a node in the graph to be imported,
 // `dst` references an operation already existing in the graph being imported
 // into. `src_name` is copied and has no lifetime requirements.
-public static native void TF_ImportGraphDefOptionsRemapControlDependency(
-    TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer src_name, TF_Operation dst);
-public static native void TF_ImportGraphDefOptionsRemapControlDependency(
-    TF_ImportGraphDefOptions opts, String src_name, TF_Operation dst);
+    public static native void TF_ImportGraphDefOptionsRemapControlDependency(
+        TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer src_name, TF_Operation dst);
 
-// Cause the imported graph to have a control dependency on `oper`. `oper`
+    public static native void TF_ImportGraphDefOptionsRemapControlDependency(
+        TF_ImportGraphDefOptions opts, String src_name, TF_Operation dst);
+
+    // Cause the imported graph to have a control dependency on `oper`. `oper`
 // should exist in the graph being imported into.
-public static native void TF_ImportGraphDefOptionsAddControlDependency(
-    TF_ImportGraphDefOptions opts, TF_Operation oper);
+    public static native void TF_ImportGraphDefOptionsAddControlDependency(
+        TF_ImportGraphDefOptions opts, TF_Operation oper);
 
-// Add an output in `graph_def` to be returned via the `return_outputs` output
+    // Add an output in `graph_def` to be returned via the `return_outputs` output
 // parameter of TF_GraphImportGraphDef(). If the output is remapped via an input
 // mapping, the corresponding existing tensor in `graph` will be returned.
 // `oper_name` is copied and has no lifetime requirements.
-public static native void TF_ImportGraphDefOptionsAddReturnOutput(
-    TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer oper_name, int index);
-public static native void TF_ImportGraphDefOptionsAddReturnOutput(
-    TF_ImportGraphDefOptions opts, String oper_name, int index);
+    public static native void TF_ImportGraphDefOptionsAddReturnOutput(
+        TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer oper_name, int index);
 
-// Returns the number of return outputs added via
+    public static native void TF_ImportGraphDefOptionsAddReturnOutput(
+        TF_ImportGraphDefOptions opts, String oper_name, int index);
+
+    // Returns the number of return outputs added via
 // TF_ImportGraphDefOptionsAddReturnOutput().
-public static native int TF_ImportGraphDefOptionsNumReturnOutputs(
-    @Const TF_ImportGraphDefOptions opts);
+    public static native int TF_ImportGraphDefOptionsNumReturnOutputs(
+        @Const TF_ImportGraphDefOptions opts);
 
-// Add an operation in `graph_def` to be returned via the `return_opers` output
+    // Add an operation in `graph_def` to be returned via the `return_opers` output
 // parameter of TF_GraphImportGraphDef(). `oper_name` is copied and has no
 // lifetime requirements.
-public static native void TF_ImportGraphDefOptionsAddReturnOperation(
-    TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer oper_name);
-public static native void TF_ImportGraphDefOptionsAddReturnOperation(
-    TF_ImportGraphDefOptions opts, String oper_name);
+    public static native void TF_ImportGraphDefOptionsAddReturnOperation(
+        TF_ImportGraphDefOptions opts, @Cast("const char*") BytePointer oper_name);
 
-// Returns the number of return operations added via
+    public static native void TF_ImportGraphDefOptionsAddReturnOperation(
+        TF_ImportGraphDefOptions opts, String oper_name);
+
+    // Returns the number of return operations added via
 // TF_ImportGraphDefOptionsAddReturnOperation().
-public static native int TF_ImportGraphDefOptionsNumReturnOperations(
-    @Const TF_ImportGraphDefOptions opts);
+    public static native int TF_ImportGraphDefOptionsNumReturnOperations(
+        @Const TF_ImportGraphDefOptions opts);
 // Targeting ../TF_ImportGraphDefResults.java
 
 
-
-// Fetches the return outputs requested via
+    // Fetches the return outputs requested via
 // TF_ImportGraphDefOptionsAddReturnOutput(). The number of fetched outputs is
 // returned in `num_outputs`. The array of return outputs is returned in
 // `outputs`. `*outputs` is owned by and has the lifetime of `results`.
-public static native void TF_ImportGraphDefResultsReturnOutputs(
-    TF_ImportGraphDefResults results, IntPointer num_outputs, @Cast("TF_Output**") PointerPointer outputs);
-public static native void TF_ImportGraphDefResultsReturnOutputs(
-    TF_ImportGraphDefResults results, IntPointer num_outputs, @ByPtrPtr TF_Output outputs);
-public static native void TF_ImportGraphDefResultsReturnOutputs(
-    TF_ImportGraphDefResults results, IntBuffer num_outputs, @ByPtrPtr TF_Output outputs);
-public static native void TF_ImportGraphDefResultsReturnOutputs(
-    TF_ImportGraphDefResults results, int[] num_outputs, @ByPtrPtr TF_Output outputs);
+    public static native void TF_ImportGraphDefResultsReturnOutputs(
+        TF_ImportGraphDefResults results, IntPointer num_outputs,
+        @Cast("TF_Output**") PointerPointer outputs);
 
-// Fetches the return operations requested via
+    public static native void TF_ImportGraphDefResultsReturnOutputs(
+        TF_ImportGraphDefResults results, IntPointer num_outputs, @ByPtrPtr TF_Output outputs);
+
+    public static native void TF_ImportGraphDefResultsReturnOutputs(
+        TF_ImportGraphDefResults results, IntBuffer num_outputs, @ByPtrPtr TF_Output outputs);
+
+    public static native void TF_ImportGraphDefResultsReturnOutputs(
+        TF_ImportGraphDefResults results, int[] num_outputs, @ByPtrPtr TF_Output outputs);
+
+    // Fetches the return operations requested via
 // TF_ImportGraphDefOptionsAddReturnOperation(). The number of fetched
 // operations is returned in `num_opers`. The array of return operations is
 // returned in `opers`. `*opers` is owned by and has the lifetime of `results`.
-public static native void TF_ImportGraphDefResultsReturnOperations(
-    TF_ImportGraphDefResults results, IntPointer num_opers, @Cast("TF_Operation***") @ByPtrPtr PointerPointer opers);
-public static native void TF_ImportGraphDefResultsReturnOperations(
-    TF_ImportGraphDefResults results, IntBuffer num_opers, @Cast("TF_Operation***") @ByPtrPtr PointerPointer opers);
-public static native void TF_ImportGraphDefResultsReturnOperations(
-    TF_ImportGraphDefResults results, int[] num_opers, @Cast("TF_Operation***") @ByPtrPtr PointerPointer opers);
+    public static native void TF_ImportGraphDefResultsReturnOperations(
+        TF_ImportGraphDefResults results, IntPointer num_opers,
+        @Cast("TF_Operation***") @ByPtrPtr PointerPointer opers);
 
-// Fetches any input mappings requested via
+    public static native void TF_ImportGraphDefResultsReturnOperations(
+        TF_ImportGraphDefResults results, IntBuffer num_opers,
+        @Cast("TF_Operation***") @ByPtrPtr PointerPointer opers);
+
+    public static native void TF_ImportGraphDefResultsReturnOperations(
+        TF_ImportGraphDefResults results, int[] num_opers,
+        @Cast("TF_Operation***") @ByPtrPtr PointerPointer opers);
+
+    // Fetches any input mappings requested via
 // TF_ImportGraphDefOptionsAddInputMapping() that didn't appear in the GraphDef
 // and weren't used as input to any node in the imported graph def. The number
 // of fetched mappings is returned in `num_missing_unused_input_mappings`. The
@@ -2111,50 +2394,56 @@ public static native void TF_ImportGraphDefResultsReturnOperations(
 //
 // `*src_names`, `*src_indexes`, and the memory backing each string in
 // `src_names` are owned by and have the lifetime of `results`.
-public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
-    TF_ImportGraphDefResults results, IntPointer num_missing_unused_input_mappings,
-    @Cast("const char***") @ByPtrPtr PointerPointer src_names, @Cast("int**") PointerPointer src_indexes);
-public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
-    TF_ImportGraphDefResults results, IntPointer num_missing_unused_input_mappings,
-    @Cast("const char***") @ByPtrPtr PointerPointer src_names, @ByPtrPtr IntPointer src_indexes);
-public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
-    TF_ImportGraphDefResults results, IntBuffer num_missing_unused_input_mappings,
-    @Cast("const char***") @ByPtrPtr PointerPointer src_names, @ByPtrPtr IntBuffer src_indexes);
-public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
-    TF_ImportGraphDefResults results, int[] num_missing_unused_input_mappings,
-    @Cast("const char***") @ByPtrPtr PointerPointer src_names, @ByPtrPtr int[] src_indexes);
+    public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
+        TF_ImportGraphDefResults results, IntPointer num_missing_unused_input_mappings,
+        @Cast("const char***") @ByPtrPtr PointerPointer src_names,
+        @Cast("int**") PointerPointer src_indexes);
 
-// Deletes a results object returned by TF_GraphImportGraphDefWithResults().
-public static native void TF_DeleteImportGraphDefResults(
-    TF_ImportGraphDefResults results);
+    public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
+        TF_ImportGraphDefResults results, IntPointer num_missing_unused_input_mappings,
+        @Cast("const char***") @ByPtrPtr PointerPointer src_names,
+        @ByPtrPtr IntPointer src_indexes);
 
-// Import the graph serialized in `graph_def` into `graph`.  Returns nullptr and
+    public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
+        TF_ImportGraphDefResults results, IntBuffer num_missing_unused_input_mappings,
+        @Cast("const char***") @ByPtrPtr PointerPointer src_names, @ByPtrPtr IntBuffer src_indexes);
+
+    public static native void TF_ImportGraphDefResultsMissingUnusedInputMappings(
+        TF_ImportGraphDefResults results, int[] num_missing_unused_input_mappings,
+        @Cast("const char***") @ByPtrPtr PointerPointer src_names, @ByPtrPtr int[] src_indexes);
+
+    // Deletes a results object returned by TF_GraphImportGraphDefWithResults().
+    public static native void TF_DeleteImportGraphDefResults(
+        TF_ImportGraphDefResults results);
+
+    // Import the graph serialized in `graph_def` into `graph`.  Returns nullptr and
 // a bad status on error. Otherwise, returns a populated
 // TF_ImportGraphDefResults instance. The returned instance must be deleted via
 // TF_DeleteImportGraphDefResults().
-public static native TF_ImportGraphDefResults TF_GraphImportGraphDefWithResults(TF_Graph graph, @Const TF_Buffer graph_def,
-                                  @Const TF_ImportGraphDefOptions options,
-                                  TF_Status status);
+    public static native TF_ImportGraphDefResults TF_GraphImportGraphDefWithResults(TF_Graph graph,
+        @Const TF_Buffer graph_def,
+        @Const TF_ImportGraphDefOptions options,
+        TF_Status status);
 
-// Import the graph serialized in `graph_def` into `graph`.
+    // Import the graph serialized in `graph_def` into `graph`.
 // Convenience function for when only return outputs are needed.
 //
 // `num_return_outputs` must be the number of return outputs added (i.e. the
 // result of TF_ImportGraphDefOptionsNumReturnOutputs()).  If
 // `num_return_outputs` is non-zero, `return_outputs` must be of length
 // `num_return_outputs`. Otherwise it can be null.
-public static native void TF_GraphImportGraphDefWithReturnOutputs(
-    TF_Graph graph, @Const TF_Buffer graph_def,
-    @Const TF_ImportGraphDefOptions options, TF_Output return_outputs,
-    int num_return_outputs, TF_Status status);
+    public static native void TF_GraphImportGraphDefWithReturnOutputs(
+        TF_Graph graph, @Const TF_Buffer graph_def,
+        @Const TF_ImportGraphDefOptions options, TF_Output return_outputs,
+        int num_return_outputs, TF_Status status);
 
-// Import the graph serialized in `graph_def` into `graph`.
+    // Import the graph serialized in `graph_def` into `graph`.
 // Convenience function for when no results are needed.
-public static native void TF_GraphImportGraphDef(
-    TF_Graph graph, @Const TF_Buffer graph_def,
-    @Const TF_ImportGraphDefOptions options, TF_Status status);
+    public static native void TF_GraphImportGraphDef(
+        TF_Graph graph, @Const TF_Buffer graph_def,
+        @Const TF_ImportGraphDefOptions options, TF_Status status);
 
-// Adds a copy of function `func` and optionally its gradient function `grad`
+    // Adds a copy of function `func` and optionally its gradient function `grad`
 // to `g`. Once `func`/`grad` is added to `g`, it can be called by creating
 // an operation using the function's name.
 // Any changes to `func`/`grad` (including deleting it) done after this method
@@ -2173,15 +2462,15 @@ public static native void TF_GraphImportGraphDef(
 //
 // If successful, status is set to OK and `func` and `grad` are added to `g`.
 // Otherwise, status is set to the encountered error and `g` is unmodified.
-public static native void TF_GraphCopyFunction(TF_Graph g,
-                                                @Const TF_Function func,
-                                                @Const TF_Function grad,
-                                                TF_Status status);
+    public static native void TF_GraphCopyFunction(TF_Graph g,
+        @Const TF_Function func,
+        @Const TF_Function grad,
+        TF_Status status);
 
-// Returns the number of TF_Functions registered in `g`.
-public static native int TF_GraphNumFunctions(TF_Graph g);
+    // Returns the number of TF_Functions registered in `g`.
+    public static native int TF_GraphNumFunctions(TF_Graph g);
 
-// Fills in `funcs` with the TF_Function* registered in `g`.
+    // Fills in `funcs` with the TF_Function* registered in `g`.
 // `funcs` must point to an array of TF_Function* of length at least
 // `max_func`. In usual usage, max_func should be set to the result of
 // TF_GraphNumFunctions(g). In this case, all the functions registered in
@@ -2192,21 +2481,22 @@ public static native int TF_GraphNumFunctions(TF_Graph g);
 // all the returned TF_Functions. They must be deleted with TF_DeleteFunction.
 // On error, returns 0, sets status to the encountered error, and the contents
 // of funcs will be undefined.
-public static native int TF_GraphGetFunctions(TF_Graph g, @Cast("TF_Function**") PointerPointer funcs,
-                                               int max_func, TF_Status status);
-public static native int TF_GraphGetFunctions(TF_Graph g, @ByPtrPtr TF_Function funcs,
-                                               int max_func, TF_Status status);
+    public static native int TF_GraphGetFunctions(TF_Graph g,
+        @Cast("TF_Function**") PointerPointer funcs,
+        int max_func, TF_Status status);
+
+    public static native int TF_GraphGetFunctions(TF_Graph g, @ByPtrPtr TF_Function funcs,
+        int max_func, TF_Status status);
 
 // Note: The following function may fail on very large protos in the future.
 
-public static native void TF_OperationToNodeDef(TF_Operation oper,
-                                                 TF_Buffer output_node_def,
-                                                 TF_Status status);
+    public static native void TF_OperationToNodeDef(TF_Operation oper,
+        TF_Buffer output_node_def,
+        TF_Status status);
 // Targeting ../TF_WhileParams.java
 
 
-
-// Creates a TF_WhileParams for creating a while loop in `g`. `inputs` are
+    // Creates a TF_WhileParams for creating a while loop in `g`. `inputs` are
 // outputs that already exist in `g` used as initial values for the loop
 // variables.
 //
@@ -2226,11 +2516,12 @@ public static native void TF_OperationToNodeDef(TF_Operation oper,
 // - Reference-type inputs
 // - Directly referencing external tensors from the cond/body graphs (this is
 //   possible in the Python API)
-public static native @ByVal TF_WhileParams TF_NewWhile(TF_Graph g, TF_Output inputs,
-                                                 int ninputs,
-                                                 TF_Status status);
+    public static native @ByVal
+    TF_WhileParams TF_NewWhile(TF_Graph g, TF_Output inputs,
+        int ninputs,
+        TF_Status status);
 
-// Builds the while loop specified by `params` and returns the output tensors of
+    // Builds the while loop specified by `params` and returns the output tensors of
 // the while loop in `outputs`. `outputs` should be allocated to size
 // `params.ninputs`.
 //
@@ -2238,16 +2529,16 @@ public static native @ByVal TF_WhileParams TF_NewWhile(TF_Graph g, TF_Output inp
 //
 // Either this or TF_AbortWhile() must be called after a successful
 // TF_NewWhile() call.
-public static native void TF_FinishWhile(@Const TF_WhileParams params,
-                                          TF_Status status,
-                                          TF_Output outputs);
+    public static native void TF_FinishWhile(@Const TF_WhileParams params,
+        TF_Status status,
+        TF_Output outputs);
 
-// Frees `params`s resources without building a while loop. `params` is no
+    // Frees `params`s resources without building a while loop. `params` is no
 // longer valid after this returns. Either this or TF_FinishWhile() must be
 // called after a successful TF_NewWhile() call.
-public static native void TF_AbortWhile(@Const TF_WhileParams params);
+    public static native void TF_AbortWhile(@Const TF_WhileParams params);
 
-// Adds operations to compute the partial derivatives of sum of `y`s w.r.t `x`s,
+    // Adds operations to compute the partial derivatives of sum of `y`s w.r.t `x`s,
 // i.e., d(y_1 + y_2 + ...)/dx_1, d(y_1 + y_2 + ...)/dx_2...
 //
 // `dx` are used as initial gradients (which represent the symbolic partial
@@ -2268,11 +2559,11 @@ public static native void TF_AbortWhile(@Const TF_WhileParams params);
 // supports. See
 // https://www.tensorflow.org/code/tensorflow/cc/gradients/README.md
 // for instructions on how to add C++ more gradients.
-public static native void TF_AddGradients(TF_Graph g, TF_Output y, int ny,
-                                    TF_Output x, int nx, TF_Output dx,
-                                    TF_Status status, TF_Output dy);
+    public static native void TF_AddGradients(TF_Graph g, TF_Output y, int ny,
+        TF_Output x, int nx, TF_Output dx,
+        TF_Status status, TF_Output dy);
 
-// Adds operations to compute the partial derivatives of sum of `y`s w.r.t `x`s,
+    // Adds operations to compute the partial derivatives of sum of `y`s w.r.t `x`s,
 // i.e., d(y_1 + y_2 + ...)/dx_1, d(y_1 + y_2 + ...)/dx_2...
 // This is a variant of TF_AddGradients that allows to caller to pass a custom
 // name prefix to the operations added to a graph to compute the gradients.
@@ -2293,18 +2584,20 @@ public static native void TF_AddGradients(TF_Graph g, TF_Output y, int ny,
 // supports. See
 // https://www.tensorflow.org/code/tensorflow/cc/gradients/README.md
 // for instructions on how to add C++ more gradients.
-public static native void TF_AddGradientsWithPrefix(TF_Graph g, @Cast("const char*") BytePointer prefix,
-                                              TF_Output y, int ny,
-                                              TF_Output x, int nx,
-                                              TF_Output dx, TF_Status status,
-                                              TF_Output dy);
-public static native void TF_AddGradientsWithPrefix(TF_Graph g, String prefix,
-                                              TF_Output y, int ny,
-                                              TF_Output x, int nx,
-                                              TF_Output dx, TF_Status status,
-                                              TF_Output dy);
+    public static native void TF_AddGradientsWithPrefix(TF_Graph g,
+        @Cast("const char*") BytePointer prefix,
+        TF_Output y, int ny,
+        TF_Output x, int nx,
+        TF_Output dx, TF_Status status,
+        TF_Output dy);
 
-// Create a TF_Function from a TF_Graph
+    public static native void TF_AddGradientsWithPrefix(TF_Graph g, String prefix,
+        TF_Output y, int ny,
+        TF_Output x, int nx,
+        TF_Output dx, TF_Status status,
+        TF_Output dy);
+
+    // Create a TF_Function from a TF_Graph
 //
 // Params:
 //  fn_body - the graph whose operations (or subset of whose operations) will be
@@ -2386,50 +2679,68 @@ public static native void TF_AddGradientsWithPrefix(TF_Graph g, String prefix,
 //  calling TF_DeleteFunction.
 //
 //  On failure, null.
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Cast("const TF_Operation*const*") PointerPointer opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") PointerPointer output_names,
-    @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
-    @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, String fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
-    @Const TF_FunctionOptions opts, String description, TF_Status status);
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr byte[] output_names,
-    @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, String fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
-    @Const TF_FunctionOptions opts, String description, TF_Status status);
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
-    @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunction(
-    @Const TF_Graph fn_body, String fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr byte[] output_names,
-    @Const TF_FunctionOptions opts, String description, TF_Status status);
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Cast("const TF_Operation*const*") PointerPointer opers, int ninputs,
+        @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") PointerPointer output_names,
+        @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description,
+        TF_Status status);
 
-// Similar to TF_GraphToFunction but allows specifying control outputs of the
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
+        @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description,
+        TF_Status status);
+
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, String fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
+        @Const TF_FunctionOptions opts, String description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr byte[] output_names,
+        @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description,
+        TF_Status status);
+
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, String fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
+        @Const TF_FunctionOptions opts, String description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
+        @Const TF_FunctionOptions opts, @Cast("const char*") BytePointer description,
+        TF_Status status);
+
+    public static native TF_Function TF_GraphToFunction(
+        @Const TF_Graph fn_body, String fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr byte[] output_names,
+        @Const TF_FunctionOptions opts, String description, TF_Status status);
+
+    // Similar to TF_GraphToFunction but allows specifying control outputs of the
 // function.
 //
 //  The arguments of TF_GraphToFunction have the same meaning, but the new
@@ -2442,79 +2753,101 @@ public static native TF_Function TF_GraphToFunction(
 //    control_output_names: Optional. If not nullptr, vector of strings, one
 //      per control output, with their names to be added to the function's
 //      OpDef.
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Cast("const TF_Operation*const*") PointerPointer opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") PointerPointer output_names,
-    int ncontrol_outputs, @Cast("const TF_Operation*const*") PointerPointer control_outputs,
-    @Cast("const char*const*") PointerPointer control_output_names, @Const TF_FunctionOptions opts,
-    @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
-    int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
-    @Cast("const char*const*") @ByPtrPtr BytePointer control_output_names, @Const TF_FunctionOptions opts,
-    @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, String fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
-    int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
-    @Cast("const char*const*") @ByPtrPtr ByteBuffer control_output_names, @Const TF_FunctionOptions opts,
-    String description, TF_Status status);
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr byte[] output_names,
-    int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
-    @Cast("const char*const*") @ByPtrPtr byte[] control_output_names, @Const TF_FunctionOptions opts,
-    @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, String fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
-    int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
-    @Cast("const char*const*") @ByPtrPtr BytePointer control_output_names, @Const TF_FunctionOptions opts,
-    String description, TF_Status status);
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
-    int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
-    @Cast("const char*const*") @ByPtrPtr ByteBuffer control_output_names, @Const TF_FunctionOptions opts,
-    @Cast("const char*") BytePointer description, TF_Status status);
-public static native TF_Function TF_GraphToFunctionWithControlOutputs(
-    @Const TF_Graph fn_body, String fn_name,
-    @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
-    @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
-    int noutputs, @Const TF_Output outputs, @Cast("const char*const*") @ByPtrPtr byte[] output_names,
-    int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
-    @Cast("const char*const*") @ByPtrPtr byte[] control_output_names, @Const TF_FunctionOptions opts,
-    String description, TF_Status status);
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Cast("const TF_Operation*const*") PointerPointer opers, int ninputs,
+        @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") PointerPointer output_names,
+        int ncontrol_outputs, @Cast("const TF_Operation*const*") PointerPointer control_outputs,
+        @Cast("const char*const*") PointerPointer control_output_names,
+        @Const TF_FunctionOptions opts,
+        @Cast("const char*") BytePointer description, TF_Status status);
 
-// Returns the name of the graph function.
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
+        int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
+        @Cast("const char*const*") @ByPtrPtr BytePointer control_output_names,
+        @Const TF_FunctionOptions opts,
+        @Cast("const char*") BytePointer description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, String fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
+        int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer control_output_names,
+        @Const TF_FunctionOptions opts,
+        String description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr byte[] output_names,
+        int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
+        @Cast("const char*const*") @ByPtrPtr byte[] control_output_names,
+        @Const TF_FunctionOptions opts,
+        @Cast("const char*") BytePointer description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, String fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr BytePointer output_names,
+        int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
+        @Cast("const char*const*") @ByPtrPtr BytePointer control_output_names,
+        @Const TF_FunctionOptions opts,
+        String description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, @Cast("const char*") BytePointer fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer output_names,
+        int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer control_output_names,
+        @Const TF_FunctionOptions opts,
+        @Cast("const char*") BytePointer description, TF_Status status);
+
+    public static native TF_Function TF_GraphToFunctionWithControlOutputs(
+        @Const TF_Graph fn_body, String fn_name,
+        @Cast("unsigned char") byte append_hash_to_fn_name, int num_opers,
+        @Const @ByPtrPtr TF_Operation opers, int ninputs, @Const TF_Output inputs,
+        int noutputs, @Const TF_Output outputs,
+        @Cast("const char*const*") @ByPtrPtr byte[] output_names,
+        int ncontrol_outputs, @Const @ByPtrPtr TF_Operation control_outputs,
+        @Cast("const char*const*") @ByPtrPtr byte[] control_output_names,
+        @Const TF_FunctionOptions opts,
+        String description, TF_Status status);
+
+    // Returns the name of the graph function.
 // The return value points to memory that is only usable until the next
 // mutation to *func.
-public static native @Cast("const char*") BytePointer TF_FunctionName(TF_Function func);
+    public static native @Cast("const char*")
+    BytePointer TF_FunctionName(TF_Function func);
 
-// Write out a serialized representation of `func` (as a FunctionDef protocol
+    // Write out a serialized representation of `func` (as a FunctionDef protocol
 // message) to `output_func_def` (allocated by TF_NewBuffer()).
 // `output_func_def`'s underlying buffer will be freed when TF_DeleteBuffer()
 // is called.
 //
 // May fail on very large graphs in the future.
-public static native void TF_FunctionToFunctionDef(TF_Function func,
-                                                    TF_Buffer output_func_def,
-                                                    TF_Status status);
+    public static native void TF_FunctionToFunctionDef(TF_Function func,
+        TF_Buffer output_func_def,
+        TF_Status status);
 
-// Construct and return the function whose FunctionDef representation is
+    // Construct and return the function whose FunctionDef representation is
 // serialized in `proto`. `proto_len` must equal the number of bytes
 // pointed to by `proto`.
 // Returns:
@@ -2522,41 +2855,43 @@ public static native void TF_FunctionToFunctionDef(TF_Function func,
 //  calling TF_DeleteFunction.
 //
 //  On failure, null.
-public static native TF_Function TF_FunctionImportFunctionDef(
-    @Const Pointer proto, @Cast("size_t") long proto_len, TF_Status status);
+    public static native TF_Function TF_FunctionImportFunctionDef(
+        @Const Pointer proto, @Cast("size_t") long proto_len, TF_Status status);
 
-// Sets function attribute named `attr_name` to value stored in `proto`.
+    // Sets function attribute named `attr_name` to value stored in `proto`.
 // If this attribute is already set to another value, it is overridden.
 // `proto` should point to a sequence of bytes of length `proto_len`
 // representing a binary serialization of an AttrValue protocol
 // buffer.
-public static native void TF_FunctionSetAttrValueProto(TF_Function func,
-                                                        @Cast("const char*") BytePointer attr_name,
-                                                        @Const Pointer proto,
-                                                        @Cast("size_t") long proto_len,
-                                                        TF_Status status);
-public static native void TF_FunctionSetAttrValueProto(TF_Function func,
-                                                        String attr_name,
-                                                        @Const Pointer proto,
-                                                        @Cast("size_t") long proto_len,
-                                                        TF_Status status);
+    public static native void TF_FunctionSetAttrValueProto(TF_Function func,
+        @Cast("const char*") BytePointer attr_name,
+        @Const Pointer proto,
+        @Cast("size_t") long proto_len,
+        TF_Status status);
 
-// Sets `output_attr_value` to the binary-serialized AttrValue proto
+    public static native void TF_FunctionSetAttrValueProto(TF_Function func,
+        String attr_name,
+        @Const Pointer proto,
+        @Cast("size_t") long proto_len,
+        TF_Status status);
+
+    // Sets `output_attr_value` to the binary-serialized AttrValue proto
 // representation of the value of the `attr_name` attr of `func`.
 // If `attr_name` attribute is not present, status is set to an error.
-public static native void TF_FunctionGetAttrValueProto(
-    TF_Function func, @Cast("const char*") BytePointer attr_name, TF_Buffer output_attr_value,
-    TF_Status status);
-public static native void TF_FunctionGetAttrValueProto(
-    TF_Function func, String attr_name, TF_Buffer output_attr_value,
-    TF_Status status);
+    public static native void TF_FunctionGetAttrValueProto(
+        TF_Function func, @Cast("const char*") BytePointer attr_name, TF_Buffer output_attr_value,
+        TF_Status status);
 
-// Frees the memory used by the `func` struct.
+    public static native void TF_FunctionGetAttrValueProto(
+        TF_Function func, String attr_name, TF_Buffer output_attr_value,
+        TF_Status status);
+
+    // Frees the memory used by the `func` struct.
 // TF_DeleteFunction is a noop if `func` is null.
 // Deleting a function does not remove it from any graphs it was copied to.
-public static native void TF_DeleteFunction(TF_Function func);
+    public static native void TF_DeleteFunction(TF_Function func);
 
-// Attempts to evaluate `output`. This will only be possible if `output` doesn't
+    // Attempts to evaluate `output`. This will only be possible if `output` doesn't
 // depend on any graph inputs (this function is safe to call if this isn't the
 // case though).
 //
@@ -2564,29 +2899,31 @@ public static native void TF_DeleteFunction(TF_Function func);
 // value is returned in `result`. Otherwise returns false. An error status is
 // returned if something is wrong with the graph or input. Note that this may
 // return false even if no error status is set.
-public static native @Cast("unsigned char") byte TF_TryEvaluateConstant(TF_Graph graph,
-                                                           @ByVal TF_Output output,
-                                                           @Cast("TF_Tensor**") PointerPointer result,
-                                                           TF_Status status);
-public static native @Cast("unsigned char") byte TF_TryEvaluateConstant(TF_Graph graph,
-                                                           @ByVal TF_Output output,
-                                                           @ByPtrPtr TF_Tensor result,
-                                                           TF_Status status);
+    public static native @Cast("unsigned char")
+    byte TF_TryEvaluateConstant(TF_Graph graph,
+        @ByVal TF_Output output,
+        @Cast("TF_Tensor**") PointerPointer result,
+        TF_Status status);
+
+    public static native @Cast("unsigned char")
+    byte TF_TryEvaluateConstant(TF_Graph graph,
+        @ByVal TF_Output output,
+        @ByPtrPtr TF_Tensor result,
+        TF_Status status);
 // Targeting ../TF_Session.java
 
 
-
-// Return a new execution session with the associated graph, or NULL on
+    // Return a new execution session with the associated graph, or NULL on
 // error. Does not take ownership of any input parameters.
 //
 // *`graph` must be a valid graph (not deleted or nullptr). `graph` will be
 // kept alive for the lifetime of the returned TF_Session. New nodes can still
 // be added to `graph` after this call.
-public static native TF_Session TF_NewSession(TF_Graph graph,
-                                                @Const TF_SessionOptions opts,
-                                                TF_Status status);
+    public static native TF_Session TF_NewSession(TF_Graph graph,
+        @Const TF_SessionOptions opts,
+        TF_Status status);
 
-// This function creates a new TF_Session (which is created on success) using
+    // This function creates a new TF_Session (which is created on success) using
 // `session_options`, and then initializes state (restoring tensors and other
 // assets) using `run_options`.
 //
@@ -2600,50 +2937,60 @@ public static native TF_Session TF_NewSession(TF_Graph graph,
 //
 // If successful, populates `graph` with the contents of the Graph and
 // `meta_graph_def` with the MetaGraphDef of the loaded model.
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    @Cast("const char*") BytePointer export_dir, @Cast("const char*const*") PointerPointer tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    @Cast("const char*") BytePointer export_dir, @Cast("const char*const*") @ByPtrPtr BytePointer tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    String export_dir, @Cast("const char*const*") @ByPtrPtr ByteBuffer tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    @Cast("const char*") BytePointer export_dir, @Cast("const char*const*") @ByPtrPtr byte[] tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    String export_dir, @Cast("const char*const*") @ByPtrPtr BytePointer tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    @Cast("const char*") BytePointer export_dir, @Cast("const char*const*") @ByPtrPtr ByteBuffer tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
-public static native TF_Session TF_LoadSessionFromSavedModel(
-    @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
-    String export_dir, @Cast("const char*const*") @ByPtrPtr byte[] tags, int tags_len,
-    TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        @Cast("const char*") BytePointer export_dir, @Cast("const char*const*") PointerPointer tags,
+        int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
 
-// Close a session.
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        @Cast("const char*") BytePointer export_dir,
+        @Cast("const char*const*") @ByPtrPtr BytePointer tags, int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        String export_dir, @Cast("const char*const*") @ByPtrPtr ByteBuffer tags, int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        @Cast("const char*") BytePointer export_dir,
+        @Cast("const char*const*") @ByPtrPtr byte[] tags, int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        String export_dir, @Cast("const char*const*") @ByPtrPtr BytePointer tags, int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        @Cast("const char*") BytePointer export_dir,
+        @Cast("const char*const*") @ByPtrPtr ByteBuffer tags, int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+
+    public static native TF_Session TF_LoadSessionFromSavedModel(
+        @Const TF_SessionOptions session_options, @Const TF_Buffer run_options,
+        String export_dir, @Cast("const char*const*") @ByPtrPtr byte[] tags, int tags_len,
+        TF_Graph graph, TF_Buffer meta_graph_def, TF_Status status);
+
+    // Close a session.
 //
 // Contacts any other processes associated with the session, if applicable.
 // May not be called after TF_DeleteSession().
-public static native void TF_CloseSession(TF_Session arg0, TF_Status status);
+    public static native void TF_CloseSession(TF_Session arg0, TF_Status status);
 
-// Destroy a session object.
+    // Destroy a session object.
 //
 // Even if error information is recorded in *status, this call discards all
 // local resources associated with the session.  The session may not be used
 // during or after this call (and the session drops its reference to the
 // corresponding graph).
-public static native void TF_DeleteSession(TF_Session arg0, TF_Status status);
+    public static native void TF_DeleteSession(TF_Session arg0, TF_Status status);
 
-// Run the graph associated with the session starting with the supplied inputs
+    // Run the graph associated with the session starting with the supplied inputs
 // (inputs[0,ninputs-1] with corresponding values in input_values[0,ninputs-1]).
 //
 // Any NULL and non-NULL value combinations for (`run_options`,
@@ -2667,24 +3014,25 @@ public static native void TF_DeleteSession(TF_Session arg0, TF_Status status);
 // to the caller, which must eventually call TF_DeleteTensor on them.
 //
 // On failure, output_values[] contains NULLs.
-public static native void TF_SessionRun(
-    TF_Session session,
-    @Const TF_Buffer run_options,
-    @Const TF_Output inputs, @Cast("TF_Tensor*const*") PointerPointer input_values, int ninputs,
-    @Const TF_Output outputs, @Cast("TF_Tensor**") PointerPointer output_values, int noutputs,
-    @Cast("const TF_Operation*const*") PointerPointer target_opers, int ntargets,
-    TF_Buffer run_metadata,
-    TF_Status arg11);
-public static native void TF_SessionRun(
-    TF_Session session,
-    @Const TF_Buffer run_options,
-    @Const TF_Output inputs, @ByPtrPtr TF_Tensor input_values, int ninputs,
-    @Const TF_Output outputs, @ByPtrPtr TF_Tensor output_values, int noutputs,
-    @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
-    TF_Buffer run_metadata,
-    TF_Status arg11);
+    public static native void TF_SessionRun(
+        TF_Session session,
+        @Const TF_Buffer run_options,
+        @Const TF_Output inputs, @Cast("TF_Tensor*const*") PointerPointer input_values, int ninputs,
+        @Const TF_Output outputs, @Cast("TF_Tensor**") PointerPointer output_values, int noutputs,
+        @Cast("const TF_Operation*const*") PointerPointer target_opers, int ntargets,
+        TF_Buffer run_metadata,
+        TF_Status arg11);
 
-// Set up the graph with the intended feeds (inputs) and fetches (outputs) for a
+    public static native void TF_SessionRun(
+        TF_Session session,
+        @Const TF_Buffer run_options,
+        @Const TF_Output inputs, @ByPtrPtr TF_Tensor input_values, int ninputs,
+        @Const TF_Output outputs, @ByPtrPtr TF_Tensor output_values, int noutputs,
+        @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
+        TF_Buffer run_metadata,
+        TF_Status arg11);
+
+    // Set up the graph with the intended feeds (inputs) and fetches (outputs) for a
 // sequence of partial run calls.
 //
 // On success, returns a handle that is used for subsequent PRun calls. The
@@ -2693,253 +3041,285 @@ public static native void TF_SessionRun(
 //
 // On failure, out_status contains a tensorflow::Status with an error
 // message. *handle is set to nullptr.
-public static native void TF_SessionPRunSetup(
-    TF_Session arg0,
-    @Const TF_Output inputs, int ninputs,
-    @Const TF_Output outputs, int noutputs,
-    @Cast("const TF_Operation*const*") PointerPointer target_opers, int ntargets,
-    @Cast("const char**") PointerPointer handle,
-    TF_Status arg8);
-public static native void TF_SessionPRunSetup(
-    TF_Session arg0,
-    @Const TF_Output inputs, int ninputs,
-    @Const TF_Output outputs, int noutputs,
-    @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
-    @Cast("const char**") @ByPtrPtr BytePointer handle,
-    TF_Status arg8);
-public static native void TF_SessionPRunSetup(
-    TF_Session arg0,
-    @Const TF_Output inputs, int ninputs,
-    @Const TF_Output outputs, int noutputs,
-    @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
-    @Cast("const char**") @ByPtrPtr ByteBuffer handle,
-    TF_Status arg8);
-public static native void TF_SessionPRunSetup(
-    TF_Session arg0,
-    @Const TF_Output inputs, int ninputs,
-    @Const TF_Output outputs, int noutputs,
-    @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
-    @Cast("const char**") @ByPtrPtr byte[] handle,
-    TF_Status arg8);
+    public static native void TF_SessionPRunSetup(
+        TF_Session arg0,
+        @Const TF_Output inputs, int ninputs,
+        @Const TF_Output outputs, int noutputs,
+        @Cast("const TF_Operation*const*") PointerPointer target_opers, int ntargets,
+        @Cast("const char**") PointerPointer handle,
+        TF_Status arg8);
 
-// Continue to run the graph with additional feeds and fetches. The
+    public static native void TF_SessionPRunSetup(
+        TF_Session arg0,
+        @Const TF_Output inputs, int ninputs,
+        @Const TF_Output outputs, int noutputs,
+        @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
+        @Cast("const char**") @ByPtrPtr BytePointer handle,
+        TF_Status arg8);
+
+    public static native void TF_SessionPRunSetup(
+        TF_Session arg0,
+        @Const TF_Output inputs, int ninputs,
+        @Const TF_Output outputs, int noutputs,
+        @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
+        @Cast("const char**") @ByPtrPtr ByteBuffer handle,
+        TF_Status arg8);
+
+    public static native void TF_SessionPRunSetup(
+        TF_Session arg0,
+        @Const TF_Output inputs, int ninputs,
+        @Const TF_Output outputs, int noutputs,
+        @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
+        @Cast("const char**") @ByPtrPtr byte[] handle,
+        TF_Status arg8);
+
+    // Continue to run the graph with additional feeds and fetches. The
 // execution state is uniquely identified by the handle.
-public static native void TF_SessionPRun(
-    TF_Session arg0, @Cast("const char*") BytePointer handle,
-    @Const TF_Output inputs, @Cast("TF_Tensor*const*") PointerPointer input_values, int ninputs,
-    @Const TF_Output outputs, @Cast("TF_Tensor**") PointerPointer output_values, int noutputs,
-    @Cast("const TF_Operation*const*") PointerPointer target_opers, int ntargets,
-    TF_Status arg10);
-public static native void TF_SessionPRun(
-    TF_Session arg0, @Cast("const char*") BytePointer handle,
-    @Const TF_Output inputs, @ByPtrPtr TF_Tensor input_values, int ninputs,
-    @Const TF_Output outputs, @ByPtrPtr TF_Tensor output_values, int noutputs,
-    @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
-    TF_Status arg10);
-public static native void TF_SessionPRun(
-    TF_Session arg0, String handle,
-    @Const TF_Output inputs, @ByPtrPtr TF_Tensor input_values, int ninputs,
-    @Const TF_Output outputs, @ByPtrPtr TF_Tensor output_values, int noutputs,
-    @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
-    TF_Status arg10);
+    public static native void TF_SessionPRun(
+        TF_Session arg0, @Cast("const char*") BytePointer handle,
+        @Const TF_Output inputs, @Cast("TF_Tensor*const*") PointerPointer input_values, int ninputs,
+        @Const TF_Output outputs, @Cast("TF_Tensor**") PointerPointer output_values, int noutputs,
+        @Cast("const TF_Operation*const*") PointerPointer target_opers, int ntargets,
+        TF_Status arg10);
 
-// Deletes a handle allocated by TF_SessionPRunSetup.
+    public static native void TF_SessionPRun(
+        TF_Session arg0, @Cast("const char*") BytePointer handle,
+        @Const TF_Output inputs, @ByPtrPtr TF_Tensor input_values, int ninputs,
+        @Const TF_Output outputs, @ByPtrPtr TF_Tensor output_values, int noutputs,
+        @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_SessionPRun(
+        TF_Session arg0, String handle,
+        @Const TF_Output inputs, @ByPtrPtr TF_Tensor input_values, int ninputs,
+        @Const TF_Output outputs, @ByPtrPtr TF_Tensor output_values, int noutputs,
+        @Const @ByPtrPtr TF_Operation target_opers, int ntargets,
+        TF_Status arg10);
+
+    // Deletes a handle allocated by TF_SessionPRunSetup.
 // Once called, no more calls to TF_SessionPRun should be made.
-public static native void TF_DeletePRunHandle(@Cast("const char*") BytePointer handle);
-public static native void TF_DeletePRunHandle(String handle);
+    public static native void TF_DeletePRunHandle(@Cast("const char*") BytePointer handle);
+
+    public static native void TF_DeletePRunHandle(String handle);
 // Targeting ../TF_DeprecatedSession.java
 
 
+    public static native TF_DeprecatedSession TF_NewDeprecatedSession(
+        @Const TF_SessionOptions arg0, TF_Status status);
 
-public static native TF_DeprecatedSession TF_NewDeprecatedSession(
-    @Const TF_SessionOptions arg0, TF_Status status);
-public static native void TF_CloseDeprecatedSession(TF_DeprecatedSession arg0,
-                                                     TF_Status status);
-public static native void TF_DeleteDeprecatedSession(TF_DeprecatedSession arg0,
-                                                      TF_Status status);
-public static native void TF_Reset(@Const TF_SessionOptions opt,
-                                    @Cast("const char**") PointerPointer containers, int ncontainers,
-                                    TF_Status status);
-public static native void TF_Reset(@Const TF_SessionOptions opt,
-                                    @Cast("const char**") @ByPtrPtr BytePointer containers, int ncontainers,
-                                    TF_Status status);
-public static native void TF_Reset(@Const TF_SessionOptions opt,
-                                    @Cast("const char**") @ByPtrPtr ByteBuffer containers, int ncontainers,
-                                    TF_Status status);
-public static native void TF_Reset(@Const TF_SessionOptions opt,
-                                    @Cast("const char**") @ByPtrPtr byte[] containers, int ncontainers,
-                                    TF_Status status);
-// Treat the bytes proto[0,proto_len-1] as a serialized GraphDef and
+    public static native void TF_CloseDeprecatedSession(TF_DeprecatedSession arg0,
+        TF_Status status);
+
+    public static native void TF_DeleteDeprecatedSession(TF_DeprecatedSession arg0,
+        TF_Status status);
+
+    public static native void TF_Reset(@Const TF_SessionOptions opt,
+        @Cast("const char**") PointerPointer containers, int ncontainers,
+        TF_Status status);
+
+    public static native void TF_Reset(@Const TF_SessionOptions opt,
+        @Cast("const char**") @ByPtrPtr BytePointer containers, int ncontainers,
+        TF_Status status);
+
+    public static native void TF_Reset(@Const TF_SessionOptions opt,
+        @Cast("const char**") @ByPtrPtr ByteBuffer containers, int ncontainers,
+        TF_Status status);
+
+    public static native void TF_Reset(@Const TF_SessionOptions opt,
+        @Cast("const char**") @ByPtrPtr byte[] containers, int ncontainers,
+        TF_Status status);
+
+    // Treat the bytes proto[0,proto_len-1] as a serialized GraphDef and
 // add the nodes in that GraphDef to the graph for the session.
 //
 // Prefer use of TF_Session and TF_GraphImportGraphDef over this.
-public static native void TF_ExtendGraph(TF_DeprecatedSession arg0,
-                                          @Const Pointer proto, @Cast("size_t") long proto_len,
-                                          TF_Status arg3);
+    public static native void TF_ExtendGraph(TF_DeprecatedSession arg0,
+        @Const Pointer proto, @Cast("size_t") long proto_len,
+        TF_Status arg3);
 
-// See TF_SessionRun() above.
-public static native void TF_Run(TF_DeprecatedSession arg0,
-                                  @Const TF_Buffer run_options,
-                                  @Cast("const char**") PointerPointer input_names, @Cast("TF_Tensor**") PointerPointer inputs,
-                                  int ninputs, @Cast("const char**") PointerPointer output_names,
-                                  @Cast("TF_Tensor**") PointerPointer outputs, int noutputs,
-                                  @Cast("const char**") PointerPointer target_oper_names, int ntargets,
-                                  TF_Buffer run_metadata, TF_Status arg11);
-public static native void TF_Run(TF_DeprecatedSession arg0,
-                                  @Const TF_Buffer run_options,
-                                  @Cast("const char**") @ByPtrPtr BytePointer input_names, @ByPtrPtr TF_Tensor inputs,
-                                  int ninputs, @Cast("const char**") @ByPtrPtr BytePointer output_names,
-                                  @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                  @Cast("const char**") @ByPtrPtr BytePointer target_oper_names, int ntargets,
-                                  TF_Buffer run_metadata, TF_Status arg11);
-public static native void TF_Run(TF_DeprecatedSession arg0,
-                                  @Const TF_Buffer run_options,
-                                  @Cast("const char**") @ByPtrPtr ByteBuffer input_names, @ByPtrPtr TF_Tensor inputs,
-                                  int ninputs, @Cast("const char**") @ByPtrPtr ByteBuffer output_names,
-                                  @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                  @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names, int ntargets,
-                                  TF_Buffer run_metadata, TF_Status arg11);
-public static native void TF_Run(TF_DeprecatedSession arg0,
-                                  @Const TF_Buffer run_options,
-                                  @Cast("const char**") @ByPtrPtr byte[] input_names, @ByPtrPtr TF_Tensor inputs,
-                                  int ninputs, @Cast("const char**") @ByPtrPtr byte[] output_names,
-                                  @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                  @Cast("const char**") @ByPtrPtr byte[] target_oper_names, int ntargets,
-                                  TF_Buffer run_metadata, TF_Status arg11);
+    // See TF_SessionRun() above.
+    public static native void TF_Run(TF_DeprecatedSession arg0,
+        @Const TF_Buffer run_options,
+        @Cast("const char**") PointerPointer input_names,
+        @Cast("TF_Tensor**") PointerPointer inputs,
+        int ninputs, @Cast("const char**") PointerPointer output_names,
+        @Cast("TF_Tensor**") PointerPointer outputs, int noutputs,
+        @Cast("const char**") PointerPointer target_oper_names, int ntargets,
+        TF_Buffer run_metadata, TF_Status arg11);
 
-// See TF_SessionPRunSetup() above.
-public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
-                                        @Cast("const char**") PointerPointer input_names, int ninputs,
-                                        @Cast("const char**") PointerPointer output_names, int noutputs,
-                                        @Cast("const char**") PointerPointer target_oper_names,
-                                        int ntargets, @Cast("const char**") PointerPointer handle,
-                                        TF_Status arg8);
-public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
-                                        @Cast("const char**") @ByPtrPtr BytePointer input_names, int ninputs,
-                                        @Cast("const char**") @ByPtrPtr BytePointer output_names, int noutputs,
-                                        @Cast("const char**") @ByPtrPtr BytePointer target_oper_names,
-                                        int ntargets, @Cast("const char**") @ByPtrPtr BytePointer handle,
-                                        TF_Status arg8);
-public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
-                                        @Cast("const char**") @ByPtrPtr ByteBuffer input_names, int ninputs,
-                                        @Cast("const char**") @ByPtrPtr ByteBuffer output_names, int noutputs,
-                                        @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names,
-                                        int ntargets, @Cast("const char**") @ByPtrPtr ByteBuffer handle,
-                                        TF_Status arg8);
-public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
-                                        @Cast("const char**") @ByPtrPtr byte[] input_names, int ninputs,
-                                        @Cast("const char**") @ByPtrPtr byte[] output_names, int noutputs,
-                                        @Cast("const char**") @ByPtrPtr byte[] target_oper_names,
-                                        int ntargets, @Cast("const char**") @ByPtrPtr byte[] handle,
-                                        TF_Status arg8);
+    public static native void TF_Run(TF_DeprecatedSession arg0,
+        @Const TF_Buffer run_options,
+        @Cast("const char**") @ByPtrPtr BytePointer input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr BytePointer output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr BytePointer target_oper_names, int ntargets,
+        TF_Buffer run_metadata, TF_Status arg11);
 
-// See TF_SessionPRun above.
-public static native void TF_PRun(TF_DeprecatedSession arg0, @Cast("const char*") BytePointer handle,
-                                   @Cast("const char**") PointerPointer input_names, @Cast("TF_Tensor**") PointerPointer inputs,
-                                   int ninputs, @Cast("const char**") PointerPointer output_names,
-                                   @Cast("TF_Tensor**") PointerPointer outputs, int noutputs,
-                                   @Cast("const char**") PointerPointer target_oper_names, int ntargets,
-                                   TF_Status arg10);
-public static native void TF_PRun(TF_DeprecatedSession arg0, @Cast("const char*") BytePointer handle,
-                                   @Cast("const char**") @ByPtrPtr BytePointer input_names, @ByPtrPtr TF_Tensor inputs,
-                                   int ninputs, @Cast("const char**") @ByPtrPtr BytePointer output_names,
-                                   @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                   @Cast("const char**") @ByPtrPtr BytePointer target_oper_names, int ntargets,
-                                   TF_Status arg10);
-public static native void TF_PRun(TF_DeprecatedSession arg0, String handle,
-                                   @Cast("const char**") @ByPtrPtr ByteBuffer input_names, @ByPtrPtr TF_Tensor inputs,
-                                   int ninputs, @Cast("const char**") @ByPtrPtr ByteBuffer output_names,
-                                   @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                   @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names, int ntargets,
-                                   TF_Status arg10);
-public static native void TF_PRun(TF_DeprecatedSession arg0, @Cast("const char*") BytePointer handle,
-                                   @Cast("const char**") @ByPtrPtr byte[] input_names, @ByPtrPtr TF_Tensor inputs,
-                                   int ninputs, @Cast("const char**") @ByPtrPtr byte[] output_names,
-                                   @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                   @Cast("const char**") @ByPtrPtr byte[] target_oper_names, int ntargets,
-                                   TF_Status arg10);
-public static native void TF_PRun(TF_DeprecatedSession arg0, String handle,
-                                   @Cast("const char**") @ByPtrPtr BytePointer input_names, @ByPtrPtr TF_Tensor inputs,
-                                   int ninputs, @Cast("const char**") @ByPtrPtr BytePointer output_names,
-                                   @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                   @Cast("const char**") @ByPtrPtr BytePointer target_oper_names, int ntargets,
-                                   TF_Status arg10);
-public static native void TF_PRun(TF_DeprecatedSession arg0, @Cast("const char*") BytePointer handle,
-                                   @Cast("const char**") @ByPtrPtr ByteBuffer input_names, @ByPtrPtr TF_Tensor inputs,
-                                   int ninputs, @Cast("const char**") @ByPtrPtr ByteBuffer output_names,
-                                   @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                   @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names, int ntargets,
-                                   TF_Status arg10);
-public static native void TF_PRun(TF_DeprecatedSession arg0, String handle,
-                                   @Cast("const char**") @ByPtrPtr byte[] input_names, @ByPtrPtr TF_Tensor inputs,
-                                   int ninputs, @Cast("const char**") @ByPtrPtr byte[] output_names,
-                                   @ByPtrPtr TF_Tensor outputs, int noutputs,
-                                   @Cast("const char**") @ByPtrPtr byte[] target_oper_names, int ntargets,
-                                   TF_Status arg10);
+    public static native void TF_Run(TF_DeprecatedSession arg0,
+        @Const TF_Buffer run_options,
+        @Cast("const char**") @ByPtrPtr ByteBuffer input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr ByteBuffer output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names, int ntargets,
+        TF_Buffer run_metadata, TF_Status arg11);
+
+    public static native void TF_Run(TF_DeprecatedSession arg0,
+        @Const TF_Buffer run_options,
+        @Cast("const char**") @ByPtrPtr byte[] input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr byte[] output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr byte[] target_oper_names, int ntargets,
+        TF_Buffer run_metadata, TF_Status arg11);
+
+    // See TF_SessionPRunSetup() above.
+    public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
+        @Cast("const char**") PointerPointer input_names, int ninputs,
+        @Cast("const char**") PointerPointer output_names, int noutputs,
+        @Cast("const char**") PointerPointer target_oper_names,
+        int ntargets, @Cast("const char**") PointerPointer handle,
+        TF_Status arg8);
+
+    public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
+        @Cast("const char**") @ByPtrPtr BytePointer input_names, int ninputs,
+        @Cast("const char**") @ByPtrPtr BytePointer output_names, int noutputs,
+        @Cast("const char**") @ByPtrPtr BytePointer target_oper_names,
+        int ntargets, @Cast("const char**") @ByPtrPtr BytePointer handle,
+        TF_Status arg8);
+
+    public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
+        @Cast("const char**") @ByPtrPtr ByteBuffer input_names, int ninputs,
+        @Cast("const char**") @ByPtrPtr ByteBuffer output_names, int noutputs,
+        @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names,
+        int ntargets, @Cast("const char**") @ByPtrPtr ByteBuffer handle,
+        TF_Status arg8);
+
+    public static native void TF_PRunSetup(TF_DeprecatedSession arg0,
+        @Cast("const char**") @ByPtrPtr byte[] input_names, int ninputs,
+        @Cast("const char**") @ByPtrPtr byte[] output_names, int noutputs,
+        @Cast("const char**") @ByPtrPtr byte[] target_oper_names,
+        int ntargets, @Cast("const char**") @ByPtrPtr byte[] handle,
+        TF_Status arg8);
+
+    // See TF_SessionPRun above.
+    public static native void TF_PRun(TF_DeprecatedSession arg0,
+        @Cast("const char*") BytePointer handle,
+        @Cast("const char**") PointerPointer input_names,
+        @Cast("TF_Tensor**") PointerPointer inputs,
+        int ninputs, @Cast("const char**") PointerPointer output_names,
+        @Cast("TF_Tensor**") PointerPointer outputs, int noutputs,
+        @Cast("const char**") PointerPointer target_oper_names, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_PRun(TF_DeprecatedSession arg0,
+        @Cast("const char*") BytePointer handle,
+        @Cast("const char**") @ByPtrPtr BytePointer input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr BytePointer output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr BytePointer target_oper_names, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_PRun(TF_DeprecatedSession arg0, String handle,
+        @Cast("const char**") @ByPtrPtr ByteBuffer input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr ByteBuffer output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_PRun(TF_DeprecatedSession arg0,
+        @Cast("const char*") BytePointer handle,
+        @Cast("const char**") @ByPtrPtr byte[] input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr byte[] output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr byte[] target_oper_names, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_PRun(TF_DeprecatedSession arg0, String handle,
+        @Cast("const char**") @ByPtrPtr BytePointer input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr BytePointer output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr BytePointer target_oper_names, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_PRun(TF_DeprecatedSession arg0,
+        @Cast("const char*") BytePointer handle,
+        @Cast("const char**") @ByPtrPtr ByteBuffer input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr ByteBuffer output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr ByteBuffer target_oper_names, int ntargets,
+        TF_Status arg10);
+
+    public static native void TF_PRun(TF_DeprecatedSession arg0, String handle,
+        @Cast("const char**") @ByPtrPtr byte[] input_names, @ByPtrPtr TF_Tensor inputs,
+        int ninputs, @Cast("const char**") @ByPtrPtr byte[] output_names,
+        @ByPtrPtr TF_Tensor outputs, int noutputs,
+        @Cast("const char**") @ByPtrPtr byte[] target_oper_names, int ntargets,
+        TF_Status arg10);
 // Targeting ../TF_DeviceList.java
 
 
-
-// Lists all devices in a TF_Session.
+    // Lists all devices in a TF_Session.
 //
 // Caller takes ownership of the returned TF_DeviceList* which must eventually
 // be freed with a call to TF_DeleteDeviceList.
-public static native TF_DeviceList TF_SessionListDevices(TF_Session session,
-                                                           TF_Status status);
+    public static native TF_DeviceList TF_SessionListDevices(TF_Session session,
+        TF_Status status);
 
-// Lists all devices in a TF_Session.
+    // Lists all devices in a TF_Session.
 //
 // Caller takes ownership of the returned TF_DeviceList* which must eventually
 // be freed with a call to TF_DeleteDeviceList.
-public static native TF_DeviceList TF_DeprecatedSessionListDevices(
-    TF_DeprecatedSession session, TF_Status status);
+    public static native TF_DeviceList TF_DeprecatedSessionListDevices(
+        TF_DeprecatedSession session, TF_Status status);
 
-// Deallocates the device list.
-public static native void TF_DeleteDeviceList(TF_DeviceList list);
+    // Deallocates the device list.
+    public static native void TF_DeleteDeviceList(TF_DeviceList list);
 
-// Counts the number of elements in the device list.
-public static native int TF_DeviceListCount(@Const TF_DeviceList list);
+    // Counts the number of elements in the device list.
+    public static native int TF_DeviceListCount(@Const TF_DeviceList list);
 
-// Retrieves the full name of the device (e.g. /job:worker/replica:0/...)
+    // Retrieves the full name of the device (e.g. /job:worker/replica:0/...)
 // The return value will be a pointer to a null terminated string. The caller
 // must not modify or delete the string. It will be deallocated upon a call to
 // TF_DeleteDeviceList.
 //
 // If index is out of bounds, an error code will be set in the status object,
 // and a null pointer will be returned.
-public static native @Cast("const char*") BytePointer TF_DeviceListName(@Const TF_DeviceList list,
-                                                    int index,
-                                                    TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TF_DeviceListName(@Const TF_DeviceList list,
+        int index,
+        TF_Status status);
 
-// Retrieves the type of the device at the given index.
+    // Retrieves the type of the device at the given index.
 //
 // The caller must not modify or delete the string. It will be deallocated upon
 // a call to TF_DeleteDeviceList.
 //
 // If index is out of bounds, an error code will be set in the status object,
 // and a null pointer will be returned.
-public static native @Cast("const char*") BytePointer TF_DeviceListType(@Const TF_DeviceList list,
-                                                    int index,
-                                                    TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TF_DeviceListType(@Const TF_DeviceList list,
+        int index,
+        TF_Status status);
 
-// Retrieve the amount of memory associated with a given device.
+    // Retrieve the amount of memory associated with a given device.
 //
 // If index is out of bounds, an error code will be set in the status object,
 // and -1 will be returned.
-public static native @Cast("int64_t") long TF_DeviceListMemoryBytes(
-    @Const TF_DeviceList list, int index, TF_Status status);
+    public static native @Cast("int64_t")
+    long TF_DeviceListMemoryBytes(
+        @Const TF_DeviceList list, int index, TF_Status status);
 
-// Retrieve the incarnation number of a given device.
+    // Retrieve the incarnation number of a given device.
 //
 // If index is out of bounds, an error code will be set in the status object,
 // and 0 will be returned.
-public static native @Cast("uint64_t") long TF_DeviceListIncarnation(
-    @Const TF_DeviceList list, int index, TF_Status status);
+    public static native @Cast("uint64_t")
+    long TF_DeviceListIncarnation(
+        @Const TF_DeviceList list, int index, TF_Status status);
 // Targeting ../TF_Library.java
 
 
-
-// Load the library specified by library_filename and register the ops and
+    // Load the library specified by library_filename and register the ops and
 // kernels present in that library.
 //
 // Pass "library_filename" to a platform-specific mechanism for dynamically
@@ -2950,34 +3330,36 @@ public static native @Cast("uint64_t") long TF_DeviceListIncarnation(
 // The caller owns the library handle.
 //
 // On failure, place an error status in status and return NULL.
-public static native TF_Library TF_LoadLibrary(@Cast("const char*") BytePointer library_filename,
-                                                 TF_Status status);
-public static native TF_Library TF_LoadLibrary(String library_filename,
-                                                 TF_Status status);
+    public static native TF_Library TF_LoadLibrary(
+        @Cast("const char*") BytePointer library_filename,
+        TF_Status status);
 
-// Get the OpList of OpDefs defined in the library pointed by lib_handle.
+    public static native TF_Library TF_LoadLibrary(String library_filename,
+        TF_Status status);
+
+    // Get the OpList of OpDefs defined in the library pointed by lib_handle.
 //
 // Returns a TF_Buffer. The memory pointed to by the result is owned by
 // lib_handle. The data in the buffer will be the serialized OpList proto for
 // ops defined in the library.
-public static native @ByVal TF_Buffer TF_GetOpList(TF_Library lib_handle);
+    public static native @ByVal
+    TF_Buffer TF_GetOpList(TF_Library lib_handle);
 
-// Frees the memory associated with the library handle.
+    // Frees the memory associated with the library handle.
 // Does NOT unload the library.
-public static native void TF_DeleteLibraryHandle(TF_Library lib_handle);
+    public static native void TF_DeleteLibraryHandle(TF_Library lib_handle);
 
-// Get the OpList of all OpDefs defined in this address space.
+    // Get the OpList of all OpDefs defined in this address space.
 // Returns a TF_Buffer, ownership of which is transferred to the caller
 // (and can be freed using TF_DeleteBuffer).
 //
 // The data in the buffer will be the serialized OpList proto for ops registered
 // in this address space.
-public static native TF_Buffer TF_GetAllOpList();
+    public static native TF_Buffer TF_GetAllOpList();
 // Targeting ../TF_ApiDefMap.java
 
 
-
-// Creates a new TF_ApiDefMap instance.
+    // Creates a new TF_ApiDefMap instance.
 //
 // Params:
 //  op_list_buffer - TF_Buffer instance containing serialized OpList
@@ -2985,13 +3367,13 @@ public static native TF_Buffer TF_GetAllOpList();
 //    https://www.tensorflow.org/code/tensorflow/core/framework/op_def.proto
 //    for the OpList proto definition).
 //  status - Set to OK on success and an appropriate error on failure.
-public static native TF_ApiDefMap TF_NewApiDefMap(TF_Buffer op_list_buffer,
-                                                    TF_Status status);
+    public static native TF_ApiDefMap TF_NewApiDefMap(TF_Buffer op_list_buffer,
+        TF_Status status);
 
-// Deallocates a TF_ApiDefMap.
-public static native void TF_DeleteApiDefMap(TF_ApiDefMap apimap);
+    // Deallocates a TF_ApiDefMap.
+    public static native void TF_DeleteApiDefMap(TF_ApiDefMap apimap);
 
-// Add ApiDefs to the map.
+    // Add ApiDefs to the map.
 //
 // `text` corresponds to a text representation of an ApiDefs protocol message.
 // (https://www.tensorflow.org/code/tensorflow/core/framework/api_def.proto).
@@ -2999,99 +3381,102 @@ public static native void TF_DeleteApiDefMap(TF_ApiDefMap apimap);
 // The provided ApiDefs will be merged with existing ones in the map, with
 // precedence given to the newly added version in case of conflicts with
 // previous calls to TF_ApiDefMapPut.
-public static native void TF_ApiDefMapPut(TF_ApiDefMap api_def_map,
-                                           @Cast("const char*") BytePointer text, @Cast("size_t") long text_len,
-                                           TF_Status status);
-public static native void TF_ApiDefMapPut(TF_ApiDefMap api_def_map,
-                                           String text, @Cast("size_t") long text_len,
-                                           TF_Status status);
+    public static native void TF_ApiDefMapPut(TF_ApiDefMap api_def_map,
+        @Cast("const char*") BytePointer text, @Cast("size_t") long text_len,
+        TF_Status status);
 
-// Returns a serialized ApiDef protocol buffer for the TensorFlow operation
+    public static native void TF_ApiDefMapPut(TF_ApiDefMap api_def_map,
+        String text, @Cast("size_t") long text_len,
+        TF_Status status);
+
+    // Returns a serialized ApiDef protocol buffer for the TensorFlow operation
 // named `name`.
-public static native TF_Buffer TF_ApiDefMapGet(TF_ApiDefMap api_def_map,
-                                                 @Cast("const char*") BytePointer name,
-                                                 @Cast("size_t") long name_len,
-                                                 TF_Status status);
-public static native TF_Buffer TF_ApiDefMapGet(TF_ApiDefMap api_def_map,
-                                                 String name,
-                                                 @Cast("size_t") long name_len,
-                                                 TF_Status status);
+    public static native TF_Buffer TF_ApiDefMapGet(TF_ApiDefMap api_def_map,
+        @Cast("const char*") BytePointer name,
+        @Cast("size_t") long name_len,
+        TF_Status status);
+
+    public static native TF_Buffer TF_ApiDefMapGet(TF_ApiDefMap api_def_map,
+        String name,
+        @Cast("size_t") long name_len,
+        TF_Status status);
 
 // --------------------------------------------------------------------------
 // Kernel definition information.
 
-// Returns a serialized KernelList protocol buffer containing KernelDefs for all
+    // Returns a serialized KernelList protocol buffer containing KernelDefs for all
 // registered kernels.
-public static native TF_Buffer TF_GetAllRegisteredKernels(TF_Status status);
+    public static native TF_Buffer TF_GetAllRegisteredKernels(TF_Status status);
 
-// Returns a serialized KernelList protocol buffer containing KernelDefs for all
+    // Returns a serialized KernelList protocol buffer containing KernelDefs for all
 // kernels registered for the operation named `name`.
-public static native TF_Buffer TF_GetRegisteredKernelsForOp(
-    @Cast("const char*") BytePointer name, TF_Status status);
-public static native TF_Buffer TF_GetRegisteredKernelsForOp(
-    String name, TF_Status status);
+    public static native TF_Buffer TF_GetRegisteredKernelsForOp(
+        @Cast("const char*") BytePointer name, TF_Status status);
 
-// Update edge, switch input/ output in a node
-public static native void TF_UpdateEdge(TF_Graph graph, @ByVal TF_Output new_src,
-                                         @ByVal TF_Input dst, TF_Status status);
+    public static native TF_Buffer TF_GetRegisteredKernelsForOp(
+        String name, TF_Status status);
+
+    // Update edge, switch input/ output in a node
+    public static native void TF_UpdateEdge(TF_Graph graph, @ByVal TF_Output new_src,
+        @ByVal TF_Input dst, TF_Status status);
 // Targeting ../TF_Server.java
 
 
-
-// Creates a new in-process TensorFlow server configured using a serialized
+    // Creates a new in-process TensorFlow server configured using a serialized
 // ServerDef protocol buffer provided via `proto` and `proto_len`.
 //
 // The server will not serve any requests until TF_ServerStart is invoked.
 // The server will stop serving requests once TF_ServerStop or
 // TF_DeleteServer is invoked.
-public static native TF_Server TF_NewServer(@Const Pointer proto,
-                                              @Cast("size_t") long proto_len,
-                                              TF_Status status);
+    public static native TF_Server TF_NewServer(@Const Pointer proto,
+        @Cast("size_t") long proto_len,
+        TF_Status status);
 
-// Starts an in-process TensorFlow server.
-public static native void TF_ServerStart(TF_Server server, TF_Status status);
+    // Starts an in-process TensorFlow server.
+    public static native void TF_ServerStart(TF_Server server, TF_Status status);
 
-// Stops an in-process TensorFlow server.
-public static native void TF_ServerStop(TF_Server server, TF_Status status);
+    // Stops an in-process TensorFlow server.
+    public static native void TF_ServerStop(TF_Server server, TF_Status status);
 
-// Blocks until the server has been successfully stopped (via TF_ServerStop or
+    // Blocks until the server has been successfully stopped (via TF_ServerStop or
 // TF_ServerClose).
-public static native void TF_ServerJoin(TF_Server server, TF_Status status);
+    public static native void TF_ServerJoin(TF_Server server, TF_Status status);
 
-// Returns the target string that can be provided to TF_SetTarget() to connect
+    // Returns the target string that can be provided to TF_SetTarget() to connect
 // a TF_Session to `server`.
 //
 // The returned string is valid only until TF_DeleteServer is invoked.
-public static native @Cast("const char*") BytePointer TF_ServerTarget(TF_Server server);
+    public static native @Cast("const char*")
+    BytePointer TF_ServerTarget(TF_Server server);
 
-// Destroy an in-process TensorFlow server, frees memory. If server is running
+    // Destroy an in-process TensorFlow server, frees memory. If server is running
 // it will be stopped and joined.
-public static native void TF_DeleteServer(TF_Server server);
+    public static native void TF_DeleteServer(TF_Server server);
 // Targeting ../Listener_BytePointer.java
 
 
-public static native void TF_RegisterLogListener(
-    Listener_BytePointer listener);
+    public static native void TF_RegisterLogListener(
+        Listener_BytePointer listener);
 // Targeting ../Listener_String.java
 
 
-public static native void TF_RegisterLogListener(
-    Listener_String listener);
+    public static native void TF_RegisterLogListener(
+        Listener_String listener);
 
-// Register a FileSystem plugin from filename `plugin_filename`.
+    // Register a FileSystem plugin from filename `plugin_filename`.
 //
 // On success, place OK in status.
 // On failure, place an error status in status.
-public static native void TF_RegisterFilesystemPlugin(
-    @Cast("const char*") BytePointer plugin_filename, TF_Status status);
-public static native void TF_RegisterFilesystemPlugin(
-    String plugin_filename, TF_Status status);
+    public static native void TF_RegisterFilesystemPlugin(
+        @Cast("const char*") BytePointer plugin_filename, TF_Status status);
+
+    public static native void TF_RegisterFilesystemPlugin(
+        String plugin_filename, TF_Status status);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_C_API_H_
-
 
 // Parsed from tensorflow/c/kernels.h
 
@@ -3144,9 +3529,7 @@ limitations under the License.
 // #endif
 // Targeting ../TF_KernelBuilder.java
 
-
 // Targeting ../TF_OpKernelConstruction.java
-
 
 // Targeting ../TF_OpKernelContext.java
 
@@ -3158,62 +3541,64 @@ limitations under the License.
 
 // Targeting ../Create_func_TF_OpKernelConstruction.java
 
-
 // Targeting ../Compute_func_Pointer_TF_OpKernelContext.java
-
 
 // Targeting ../Delete_func_Pointer.java
 
 
-public static native TF_KernelBuilder TF_NewKernelBuilder(
-    @Cast("const char*") BytePointer op_name, @Cast("const char*") BytePointer device_name,
-    Create_func_TF_OpKernelConstruction create_func,
-    Compute_func_Pointer_TF_OpKernelContext compute_func,
-    Delete_func_Pointer delete_func);
-public static native TF_KernelBuilder TF_NewKernelBuilder(
-    String op_name, String device_name,
-    Create_func_TF_OpKernelConstruction create_func,
-    Compute_func_Pointer_TF_OpKernelContext compute_func,
-    Delete_func_Pointer delete_func);
+    public static native TF_KernelBuilder TF_NewKernelBuilder(
+        @Cast("const char*") BytePointer op_name, @Cast("const char*") BytePointer device_name,
+        Create_func_TF_OpKernelConstruction create_func,
+        Compute_func_Pointer_TF_OpKernelContext compute_func,
+        Delete_func_Pointer delete_func);
 
-// Specifies that this kernel's attribute only supports the given type.
-public static native void TF_KernelBuilder_TypeConstraint(
-    TF_KernelBuilder kernel_builder, @Cast("const char*") BytePointer attr_name,
-    @Cast("const TF_DataType") int type, TF_Status status);
-public static native void TF_KernelBuilder_TypeConstraint(
-    TF_KernelBuilder kernel_builder, String attr_name,
-    @Cast("const TF_DataType") int type, TF_Status status);
+    public static native TF_KernelBuilder TF_NewKernelBuilder(
+        String op_name, String device_name,
+        Create_func_TF_OpKernelConstruction create_func,
+        Compute_func_Pointer_TF_OpKernelContext compute_func,
+        Delete_func_Pointer delete_func);
 
-// Specify that this kernel requires/provides an input/output arg
+    // Specifies that this kernel's attribute only supports the given type.
+    public static native void TF_KernelBuilder_TypeConstraint(
+        TF_KernelBuilder kernel_builder, @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType") int type, TF_Status status);
+
+    public static native void TF_KernelBuilder_TypeConstraint(
+        TF_KernelBuilder kernel_builder, String attr_name,
+        @Cast("const TF_DataType") int type, TF_Status status);
+
+    // Specify that this kernel requires/provides an input/output arg
 // in host memory (instead of the default, device memory).
-public static native void TF_KernelBuilder_HostMemory(
-    TF_KernelBuilder kernel_builder, @Cast("const char*") BytePointer arg_name);
-public static native void TF_KernelBuilder_HostMemory(
-    TF_KernelBuilder kernel_builder, String arg_name);
+    public static native void TF_KernelBuilder_HostMemory(
+        TF_KernelBuilder kernel_builder, @Cast("const char*") BytePointer arg_name);
 
-// Specify a priority number for this kernel.
-public static native void TF_KernelBuilder_Priority(
-    TF_KernelBuilder kernel_builder, int priority_number);
+    public static native void TF_KernelBuilder_HostMemory(
+        TF_KernelBuilder kernel_builder, String arg_name);
 
-// Register the given kernel builder with the TensorFlow runtime. If
+    // Specify a priority number for this kernel.
+    public static native void TF_KernelBuilder_Priority(
+        TF_KernelBuilder kernel_builder, int priority_number);
+
+    // Register the given kernel builder with the TensorFlow runtime. If
 // registration fails, the given status will be populated.
 //
 // This call takes ownership of the `builder` pointer.
-public static native void TF_RegisterKernelBuilder(@Cast("const char*") BytePointer kernel_name,
-                                                    TF_KernelBuilder builder,
-                                                    TF_Status status);
-public static native void TF_RegisterKernelBuilder(String kernel_name,
-                                                    TF_KernelBuilder builder,
-                                                    TF_Status status);
+    public static native void TF_RegisterKernelBuilder(@Cast("const char*") BytePointer kernel_name,
+        TF_KernelBuilder builder,
+        TF_Status status);
 
-// Deletes the given TF_KernelBuilder. This should be called only if the kernel
+    public static native void TF_RegisterKernelBuilder(String kernel_name,
+        TF_KernelBuilder builder,
+        TF_Status status);
+
+    // Deletes the given TF_KernelBuilder. This should be called only if the kernel
 // builder is not registered with TensorFlow via TF_RegisterKernelBuilder.
-public static native void TF_DeleteKernelBuilder(TF_KernelBuilder builder);
+    public static native void TF_DeleteKernelBuilder(TF_KernelBuilder builder);
 
 // --------------------------------------------------------------------------
 // OpKernelContext routines
 
-// TF_GetStream returns the SP_Stream available in ctx.
+    // TF_GetStream returns the SP_Stream available in ctx.
 // This function returns a stream only for devices registered using the
 // StreamExecutor C API
 // (tensorflow/c/experimental/stream_executor/stream_executor.h). It will return
@@ -3224,48 +3609,51 @@ public static native @ByVal @Cast("SP_Stream*") Pointer TF_GetStream(TF_OpKernel
                                              TF_Status status);
 
 // TF_NumInputs returns the number of inputs available in ctx.
-public static native int TF_NumInputs(TF_OpKernelContext ctx);
+    public static native int TF_NumInputs(TF_OpKernelContext ctx);
 
-// TF_NumOutputs returns the number of outputs to be placed in *ctx by the
+    // TF_NumOutputs returns the number of outputs to be placed in *ctx by the
 // kernel.
-public static native int TF_NumOutputs(TF_OpKernelContext ctx);
+    public static native int TF_NumOutputs(TF_OpKernelContext ctx);
 
-// Retrieves the ith input from ctx. If TF_GetCode(status) is TF_OK, *tensor is
+    // Retrieves the ith input from ctx. If TF_GetCode(status) is TF_OK, *tensor is
 // populated and its ownership is passed to the caller. In any other case,
 // *tensor is not modified.
 //
 // If i < 0 or i >= TF_NumInputs(ctx), *status is set to TF_OUT_OF_RANGE.
-public static native void TF_GetInput(TF_OpKernelContext ctx, int i,
-                                       @Cast("TF_Tensor**") PointerPointer tensor, TF_Status status);
-public static native void TF_GetInput(TF_OpKernelContext ctx, int i,
-                                       @ByPtrPtr TF_Tensor tensor, TF_Status status);
+    public static native void TF_GetInput(TF_OpKernelContext ctx, int i,
+        @Cast("TF_Tensor**") PointerPointer tensor, TF_Status status);
 
-// Sets the ith output of ctx to tensor. If TF_GetCode(status) is anything but
+    public static native void TF_GetInput(TF_OpKernelContext ctx, int i,
+        @ByPtrPtr TF_Tensor tensor, TF_Status status);
+
+    // Sets the ith output of ctx to tensor. If TF_GetCode(status) is anything but
 // TF_OK, ctx is left unmodified.
 //
 // If i < 0 or i >= TF_NumOutputs(ctx), *status is set to TF_OUT_OF_RANGE.
-public static native void TF_SetOutput(TF_OpKernelContext ctx, int i,
-                                        @Const TF_Tensor tensor,
-                                        TF_Status status);
+    public static native void TF_SetOutput(TF_OpKernelContext ctx, int i,
+        @Const TF_Tensor tensor,
+        TF_Status status);
 
-// Notifies the given OpKernelConstruction that kernel construction has failed.
-public static native void TF_OpKernelConstruction_Failure(
-    TF_OpKernelConstruction ctx, TF_Status status);
+    // Notifies the given OpKernelConstruction that kernel construction has failed.
+    public static native void TF_OpKernelConstruction_Failure(
+        TF_OpKernelConstruction ctx, TF_Status status);
 
-// Notifies the given OpKernelContext that the kernel's compute function has
+    // Notifies the given OpKernelContext that the kernel's compute function has
 // failed.
-public static native void TF_OpKernelContext_Failure(TF_OpKernelContext ctx,
-                                                      TF_Status status);
+    public static native void TF_OpKernelContext_Failure(TF_OpKernelContext ctx,
+        TF_Status status);
 
-// Returns the expected output data type of the ith output. If i < 0 or
+    // Returns the expected output data type of the ith output. If i < 0 or
 // i >= TF_NumOutputs(ctx), the program aborts.
-public static native @Cast("TF_DataType") int TF_ExpectedOutputDataType(
-    TF_OpKernelContext ctx, int i);
+    public static native @Cast("TF_DataType")
+    int TF_ExpectedOutputDataType(
+        TF_OpKernelContext ctx, int i);
 
-// Returns the step ID of the given context.
-public static native @Cast("int64_t") long TF_StepId(TF_OpKernelContext ctx);
+    // Returns the step ID of the given context.
+    public static native @Cast("int64_t")
+    long TF_StepId(TF_OpKernelContext ctx);
 
-// Get the list_size and total_size of the attribute `attr_name` of `oper`.
+    // Get the list_size and total_size of the attribute `attr_name` of `oper`.
 // list_size - the length of the list.
 // total_size - total size of the list.
 //   (1) If attr_type == TF_ATTR_STRING
@@ -3303,48 +3691,61 @@ public static native void TF_OpKernelConstruction_GetAttrSize(
 //
 // If the attribute could not be found or could not be interpreted as
 // TF_DataType, *status is populated with an error.
-public static native void TF_OpKernelConstruction_GetAttrType(
-    TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, @Cast("TF_DataType*") IntPointer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrType(
-    TF_OpKernelConstruction ctx, String attr_name, @Cast("TF_DataType*") IntBuffer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrType(
-    TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, @Cast("TF_DataType*") int[] val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrType(
-    TF_OpKernelConstruction ctx, String attr_name, @Cast("TF_DataType*") IntPointer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrType(
-    TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, @Cast("TF_DataType*") IntBuffer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrType(
-    TF_OpKernelConstruction ctx, String attr_name, @Cast("TF_DataType*") int[] val,
-    TF_Status status);
+    public static native void TF_OpKernelConstruction_GetAttrType(
+        TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntPointer val,
+        TF_Status status);
 
-// Interprets the named kernel construction attribute as int32_t and
+    public static native void TF_OpKernelConstruction_GetAttrType(
+        TF_OpKernelConstruction ctx, String attr_name, @Cast("TF_DataType*") IntBuffer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrType(
+        TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") int[] val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrType(
+        TF_OpKernelConstruction ctx, String attr_name, @Cast("TF_DataType*") IntPointer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrType(
+        TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntBuffer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrType(
+        TF_OpKernelConstruction ctx, String attr_name, @Cast("TF_DataType*") int[] val,
+        TF_Status status);
+
+    // Interprets the named kernel construction attribute as int32_t and
 // places it into *val. *status is set to TF_OK.
 //
 // If the attribute could not be found or could not be interpreted as
 // int32, *status is populated with an error.
-public static native void TF_OpKernelConstruction_GetAttrInt32(
-    TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, IntPointer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrInt32(
-    TF_OpKernelConstruction ctx, String attr_name, IntBuffer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrInt32(
-    TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, int[] val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrInt32(
-    TF_OpKernelConstruction ctx, String attr_name, IntPointer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrInt32(
-    TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, IntBuffer val,
-    TF_Status status);
-public static native void TF_OpKernelConstruction_GetAttrInt32(
-    TF_OpKernelConstruction ctx, String attr_name, int[] val,
-    TF_Status status);
+    public static native void TF_OpKernelConstruction_GetAttrInt32(
+        TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, IntPointer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrInt32(
+        TF_OpKernelConstruction ctx, String attr_name, IntBuffer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrInt32(
+        TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, int[] val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrInt32(
+        TF_OpKernelConstruction ctx, String attr_name, IntPointer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrInt32(
+        TF_OpKernelConstruction ctx, @Cast("const char*") BytePointer attr_name, IntBuffer val,
+        TF_Status status);
+
+    public static native void TF_OpKernelConstruction_GetAttrInt32(
+        TF_OpKernelConstruction ctx, String attr_name, int[] val,
+        TF_Status status);
 
 // Interprets the named kernel construction attribute as int64_t and
 // places it into *val. *status is set to TF_OK.
@@ -3613,67 +4014,77 @@ public static native @Cast("bool") boolean TF_OpKernelConstruction_HasAttr(
 public static native @Cast("bool") boolean TF_OpKernelConstruction_HasAttr(
     TF_OpKernelConstruction ctx, String attr_name, TF_Status status);
 
-// Returns the unique operation name for this OpKernel.
-public static native @ByVal TF_StringView TF_OpKernelConstruction_GetName(
-    TF_OpKernelConstruction ctx);
+    // Returns the unique operation name for this OpKernel.
+    public static native @ByVal
+    TF_StringView TF_OpKernelConstruction_GetName(
+        TF_OpKernelConstruction ctx);
 
-// Allocates Tensor for output at given index. Caller takes ownership of
+    // Allocates Tensor for output at given index. Caller takes ownership of
 // returned TF_Tensor and should deallocate it using TF_DeleteTensor(tensor).
 //
 // This function should be used to allocate outputs inside kernel
 // compute function.
-public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
-                                            int index, @Cast("TF_DataType") int dtype,
-                                            @Cast("int64_t*") LongPointer dims, int num_dims,
-                                            @Cast("size_t") long len, TF_Status status);
-public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
-                                            int index, @Cast("TF_DataType") int dtype,
-                                            @Cast("int64_t*") LongBuffer dims, int num_dims,
-                                            @Cast("size_t") long len, TF_Status status);
-public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
-                                            int index, @Cast("TF_DataType") int dtype,
-                                            @Cast("int64_t*") long[] dims, int num_dims,
-                                            @Cast("size_t") long len, TF_Status status);
+    public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
+        int index, @Cast("TF_DataType") int dtype,
+        @Cast("int64_t*") LongPointer dims, int num_dims,
+        @Cast("size_t") long len, TF_Status status);
 
-// Tries to forward one of the inputs given in input_indices to
+    public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
+        int index, @Cast("TF_DataType") int dtype,
+        @Cast("int64_t*") LongBuffer dims, int num_dims,
+        @Cast("size_t") long len, TF_Status status);
+
+    public static native TF_Tensor TF_AllocateOutput(TF_OpKernelContext context,
+        int index, @Cast("TF_DataType") int dtype,
+        @Cast("int64_t*") long[] dims, int num_dims,
+        @Cast("size_t") long len, TF_Status status);
+
+    // Tries to forward one of the inputs given in input_indices to
 // output[output_index]. If none of the given inputs can be forwarded, calls
 // allocate_output() to allocate a new output buffer. The index of the
 // forwarded input will be assign to output argument forwarded_input (if it's
 // not nullptr). If no inputs are forwarded, forwarded_input will be assigned
 // -1.
-public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
-    TF_OpKernelContext context, IntPointer candidate_input_indices,
-    int num_candidate_input_indices, int output_index, @Cast("int64_t*") LongPointer output_dims,
-    int output_num_dims, IntPointer forwarded_input, TF_Status status);
-public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
-    TF_OpKernelContext context, IntBuffer candidate_input_indices,
-    int num_candidate_input_indices, int output_index, @Cast("int64_t*") LongBuffer output_dims,
-    int output_num_dims, IntBuffer forwarded_input, TF_Status status);
-public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
-    TF_OpKernelContext context, int[] candidate_input_indices,
-    int num_candidate_input_indices, int output_index, @Cast("int64_t*") long[] output_dims,
-    int output_num_dims, int[] forwarded_input, TF_Status status);
+    public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
+        TF_OpKernelContext context, IntPointer candidate_input_indices,
+        int num_candidate_input_indices, int output_index,
+        @Cast("int64_t*") LongPointer output_dims,
+        int output_num_dims, IntPointer forwarded_input, TF_Status status);
 
-// Allocates a temporary Tensor of the specified type and shape. The
+    public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
+        TF_OpKernelContext context, IntBuffer candidate_input_indices,
+        int num_candidate_input_indices, int output_index, @Cast("int64_t*") LongBuffer output_dims,
+        int output_num_dims, IntBuffer forwarded_input, TF_Status status);
+
+    public static native TF_Tensor TF_ForwardInputOrAllocateOutput(
+        TF_OpKernelContext context, int[] candidate_input_indices,
+        int num_candidate_input_indices, int output_index, @Cast("int64_t*") long[] output_dims,
+        int output_num_dims, int[] forwarded_input, TF_Status status);
+
+    // Allocates a temporary Tensor of the specified type and shape. The
 // Tensor must not be used after kernel construction is
 // complete.
 //
 // num_dims must equal the size of array dims
-public static native TF_Tensor TF_AllocateTemp(
-    TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") LongPointer dims, int num_dims,
-    TF_AllocatorAttributes alloc_attrs, TF_Status status);
-public static native TF_Tensor TF_AllocateTemp(
-    TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") LongBuffer dims, int num_dims,
-    TF_AllocatorAttributes alloc_attrs, TF_Status status);
-public static native TF_Tensor TF_AllocateTemp(
-    TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") long[] dims, int num_dims,
-    TF_AllocatorAttributes alloc_attrs, TF_Status status);
+    public static native TF_Tensor TF_AllocateTemp(
+        TF_OpKernelContext context, @Cast("TF_DataType") int dtype,
+        @Cast("int64_t*") LongPointer dims, int num_dims,
+        TF_AllocatorAttributes alloc_attrs, TF_Status status);
+
+    public static native TF_Tensor TF_AllocateTemp(
+        TF_OpKernelContext context, @Cast("TF_DataType") int dtype,
+        @Cast("int64_t*") LongBuffer dims, int num_dims,
+        TF_AllocatorAttributes alloc_attrs, TF_Status status);
+
+    public static native TF_Tensor TF_AllocateTemp(
+        TF_OpKernelContext context, @Cast("TF_DataType") int dtype, @Cast("int64_t*") long[] dims,
+        int num_dims,
+        TF_AllocatorAttributes alloc_attrs, TF_Status status);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_KERNELS_H_
-
 
 // Parsed from tensorflow/c/ops.h
 
@@ -3772,47 +4183,44 @@ limitations under the License.
 // #ifdef __cplusplus
 // Targeting ../TF_DimensionHandle.java
 
-
 // Targeting ../TF_OpDefinitionBuilder.java
 
-
 // Targeting ../TF_ShapeHandle.java
-
 
 // Targeting ../TF_ShapeInferenceContext.java
 
 
-
-// Returns a newly allocated op definition builder for the given op name. The
+    // Returns a newly allocated op definition builder for the given op name. The
 // returned builder may be customized with the `TF_OpDefinitionBuilder...`
 // functions and then registered with TensorFlow with TF_RegisterOpDefinition.
 //
 // The returned pointer is either freed by a call to TF_RegisterOpDefinition, or
 // can be manually deleted by TF_DeleteOpDefinitionBuilder if it is never
 // registered.
-public static native TF_OpDefinitionBuilder TF_NewOpDefinitionBuilder(
-    @Cast("const char*") BytePointer op_name);
-public static native TF_OpDefinitionBuilder TF_NewOpDefinitionBuilder(
-    String op_name);
+    public static native TF_OpDefinitionBuilder TF_NewOpDefinitionBuilder(
+        @Cast("const char*") BytePointer op_name);
 
-// Registers the given op builder with TensorFlow. Indicates success or
+    public static native TF_OpDefinitionBuilder TF_NewOpDefinitionBuilder(
+        String op_name);
+
+    // Registers the given op builder with TensorFlow. Indicates success or
 // otherwise in the given status.
 //
 // `builder` is freed whether the op was successfully registered or not. You
 // must call either this function or TF_DeleteOpDefinitionBuilder to free the
 // builder, but never both.
-public static native void TF_RegisterOpDefinition(
-    TF_OpDefinitionBuilder builder, TF_Status status);
+    public static native void TF_RegisterOpDefinition(
+        TF_OpDefinitionBuilder builder, TF_Status status);
 
-// Frees the given op definition builder. You must call either this function or
+    // Frees the given op definition builder. You must call either this function or
 // TF_RegisterOpDefinition to free the builder, but never both.
-public static native void TF_DeleteOpDefinitionBuilder(
-    TF_OpDefinitionBuilder builder);
+    public static native void TF_DeleteOpDefinitionBuilder(
+        TF_OpDefinitionBuilder builder);
 
 //----------------------------------------------------
 // Attribute functions.
 
-// Adds an attr to the given TF_OpDefinitionBuilder. The spec has
+    // Adds an attr to the given TF_OpDefinitionBuilder. The spec has
 // format "<name>:<type>" or "<name>:<type>=<default>"
 // where <name> matches regexp [a-zA-Z][a-zA-Z0-9_]*.
 // By convention, names containing only capital letters are reserved for
@@ -3839,12 +4247,13 @@ public static native void TF_DeleteOpDefinitionBuilder(
 //
 // Note that any attr specifying the length of an input or output will
 // get a default minimum of 1 unless the >= # syntax is used.
-public static native void TF_OpDefinitionBuilderAddAttr(
-    TF_OpDefinitionBuilder builder, @Cast("const char*") BytePointer attr_spec);
-public static native void TF_OpDefinitionBuilderAddAttr(
-    TF_OpDefinitionBuilder builder, String attr_spec);
+    public static native void TF_OpDefinitionBuilderAddAttr(
+        TF_OpDefinitionBuilder builder, @Cast("const char*") BytePointer attr_spec);
 
-// Adds an input to this TF_OpDefinitionBuilder.
+    public static native void TF_OpDefinitionBuilderAddAttr(
+        TF_OpDefinitionBuilder builder, String attr_spec);
+
+    // Adds an input to this TF_OpDefinitionBuilder.
 // The spec has form "<name>:<type-expr>" or "<name>:Ref(<type-expr>)"
 // where <name> matches regexp [a-z][a-z0-9_]* and <type-expr> can be:
 // * For a single tensor: <type>
@@ -3856,12 +4265,13 @@ public static native void TF_OpDefinitionBuilderAddAttr(
 //          with type "type".
 //   <number> is the name of an attr with type "int".
 //   <type-list> is the name of an attr with type "list(type)".
-public static native void TF_OpDefinitionBuilderAddInput(
-    TF_OpDefinitionBuilder builder, @Cast("const char*") BytePointer input_spec);
-public static native void TF_OpDefinitionBuilderAddInput(
-    TF_OpDefinitionBuilder builder, String input_spec);
+    public static native void TF_OpDefinitionBuilderAddInput(
+        TF_OpDefinitionBuilder builder, @Cast("const char*") BytePointer input_spec);
 
-// Adds an output to this TF_OpDefinitionBuilder.
+    public static native void TF_OpDefinitionBuilderAddInput(
+        TF_OpDefinitionBuilder builder, String input_spec);
+
+    // Adds an output to this TF_OpDefinitionBuilder.
 // The spec has form "<name>:<type-expr>" or "<name>:Ref(<type-expr>)"
 // where <name> matches regexp [a-z][a-z0-9_]* and <type-expr> can be:
 // * For a single tensor: <type>
@@ -3873,16 +4283,17 @@ public static native void TF_OpDefinitionBuilderAddInput(
 //          with type "type".
 //   <number> is the name of an attr with type "int".
 //   <type-list> is the name of an attr with type "list(type)".
-public static native void TF_OpDefinitionBuilderAddOutput(
-    TF_OpDefinitionBuilder builder, @Cast("const char*") BytePointer output_spec);
-public static native void TF_OpDefinitionBuilderAddOutput(
-    TF_OpDefinitionBuilder builder, String output_spec);
+    public static native void TF_OpDefinitionBuilderAddOutput(
+        TF_OpDefinitionBuilder builder, @Cast("const char*") BytePointer output_spec);
 
-// Sets the commutative property for the op built by the given builder.
-public static native void TF_OpDefinitionBuilderSetIsCommutative(
-    TF_OpDefinitionBuilder builder, @Cast("bool") boolean is_commutative);
+    public static native void TF_OpDefinitionBuilderAddOutput(
+        TF_OpDefinitionBuilder builder, String output_spec);
 
-// Sets the is_aggregate property of the builder to the given value.
+    // Sets the commutative property for the op built by the given builder.
+    public static native void TF_OpDefinitionBuilderSetIsCommutative(
+        TF_OpDefinitionBuilder builder, @Cast("bool") boolean is_commutative);
+
+    // Sets the is_aggregate property of the builder to the given value.
 //
 // If is_aggregate is true, then the operation produced by this builder accepts
 // N >= 2 inputs and produces 1 output all of the same type. Should be
@@ -3890,10 +4301,10 @@ public static native void TF_OpDefinitionBuilderSetIsCommutative(
 // input. The optimizer may replace an aggregate op taking input from multiple
 // devices with a tree of aggregate ops that aggregate locally within each
 // device (and possibly within groups of nearby devices) before communicating.
-public static native void TF_OpDefinitionBuilderSetIsAggregate(
-    TF_OpDefinitionBuilder builder, @Cast("bool") boolean is_aggregate);
+    public static native void TF_OpDefinitionBuilderSetIsAggregate(
+        TF_OpDefinitionBuilder builder, @Cast("bool") boolean is_aggregate);
 
-// Sets the is_stateful property of the builder to the given value.
+    // Sets the is_stateful property of the builder to the given value.
 //
 // The op built by this builder is stateful if its behavior depends on some
 // state beyond its input tensors (e.g. variable reading op) or if it has a
@@ -3905,35 +4316,36 @@ public static native void TF_OpDefinitionBuilderSetIsAggregate(
 // be moved, or should only be moved if that state can also be moved (e.g. via
 // some sort of save / restore). Stateful ops are guaranteed to never be
 // optimized away by Common Subexpression Elimination (CSE).
-public static native void TF_OpDefinitionBuilderSetIsStateful(
-    TF_OpDefinitionBuilder builder, @Cast("bool") boolean is_stateful);
+    public static native void TF_OpDefinitionBuilderSetIsStateful(
+        TF_OpDefinitionBuilder builder, @Cast("bool") boolean is_stateful);
 
-// Sets the allows_uninitialized_input property of the operation built by this
+    // Sets the allows_uninitialized_input property of the operation built by this
 // builder.
 //
 // By default, all inputs to an Op must be initialized Tensors. Ops that may
 // initialize tensors for the first time should set this field to true, to allow
 // the Op to take an uninitialized Tensor as input.
-public static native void TF_OpDefinitionBuilderSetAllowsUninitializedInput(
-    TF_OpDefinitionBuilder builder, @Cast("bool") boolean allows_uninitialized_input);
+    public static native void TF_OpDefinitionBuilderSetAllowsUninitializedInput(
+        TF_OpDefinitionBuilder builder, @Cast("bool") boolean allows_uninitialized_input);
 
-// Adds a deprecation warning for the given op. This indicates to the user that
+    // Adds a deprecation warning for the given op. This indicates to the user that
 // `version` is the first TensorFlow GraphDef version for which the operation is
 // deprecated. `explanation` should contain the reason for the deprecation and
 // what to use instead.
 //
 // This function is only an indicator that the operation may disappear in a
 // version of TensorFlow after `version`. It does not affect op registration.
-public static native void TF_OpDefinitionBuilderDeprecated(
-    TF_OpDefinitionBuilder builder, int version, @Cast("const char*") BytePointer explanation);
-public static native void TF_OpDefinitionBuilderDeprecated(
-    TF_OpDefinitionBuilder builder, int version, String explanation);
+    public static native void TF_OpDefinitionBuilderDeprecated(
+        TF_OpDefinitionBuilder builder, int version, @Cast("const char*") BytePointer explanation);
+
+    public static native void TF_OpDefinitionBuilderDeprecated(
+        TF_OpDefinitionBuilder builder, int version, String explanation);
 // Targeting ../Shape_inference_func_TF_ShapeInferenceContext_TF_Status.java
 
 
-public static native void TF_OpDefinitionBuilderSetShapeInferenceFunction(
-    TF_OpDefinitionBuilder builder,
-    Shape_inference_func_TF_ShapeInferenceContext_TF_Status shape_inference_func);
+    public static native void TF_OpDefinitionBuilderSetShapeInferenceFunction(
+        TF_OpDefinitionBuilder builder,
+        Shape_inference_func_TF_ShapeInferenceContext_TF_Status shape_inference_func);
 
 //----------------------------------------------------
 // Functions for TF_ShapeInferenceContext.
@@ -3949,140 +4361,150 @@ public static native void TF_OpDefinitionBuilderSetShapeInferenceFunction(
 // TF_ShapeInferenceContext to examine the input state and determine the output
 // shape.
 
-// Returns the number of inputs in the given shape inference context.
-public static native @Cast("int64_t") long TF_ShapeInferenceContextNumInputs(
-    TF_ShapeInferenceContext ctx);
+    // Returns the number of inputs in the given shape inference context.
+    public static native @Cast("int64_t")
+    long TF_ShapeInferenceContextNumInputs(
+        TF_ShapeInferenceContext ctx);
 
-// Returns a newly allocated shape handle. The shapes represented by these
+    // Returns a newly allocated shape handle. The shapes represented by these
 // handles may be queried or mutated with the corresponding
 // TF_ShapeInferenceContext...  functions.
-public static native TF_ShapeHandle TF_NewShapeHandle();
+    public static native TF_ShapeHandle TF_NewShapeHandle();
 
-// Places the ith input of the given shape inference context into the given
+    // Places the ith input of the given shape inference context into the given
 // shape handle, or returns a status other than TF_OK indicating why the input
 // could not be retrieved
 // (for example, if i < 0 || i >= TF_ShapeInferenceContextNumInputs(ctx)).
-public static native void TF_ShapeInferenceContextGetInput(
-    TF_ShapeInferenceContext ctx, int i, TF_ShapeHandle handle,
-    TF_Status status);
+    public static native void TF_ShapeInferenceContextGetInput(
+        TF_ShapeInferenceContext ctx, int i, TF_ShapeHandle handle,
+        TF_Status status);
 
-// Places the given shape handle into the `i`th output position of the given
+    // Places the given shape handle into the `i`th output position of the given
 // context. Internally, the shape handle is copied; the caller may subsequently
 // delete `handle`.
-public static native void TF_ShapeInferenceContextSetOutput(TF_ShapeInferenceContext ctx,
-                                              int i, TF_ShapeHandle handle,
-                                              TF_Status status);
+    public static native void TF_ShapeInferenceContextSetOutput(TF_ShapeInferenceContext ctx,
+        int i, TF_ShapeHandle handle,
+        TF_Status status);
 
-// Returns a newly-allocated scalar shape handle. The returned handle should
+    // Returns a newly-allocated scalar shape handle. The returned handle should
 // be freed with TF_DeleteShapeHandle.
-public static native TF_ShapeHandle TF_ShapeInferenceContextScalar(
-    TF_ShapeInferenceContext ctx);
+    public static native TF_ShapeHandle TF_ShapeInferenceContextScalar(
+        TF_ShapeInferenceContext ctx);
 
-// Returns a newly-allocate shape handle representing a vector of the given
+    // Returns a newly-allocate shape handle representing a vector of the given
 // size. The returned handle should be freed with TF_DeleteShapeHandle.
-public static native TF_ShapeHandle TF_ShapeInferenceContextVectorFromSize(
-    TF_ShapeInferenceContext ctx, @Cast("size_t") long size);
+    public static native TF_ShapeHandle TF_ShapeInferenceContextVectorFromSize(
+        TF_ShapeInferenceContext ctx, @Cast("size_t") long size);
 
-// Returns a newly allocated dimension handle. It must be freed with
+    // Returns a newly allocated dimension handle. It must be freed with
 // TF_DeleteDimensionHandle.
-public static native TF_DimensionHandle TF_NewDimensionHandle();
+    public static native TF_DimensionHandle TF_NewDimensionHandle();
 
-// Interprets the named shape inference context attribute as a TF_DataType and
+    // Interprets the named shape inference context attribute as a TF_DataType and
 // places it into *val. *status is set to TF_OK.
 //
 // If the attribute could not be found or could not be interpreted as
 // TF_DataType, *status is populated with an error.
-public static native void TF_ShapeInferenceContext_GetAttrType(
-    TF_ShapeInferenceContext ctx, @Cast("const char*") BytePointer attr_name, @Cast("TF_DataType*") IntPointer val,
-    TF_Status status);
-public static native void TF_ShapeInferenceContext_GetAttrType(
-    TF_ShapeInferenceContext ctx, String attr_name, @Cast("TF_DataType*") IntBuffer val,
-    TF_Status status);
-public static native void TF_ShapeInferenceContext_GetAttrType(
-    TF_ShapeInferenceContext ctx, @Cast("const char*") BytePointer attr_name, @Cast("TF_DataType*") int[] val,
-    TF_Status status);
-public static native void TF_ShapeInferenceContext_GetAttrType(
-    TF_ShapeInferenceContext ctx, String attr_name, @Cast("TF_DataType*") IntPointer val,
-    TF_Status status);
-public static native void TF_ShapeInferenceContext_GetAttrType(
-    TF_ShapeInferenceContext ctx, @Cast("const char*") BytePointer attr_name, @Cast("TF_DataType*") IntBuffer val,
-    TF_Status status);
-public static native void TF_ShapeInferenceContext_GetAttrType(
-    TF_ShapeInferenceContext ctx, String attr_name, @Cast("TF_DataType*") int[] val,
-    TF_Status status);
+    public static native void TF_ShapeInferenceContext_GetAttrType(
+        TF_ShapeInferenceContext ctx, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntPointer val,
+        TF_Status status);
 
-// Returns the rank of the shape represented by the given handle.
-public static native @Cast("int64_t") long TF_ShapeInferenceContextRank(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle handle);
+    public static native void TF_ShapeInferenceContext_GetAttrType(
+        TF_ShapeInferenceContext ctx, String attr_name, @Cast("TF_DataType*") IntBuffer val,
+        TF_Status status);
 
-// Returns 1 if `handle` has a known rank, 0 otherwise.
-public static native int TF_ShapeInferenceContextRankKnown(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle handle);
+    public static native void TF_ShapeInferenceContext_GetAttrType(
+        TF_ShapeInferenceContext ctx, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") int[] val,
+        TF_Status status);
 
-// If <handle> has rank <rank>, or its rank is unknown, return OK and return the
+    public static native void TF_ShapeInferenceContext_GetAttrType(
+        TF_ShapeInferenceContext ctx, String attr_name, @Cast("TF_DataType*") IntPointer val,
+        TF_Status status);
+
+    public static native void TF_ShapeInferenceContext_GetAttrType(
+        TF_ShapeInferenceContext ctx, @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType*") IntBuffer val,
+        TF_Status status);
+
+    public static native void TF_ShapeInferenceContext_GetAttrType(
+        TF_ShapeInferenceContext ctx, String attr_name, @Cast("TF_DataType*") int[] val,
+        TF_Status status);
+
+    // Returns the rank of the shape represented by the given handle.
+    public static native @Cast("int64_t")
+    long TF_ShapeInferenceContextRank(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle handle);
+
+    // Returns 1 if `handle` has a known rank, 0 otherwise.
+    public static native int TF_ShapeInferenceContextRankKnown(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle handle);
+
+    // If <handle> has rank <rank>, or its rank is unknown, return OK and return the
 // shape with asserted rank in <*result>. Otherwise an error is placed into
 // `status`.
-public static native void TF_ShapeInferenceContextWithRank(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle handle, @Cast("int64_t") long rank,
-    TF_ShapeHandle result, TF_Status status);
+    public static native void TF_ShapeInferenceContextWithRank(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle handle, @Cast("int64_t") long rank,
+        TF_ShapeHandle result, TF_Status status);
 
-// If <handle> has rank at least <rank>, or its rank is unknown, return OK and
+    // If <handle> has rank at least <rank>, or its rank is unknown, return OK and
 // return the shape with asserted rank in <*result>. Otherwise an error is
 // placed into `status`.
-public static native void TF_ShapeInferenceContextWithRankAtLeast(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle handle, @Cast("int64_t") long rank,
-    TF_ShapeHandle result, TF_Status status);
+    public static native void TF_ShapeInferenceContextWithRankAtLeast(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle handle, @Cast("int64_t") long rank,
+        TF_ShapeHandle result, TF_Status status);
 
-// If <handle> has rank at most <rank>, or its rank is unknown, return OK and
+    // If <handle> has rank at most <rank>, or its rank is unknown, return OK and
 // return the shape with asserted rank in <*result>. Otherwise an error is
 // placed into `status`.
-public static native void TF_ShapeInferenceContextWithRankAtMost(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle handle, @Cast("int64_t") long rank,
-    TF_ShapeHandle result, TF_Status status);
+    public static native void TF_ShapeInferenceContextWithRankAtMost(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle handle, @Cast("int64_t") long rank,
+        TF_ShapeHandle result, TF_Status status);
 
-// Places a handle to the ith dimension of the given shape into *result.
-public static native void TF_ShapeInferenceContextDim(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle shape_handle, @Cast("int64_t") long i,
-    TF_DimensionHandle result);
+    // Places a handle to the ith dimension of the given shape into *result.
+    public static native void TF_ShapeInferenceContextDim(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle shape_handle, @Cast("int64_t") long i,
+        TF_DimensionHandle result);
 
-// Returns in <*result> a sub-shape of <shape_handle>, with dimensions
+    // Returns in <*result> a sub-shape of <shape_handle>, with dimensions
 // [start:end]. <start> and <end> can be negative, to index from the end of the
 // shape. <start> and <end> are set to the rank of <shape_handle> if > rank of
 // <shape_handle>.
-public static native void TF_ShapeInferenceContextSubshape(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle shape_handle, @Cast("int64_t") long start,
-    @Cast("int64_t") long end, TF_ShapeHandle result, TF_Status status);
+    public static native void TF_ShapeInferenceContextSubshape(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle shape_handle, @Cast("int64_t") long start,
+        @Cast("int64_t") long end, TF_ShapeHandle result, TF_Status status);
 
-// Places an unknown shape in all outputs for the given inference context. Used
+    // Places an unknown shape in all outputs for the given inference context. Used
 // for shape inference functions with ops whose output shapes are unknown.
-public static native void TF_ShapeInferenceContextSetUnknownShape(
-    TF_ShapeInferenceContext ctx, TF_Status status);
+    public static native void TF_ShapeInferenceContextSetUnknownShape(
+        TF_ShapeInferenceContext ctx, TF_Status status);
 
-// Returns whether the given handle represents a known dimension.
-public static native int TF_DimensionHandleValueKnown(
-    TF_DimensionHandle dim_handle);
+    // Returns whether the given handle represents a known dimension.
+    public static native int TF_DimensionHandleValueKnown(
+        TF_DimensionHandle dim_handle);
 
-// Returns the value of the given dimension.
-public static native @Cast("int64_t") long TF_DimensionHandleValue(
-    TF_DimensionHandle dim_handle);
+    // Returns the value of the given dimension.
+    public static native @Cast("int64_t")
+    long TF_DimensionHandleValue(
+        TF_DimensionHandle dim_handle);
 
-// Returns in <*result> the result of appending the dimensions of <second> to
+    // Returns in <*result> the result of appending the dimensions of <second> to
 // those of <first>.
-public static native void TF_ShapeInferenceContextConcatenateShapes(
-    TF_ShapeInferenceContext ctx, TF_ShapeHandle first,
-    TF_ShapeHandle second, TF_ShapeHandle result, TF_Status status);
+    public static native void TF_ShapeInferenceContextConcatenateShapes(
+        TF_ShapeInferenceContext ctx, TF_ShapeHandle first,
+        TF_ShapeHandle second, TF_ShapeHandle result, TF_Status status);
 
-// Frees the given shape handle.
-public static native void TF_DeleteShapeHandle(TF_ShapeHandle handle);
+    // Frees the given shape handle.
+    public static native void TF_DeleteShapeHandle(TF_ShapeHandle handle);
 
-// Frees the given dimension handle.
-public static native void TF_DeleteDimensionHandle(TF_DimensionHandle handle);
+    // Frees the given dimension handle.
+    public static native void TF_DeleteDimensionHandle(TF_DimensionHandle handle);
 
 // #ifdef __cplusplus /* end extern "C" */
 // #endif
 
 // #endif  // TENSORFLOW_C_OPS_H_
-
 
 // Parsed from tensorflow_adapters.h
 
@@ -4101,8 +4523,6 @@ public static native void TF_DeleteDimensionHandle(TF_DimensionHandle handle);
  */
 
 // #include "absl/types/span.h"
-
-
 
 // Parsed from tensorflow/c/eager/c_api.h
 
@@ -4153,130 +4573,142 @@ limitations under the License.
 // Targeting ../TFE_ContextOptions.java
 
 
+    // Return a new options object.
+    public static native TFE_ContextOptions TFE_NewContextOptions();
 
-// Return a new options object.
-public static native TFE_ContextOptions TFE_NewContextOptions();
-
-// Set the config in TF_ContextOptions.options.
+    // Set the config in TF_ContextOptions.options.
 // config should be a serialized tensorflow.ConfigProto proto.
 // If config was not parsed successfully as a ConfigProto, record the
 // error information in *status.
-public static native void TFE_ContextOptionsSetConfig(
-    TFE_ContextOptions options, @Const Pointer proto, @Cast("size_t") long proto_len,
-    TF_Status status);
+    public static native void TFE_ContextOptionsSetConfig(
+        TFE_ContextOptions options, @Const Pointer proto, @Cast("size_t") long proto_len,
+        TF_Status status);
 
 // Controls how to act when we try to run an operation on a given device but
 // some input tensors are not on that device.
 // LINT.IfChange
 // Note: Keep in sync with internal copy of enum in eager/context.h.
-/** enum TFE_ContextDevicePlacementPolicy */
-public static final int
-  // Running operations with input tensors on the wrong device will fail.
-  TFE_DEVICE_PLACEMENT_EXPLICIT = 0,
-  // Copy the tensor to the right device but log a warning.
-  TFE_DEVICE_PLACEMENT_WARN = 1,
-  // Silently copy the tensor, which has a performance cost since the operation
-  // will be blocked till the copy completes. This is the default placement
-  // policy.
-  TFE_DEVICE_PLACEMENT_SILENT = 2,
-  // Placement policy which silently copies int32 tensors but not other dtypes.
-  TFE_DEVICE_PLACEMENT_SILENT_FOR_INT32 = 3;
+    /**
+     * enum TFE_ContextDevicePlacementPolicy
+     */
+    public static final int
+        // Running operations with input tensors on the wrong device will fail.
+        TFE_DEVICE_PLACEMENT_EXPLICIT = 0,
+    // Copy the tensor to the right device but log a warning.
+    TFE_DEVICE_PLACEMENT_WARN = 1,
+    // Silently copy the tensor, which has a performance cost since the operation
+    // will be blocked till the copy completes. This is the default placement
+    // policy.
+    TFE_DEVICE_PLACEMENT_SILENT = 2,
+    // Placement policy which silently copies int32 tensors but not other dtypes.
+    TFE_DEVICE_PLACEMENT_SILENT_FOR_INT32 = 3;
 // LINT.ThenChange(//tensorflow/c/eager/immediate_execution_context.h)
 
-// Sets the default execution mode (sync/async). Note that this can be
+    // Sets the default execution mode (sync/async). Note that this can be
 // overridden per thread using TFE_ContextSetExecutorForThread.
-public static native void TFE_ContextOptionsSetAsync(TFE_ContextOptions arg0,
-                                                      @Cast("unsigned char") byte enable);
+    public static native void TFE_ContextOptionsSetAsync(TFE_ContextOptions arg0,
+        @Cast("unsigned char") byte enable);
 
-public static native void TFE_ContextOptionsSetDevicePlacementPolicy(
-    TFE_ContextOptions arg0, @Cast("TFE_ContextDevicePlacementPolicy") int arg1);
+    public static native void TFE_ContextOptionsSetDevicePlacementPolicy(
+        TFE_ContextOptions arg0, @Cast("TFE_ContextDevicePlacementPolicy") int arg1);
 
-// Destroy an options object.
-public static native void TFE_DeleteContextOptions(TFE_ContextOptions arg0);
+    // Destroy an options object.
+    public static native void TFE_DeleteContextOptions(TFE_ContextOptions arg0);
 // Targeting ../TFE_Context.java
 
 
+    public static native TFE_Context TFE_NewContext(
+        @Const TFE_ContextOptions opts, TF_Status status);
 
-public static native TFE_Context TFE_NewContext(
-    @Const TFE_ContextOptions opts, TF_Status status);
-public static native void TFE_DeleteContext(TFE_Context ctx);
-public static native TF_DeviceList TFE_ContextListDevices(TFE_Context ctx,
-                                                            TF_Status status);
+    public static native void TFE_DeleteContext(TFE_Context ctx);
 
-// Clears the internal caches in the TFE context. Useful when reseeding random
+    public static native TF_DeviceList TFE_ContextListDevices(TFE_Context ctx,
+        TF_Status status);
+
+    // Clears the internal caches in the TFE context. Useful when reseeding random
 // ops.
-public static native void TFE_ContextClearCaches(TFE_Context ctx);
+    public static native void TFE_ContextClearCaches(TFE_Context ctx);
 
-// Sets a thread-local device placement policy. After this call, other calls to
+    // Sets a thread-local device placement policy. After this call, other calls to
 // TFE_Execute in the same thread will use the device policy specified here
 // instead of the device policy used to construct the context. This has no
 // effect on the device policy used by other program threads.
-public static native void TFE_ContextSetThreadLocalDevicePlacementPolicy(
-    TFE_Context ctx, @Cast("TFE_ContextDevicePlacementPolicy") int policy);
+    public static native void TFE_ContextSetThreadLocalDevicePlacementPolicy(
+        TFE_Context ctx, @Cast("TFE_ContextDevicePlacementPolicy") int policy);
 
-// Returns the device placement policy to be used by this context in the current
+    // Returns the device placement policy to be used by this context in the current
 // thread.
-public static native @Cast("TFE_ContextDevicePlacementPolicy") int TFE_ContextGetDevicePlacementPolicy(TFE_Context ctx);
+    public static native @Cast("TFE_ContextDevicePlacementPolicy")
+    int TFE_ContextGetDevicePlacementPolicy(TFE_Context ctx);
 
-// A tensorflow.ServerDef specifies remote workers (in addition to the current
+    // A tensorflow.ServerDef specifies remote workers (in addition to the current
 // workers name). Operations created on this context can then be executed on
 // any of these remote workers by setting an appropriate device.
 //
 // If the following is set, all servers identified by the
 // ServerDef must be up when the context is created.
-public static native void TFE_ContextSetServerDef(TFE_Context ctx,
-                                                   int keep_alive_secs,
-                                                   @Const Pointer proto,
-                                                   @Cast("size_t") long proto_len,
-                                                   TF_Status status);
+    public static native void TFE_ContextSetServerDef(TFE_Context ctx,
+        int keep_alive_secs,
+        @Const Pointer proto,
+        @Cast("size_t") long proto_len,
+        TF_Status status);
 // Targeting ../TFE_TensorHandle.java
 
 
+    public static native TFE_TensorHandle TFE_NewTensorHandle(@Const TF_Tensor t,
+        TF_Status status);
 
-public static native TFE_TensorHandle TFE_NewTensorHandle(@Const TF_Tensor t,
-                                                            TF_Status status);
-// Indicates that the caller will not be using `h` any more.
-public static native void TFE_DeleteTensorHandle(TFE_TensorHandle h);
-public static native @Cast("TF_DataType") int TFE_TensorHandleDataType(TFE_TensorHandle h);
-// This function will block till the operation that produces `h` has completed.
-public static native int TFE_TensorHandleNumDims(TFE_TensorHandle h,
-                                                  TF_Status status);
-public static native @Cast("int64_t") long TFE_TensorHandleNumElements(TFE_TensorHandle h,
-                                                          TF_Status status);
-// This function will block till the operation that produces `h` has completed.
-public static native @Cast("int64_t") long TFE_TensorHandleDim(TFE_TensorHandle h,
-                                                  int dim_index,
-                                                  TF_Status status);
+    // Indicates that the caller will not be using `h` any more.
+    public static native void TFE_DeleteTensorHandle(TFE_TensorHandle h);
 
-// Returns the device of the operation that produced `h`. If `h` was produced by
+    public static native @Cast("TF_DataType")
+    int TFE_TensorHandleDataType(TFE_TensorHandle h);
+
+    // This function will block till the operation that produces `h` has completed.
+    public static native int TFE_TensorHandleNumDims(TFE_TensorHandle h,
+        TF_Status status);
+
+    public static native @Cast("int64_t")
+    long TFE_TensorHandleNumElements(TFE_TensorHandle h,
+        TF_Status status);
+
+    // This function will block till the operation that produces `h` has completed.
+    public static native @Cast("int64_t")
+    long TFE_TensorHandleDim(TFE_TensorHandle h,
+        int dim_index,
+        TF_Status status);
+
+    // Returns the device of the operation that produced `h`. If `h` was produced by
 // a copy, returns the destination device of the copy. Note that the returned
 // device name is not always the device holding the tensor handle's memory. If
 // you want the latter, use TFE_TensorHandleBackingDeviceName. This function
 // will block till the operation that produces `h` has completed.
-public static native @Cast("const char*") BytePointer TFE_TensorHandleDeviceName(
-    TFE_TensorHandle h, TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TFE_TensorHandleDeviceName(
+        TFE_TensorHandle h, TF_Status status);
 
-// Returns the name of the device in whose memory `h` resides.
+    // Returns the name of the device in whose memory `h` resides.
 //
 // This function will block till the operation that produces `h` has completed.
-public static native @Cast("const char*") BytePointer TFE_TensorHandleBackingDeviceName(
-    TFE_TensorHandle h, TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TFE_TensorHandleBackingDeviceName(
+        TFE_TensorHandle h, TF_Status status);
 
-// Return a pointer to a new TFE_TensorHandle that shares the underlying tensor
+    // Return a pointer to a new TFE_TensorHandle that shares the underlying tensor
 // with `h`. On success, `status` is set to OK. On failure, `status` reflects
 // the error and a nullptr is returned.
-public static native TFE_TensorHandle TFE_TensorHandleCopySharingTensor(
-    TFE_TensorHandle h, TF_Status status);
+    public static native TFE_TensorHandle TFE_TensorHandleCopySharingTensor(
+        TFE_TensorHandle h, TF_Status status);
 
-// This function will block till the operation that produces `h` has
+    // This function will block till the operation that produces `h` has
 // completed. The memory returned might alias the internal memory used by
 // TensorFlow. Hence, callers should not mutate this memory (for example by
 // modifying the memory region pointed to by TF_TensorData() on the returned
 // TF_Tensor).
-public static native TF_Tensor TFE_TensorHandleResolve(TFE_TensorHandle h,
-                                                         TF_Status status);
+    public static native TF_Tensor TFE_TensorHandleResolve(TFE_TensorHandle h,
+        TF_Status status);
 
-// Create a new TFE_TensorHandle with the same contents as 'h' but placed
+    // Create a new TFE_TensorHandle with the same contents as 'h' but placed
 // in the memory of the device name 'device_name'.
 // If source and destination are the same device, then this creates a new handle
 // that shares the underlying buffer. Otherwise, it currently requires at least
@@ -4285,37 +4717,37 @@ public static native TF_Tensor TFE_TensorHandleResolve(TFE_TensorHandle h,
 // If async execution is enabled, the copy may be enqueued and the call will
 // return "non-ready" handle. Else, this function returns after the copy has
 // been done.
-public static native TFE_TensorHandle TFE_TensorHandleCopyToDevice(
-    TFE_TensorHandle h, TFE_Context ctx, @Cast("const char*") BytePointer device_name,
-    TF_Status status);
-public static native TFE_TensorHandle TFE_TensorHandleCopyToDevice(
-    TFE_TensorHandle h, TFE_Context ctx, String device_name,
-    TF_Status status);
+    public static native TFE_TensorHandle TFE_TensorHandleCopyToDevice(
+        TFE_TensorHandle h, TFE_Context ctx, @Cast("const char*") BytePointer device_name,
+        TF_Status status);
+
+    public static native TFE_TensorHandle TFE_TensorHandleCopyToDevice(
+        TFE_TensorHandle h, TFE_Context ctx, String device_name,
+        TF_Status status);
 // Targeting ../TFE_TensorDebugInfo.java
 
 
-
-// Retrieves TFE_TensorDebugInfo for `handle`.
+    // Retrieves TFE_TensorDebugInfo for `handle`.
 // If TFE_TensorHandleTensorDebugInfo succeeds, `status` is set to OK and caller
 // is responsible for deleting returned TFE_TensorDebugInfo.
 // If TFE_TensorHandleTensorDebugInfo fails, `status` is set to appropriate
 // error and nullptr is returned. This function can block till the operation
 // that produces `handle` has completed.
-public static native TFE_TensorDebugInfo TFE_TensorHandleTensorDebugInfo(
-    TFE_TensorHandle h, TF_Status status);
+    public static native TFE_TensorDebugInfo TFE_TensorHandleTensorDebugInfo(
+        TFE_TensorHandle h, TF_Status status);
 
-// Deletes `debug_info`.
-public static native void TFE_DeleteTensorDebugInfo(
-    TFE_TensorDebugInfo debug_info);
+    // Deletes `debug_info`.
+    public static native void TFE_DeleteTensorDebugInfo(
+        TFE_TensorDebugInfo debug_info);
 
-// Returns the number of dimensions used to represent the tensor on its device.
+    // Returns the number of dimensions used to represent the tensor on its device.
 // The number of dimensions used to represent the tensor on device can be
 // different from the number returned by TFE_TensorHandleNumDims.
 // The return value was current at the time of TFE_TensorDebugInfo creation.
-public static native int TFE_TensorDebugInfoOnDeviceNumDims(
-    TFE_TensorDebugInfo debug_info);
+    public static native int TFE_TensorDebugInfoOnDeviceNumDims(
+        TFE_TensorDebugInfo debug_info);
 
-// Returns the number of elements in dimension `dim_index`.
+    // Returns the number of elements in dimension `dim_index`.
 // Tensor representation on device can be transposed from its representation
 // on host. The data contained in dimension `dim_index` on device
 // can correspond to the data contained in another dimension in on-host
@@ -4325,49 +4757,58 @@ public static native int TFE_TensorDebugInfoOnDeviceNumDims(
 // On-device dimensions can be padded. TFE_TensorDebugInfoOnDeviceDim returns
 // the number of elements in a dimension after padding.
 // The return value was current at the time of TFE_TensorDebugInfo creation.
-public static native @Cast("int64_t") long TFE_TensorDebugInfoOnDeviceDim(
-    TFE_TensorDebugInfo debug_info, int dim_index);
+    public static native @Cast("int64_t")
+    long TFE_TensorDebugInfoOnDeviceDim(
+        TFE_TensorDebugInfo debug_info, int dim_index);
 // Targeting ../TFE_Op.java
 
 
+    public static native TFE_Op TFE_NewOp(TFE_Context ctx,
+        @Cast("const char*") BytePointer op_or_function_name,
+        TF_Status status);
 
-public static native TFE_Op TFE_NewOp(TFE_Context ctx,
-                                        @Cast("const char*") BytePointer op_or_function_name,
-                                        TF_Status status);
-public static native TFE_Op TFE_NewOp(TFE_Context ctx,
-                                        String op_or_function_name,
-                                        TF_Status status);
-public static native void TFE_DeleteOp(TFE_Op op);
+    public static native TFE_Op TFE_NewOp(TFE_Context ctx,
+        String op_or_function_name,
+        TF_Status status);
 
-// Returns the op or function name `op` will execute.
+    public static native void TFE_DeleteOp(TFE_Op op);
+
+    // Returns the op or function name `op` will execute.
 //
 // The returned string remains valid throughout the lifetime of 'op'.
-public static native @Cast("const char*") BytePointer TFE_OpGetName(@Const TFE_Op op,
-                                                TF_Status status);
-public static native TFE_Context TFE_OpGetContext(@Const TFE_Op op,
-                                                    TF_Status status);
+    public static native @Cast("const char*")
+    BytePointer TFE_OpGetName(@Const TFE_Op op,
+        TF_Status status);
 
-public static native void TFE_OpSetDevice(TFE_Op op, @Cast("const char*") BytePointer device_name,
-                                           TF_Status status);
-public static native void TFE_OpSetDevice(TFE_Op op, String device_name,
-                                           TF_Status status);
-// The returned string remains valid throughout the lifetime of 'op'.
-public static native @Cast("const char*") BytePointer TFE_OpGetDevice(@Const TFE_Op op,
-                                                  TF_Status status);
+    public static native TFE_Context TFE_OpGetContext(@Const TFE_Op op,
+        TF_Status status);
 
-public static native void TFE_OpAddInput(TFE_Op op, TFE_TensorHandle input,
-                                          TF_Status status);
+    public static native void TFE_OpSetDevice(TFE_Op op,
+        @Cast("const char*") BytePointer device_name,
+        TF_Status status);
 
-public static native void TFE_OpAddInputList(TFE_Op op,
-                                              @Cast("TFE_TensorHandle**") PointerPointer inputs,
-                                              int num_inputs,
-                                              TF_Status status);
-public static native void TFE_OpAddInputList(TFE_Op op,
-                                              @ByPtrPtr TFE_TensorHandle inputs,
-                                              int num_inputs,
-                                              TF_Status status);
+    public static native void TFE_OpSetDevice(TFE_Op op, String device_name,
+        TF_Status status);
 
-// Fetches the current number of inputs attached to `op`.
+    // The returned string remains valid throughout the lifetime of 'op'.
+    public static native @Cast("const char*")
+    BytePointer TFE_OpGetDevice(@Const TFE_Op op,
+        TF_Status status);
+
+    public static native void TFE_OpAddInput(TFE_Op op, TFE_TensorHandle input,
+        TF_Status status);
+
+    public static native void TFE_OpAddInputList(TFE_Op op,
+        @Cast("TFE_TensorHandle**") PointerPointer inputs,
+        int num_inputs,
+        TF_Status status);
+
+    public static native void TFE_OpAddInputList(TFE_Op op,
+        @ByPtrPtr TFE_TensorHandle inputs,
+        int num_inputs,
+        TF_Status status);
+
+    // Fetches the current number of inputs attached to `op`.
 //
 // Does not use the operation's definition to determine how many inputs should
 // be attached. It is intended for use with TFE_OpGetFlatInput to inspect an
@@ -4376,301 +4817,396 @@ public static native void TFE_OpAddInputList(TFE_Op op,
 // Note that TFE_OpGetFlatInputCount and TFE_OpGetFlatInput operate on a flat
 // sequence of inputs, unlike TFE_OpGetInputLength (for getting the length of a
 // particular named input list, which may only be part of the op's inputs).
-public static native int TFE_OpGetFlatInputCount(@Const TFE_Op op,
-                                                  TF_Status status);
-// Returns a borrowed reference to one of `op`'s inputs. Use
-// `TFE_TensorHandleCopySharingTensor` to make a new reference.
-public static native TFE_TensorHandle TFE_OpGetFlatInput(@Const TFE_Op op,
-                                                           int index,
-                                                           TF_Status status);
+    public static native int TFE_OpGetFlatInputCount(@Const TFE_Op op,
+        TF_Status status);
 
-public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    @Cast("unsigned char*") BytePointer is_list,
-                                                    TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
-                                                    String attr_name,
-                                                    @Cast("unsigned char*") ByteBuffer is_list,
-                                                    TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    @Cast("unsigned char*") byte[] is_list,
-                                                    TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
-                                                    String attr_name,
-                                                    @Cast("unsigned char*") BytePointer is_list,
-                                                    TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
-                                                    @Cast("const char*") BytePointer attr_name,
-                                                    @Cast("unsigned char*") ByteBuffer is_list,
-                                                    TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpGetAttrType(TFE_Op op,
-                                                    String attr_name,
-                                                    @Cast("unsigned char*") byte[] is_list,
-                                                    TF_Status status);
-// Get an attribute type given an op name; a fusion of TFE_NewOp and
+    // Returns a borrowed reference to one of `op`'s inputs. Use
+// `TFE_TensorHandleCopySharingTensor` to make a new reference.
+    public static native TFE_TensorHandle TFE_OpGetFlatInput(@Const TFE_Op op,
+        int index,
+        TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpGetAttrType(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") BytePointer is_list,
+        TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpGetAttrType(TFE_Op op,
+        String attr_name,
+        @Cast("unsigned char*") ByteBuffer is_list,
+        TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpGetAttrType(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") byte[] is_list,
+        TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpGetAttrType(TFE_Op op,
+        String attr_name,
+        @Cast("unsigned char*") BytePointer is_list,
+        TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpGetAttrType(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") ByteBuffer is_list,
+        TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpGetAttrType(TFE_Op op,
+        String attr_name,
+        @Cast("unsigned char*") byte[] is_list,
+        TF_Status status);
+
+    // Get an attribute type given an op name; a fusion of TFE_NewOp and
 // TFE_OpGetAttrType for use from Python without the overhead of the individual
 // calls and memory management of TFE_Op.
-public static native @Cast("TF_AttrType") int TFE_OpNameGetAttrType(
-    TFE_Context ctx, @Cast("const char*") BytePointer op_or_function_name, @Cast("const char*") BytePointer attr_name,
-    @Cast("unsigned char*") BytePointer is_list, TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpNameGetAttrType(
-    TFE_Context ctx, String op_or_function_name, String attr_name,
-    @Cast("unsigned char*") ByteBuffer is_list, TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpNameGetAttrType(
-    TFE_Context ctx, @Cast("const char*") BytePointer op_or_function_name, @Cast("const char*") BytePointer attr_name,
-    @Cast("unsigned char*") byte[] is_list, TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpNameGetAttrType(
-    TFE_Context ctx, String op_or_function_name, String attr_name,
-    @Cast("unsigned char*") BytePointer is_list, TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpNameGetAttrType(
-    TFE_Context ctx, @Cast("const char*") BytePointer op_or_function_name, @Cast("const char*") BytePointer attr_name,
-    @Cast("unsigned char*") ByteBuffer is_list, TF_Status status);
-public static native @Cast("TF_AttrType") int TFE_OpNameGetAttrType(
-    TFE_Context ctx, String op_or_function_name, String attr_name,
-    @Cast("unsigned char*") byte[] is_list, TF_Status status);
+    public static native @Cast("TF_AttrType")
+    int TFE_OpNameGetAttrType(
+        TFE_Context ctx, @Cast("const char*") BytePointer op_or_function_name,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") BytePointer is_list, TF_Status status);
 
-public static native void TFE_OpSetAttrString(TFE_Op op,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               @Const Pointer value,
-                                               @Cast("size_t") long length);
-public static native void TFE_OpSetAttrString(TFE_Op op,
-                                               String attr_name,
-                                               @Const Pointer value,
-                                               @Cast("size_t") long length);
-public static native void TFE_OpSetAttrInt(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                            @Cast("int64_t") long value);
-public static native void TFE_OpSetAttrInt(TFE_Op op, String attr_name,
-                                            @Cast("int64_t") long value);
-public static native void TFE_OpSetAttrFloat(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                              float value);
-public static native void TFE_OpSetAttrFloat(TFE_Op op, String attr_name,
-                                              float value);
-public static native void TFE_OpSetAttrBool(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                             @Cast("unsigned char") byte value);
-public static native void TFE_OpSetAttrBool(TFE_Op op, String attr_name,
-                                             @Cast("unsigned char") byte value);
-public static native void TFE_OpSetAttrType(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                             @Cast("TF_DataType") int value);
-public static native void TFE_OpSetAttrType(TFE_Op op, String attr_name,
-                                             @Cast("TF_DataType") int value);
-// If the number of dimensions is unknown, `num_dims` must be set to
+    public static native @Cast("TF_AttrType")
+    int TFE_OpNameGetAttrType(
+        TFE_Context ctx, String op_or_function_name, String attr_name,
+        @Cast("unsigned char*") ByteBuffer is_list, TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpNameGetAttrType(
+        TFE_Context ctx, @Cast("const char*") BytePointer op_or_function_name,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") byte[] is_list, TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpNameGetAttrType(
+        TFE_Context ctx, String op_or_function_name, String attr_name,
+        @Cast("unsigned char*") BytePointer is_list, TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpNameGetAttrType(
+        TFE_Context ctx, @Cast("const char*") BytePointer op_or_function_name,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char*") ByteBuffer is_list, TF_Status status);
+
+    public static native @Cast("TF_AttrType")
+    int TFE_OpNameGetAttrType(
+        TFE_Context ctx, String op_or_function_name, String attr_name,
+        @Cast("unsigned char*") byte[] is_list, TF_Status status);
+
+    public static native void TFE_OpSetAttrString(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Const Pointer value,
+        @Cast("size_t") long length);
+
+    public static native void TFE_OpSetAttrString(TFE_Op op,
+        String attr_name,
+        @Const Pointer value,
+        @Cast("size_t") long length);
+
+    public static native void TFE_OpSetAttrInt(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("int64_t") long value);
+
+    public static native void TFE_OpSetAttrInt(TFE_Op op, String attr_name,
+        @Cast("int64_t") long value);
+
+    public static native void TFE_OpSetAttrFloat(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        float value);
+
+    public static native void TFE_OpSetAttrFloat(TFE_Op op, String attr_name,
+        float value);
+
+    public static native void TFE_OpSetAttrBool(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("unsigned char") byte value);
+
+    public static native void TFE_OpSetAttrBool(TFE_Op op, String attr_name,
+        @Cast("unsigned char") byte value);
+
+    public static native void TFE_OpSetAttrType(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("TF_DataType") int value);
+
+    public static native void TFE_OpSetAttrType(TFE_Op op, String attr_name,
+        @Cast("TF_DataType") int value);
+
+    // If the number of dimensions is unknown, `num_dims` must be set to
 // -1 and `dims` can be null.  If a dimension is unknown, the
 // corresponding entry in the `dims` array must be -1.
-public static native void TFE_OpSetAttrShape(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const int64_t*") LongPointer dims,
-                                              int num_dims,
-                                              TF_Status out_status);
-public static native void TFE_OpSetAttrShape(TFE_Op op, String attr_name,
-                                              @Cast("const int64_t*") LongBuffer dims,
-                                              int num_dims,
-                                              TF_Status out_status);
-public static native void TFE_OpSetAttrShape(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const int64_t*") long[] dims,
-                                              int num_dims,
-                                              TF_Status out_status);
-public static native void TFE_OpSetAttrShape(TFE_Op op, String attr_name,
-                                              @Cast("const int64_t*") LongPointer dims,
-                                              int num_dims,
-                                              TF_Status out_status);
-public static native void TFE_OpSetAttrShape(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const int64_t*") LongBuffer dims,
-                                              int num_dims,
-                                              TF_Status out_status);
-public static native void TFE_OpSetAttrShape(TFE_Op op, String attr_name,
-                                              @Cast("const int64_t*") long[] dims,
-                                              int num_dims,
-                                              TF_Status out_status);
+    public static native void TFE_OpSetAttrShape(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongPointer dims,
+        int num_dims,
+        TF_Status out_status);
 
-// Sets the attribute attr_name to be a function specified by 'function'.
+    public static native void TFE_OpSetAttrShape(TFE_Op op, String attr_name,
+        @Cast("const int64_t*") LongBuffer dims,
+        int num_dims,
+        TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShape(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") long[] dims,
+        int num_dims,
+        TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShape(TFE_Op op, String attr_name,
+        @Cast("const int64_t*") LongPointer dims,
+        int num_dims,
+        TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShape(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongBuffer dims,
+        int num_dims,
+        TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShape(TFE_Op op, String attr_name,
+        @Cast("const int64_t*") long[] dims,
+        int num_dims,
+        TF_Status out_status);
+
+    // Sets the attribute attr_name to be a function specified by 'function'.
 //
 // TODO(ashankar,iga): Add this functionality to the C API for graph
 // construction. Perhaps we want an AttrValueMap equivalent in the C API?
-public static native void TFE_OpSetAttrFunction(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Const TFE_Op value);
-public static native void TFE_OpSetAttrFunction(TFE_Op op,
-                                                 String attr_name,
-                                                 @Const TFE_Op value);
+    public static native void TFE_OpSetAttrFunction(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Const TFE_Op value);
 
-public static native void TFE_OpSetAttrFunctionName(TFE_Op op, @Cast("const char*") BytePointer attr_name,
-                                              @Cast("const char*") BytePointer data, @Cast("size_t") long length);
-public static native void TFE_OpSetAttrFunctionName(TFE_Op op, String attr_name,
-                                              String data, @Cast("size_t") long length);
+    public static native void TFE_OpSetAttrFunction(TFE_Op op,
+        String attr_name,
+        @Const TFE_Op value);
 
-public static native void TFE_OpSetAttrTensor(TFE_Op op,
-                                               @Cast("const char*") BytePointer attr_name,
-                                               TF_Tensor tensor,
-                                               TF_Status status);
-public static native void TFE_OpSetAttrTensor(TFE_Op op,
-                                               String attr_name,
-                                               TF_Tensor tensor,
-                                               TF_Status status);
+    public static native void TFE_OpSetAttrFunctionName(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const char*") BytePointer data, @Cast("size_t") long length);
 
-public static native void TFE_OpSetAttrStringList(TFE_Op op,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("const void*const*") PointerPointer values,
-                                                   @Cast("const size_t*") SizeTPointer lengths,
-                                                   int num_values);
-public static native void TFE_OpSetAttrStringList(TFE_Op op,
-                                                   @Cast("const char*") BytePointer attr_name,
-                                                   @Cast("const void*const*") @ByPtrPtr Pointer values,
-                                                   @Cast("const size_t*") SizeTPointer lengths,
-                                                   int num_values);
-public static native void TFE_OpSetAttrStringList(TFE_Op op,
-                                                   String attr_name,
-                                                   @Cast("const void*const*") @ByPtrPtr Pointer values,
-                                                   @Cast("const size_t*") SizeTPointer lengths,
-                                                   int num_values);
-public static native void TFE_OpSetAttrIntList(TFE_Op op,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Cast("const int64_t*") LongPointer values,
-                                                int num_values);
-public static native void TFE_OpSetAttrIntList(TFE_Op op,
-                                                String attr_name,
-                                                @Cast("const int64_t*") LongBuffer values,
-                                                int num_values);
-public static native void TFE_OpSetAttrIntList(TFE_Op op,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Cast("const int64_t*") long[] values,
-                                                int num_values);
-public static native void TFE_OpSetAttrIntList(TFE_Op op,
-                                                String attr_name,
-                                                @Cast("const int64_t*") LongPointer values,
-                                                int num_values);
-public static native void TFE_OpSetAttrIntList(TFE_Op op,
-                                                @Cast("const char*") BytePointer attr_name,
-                                                @Cast("const int64_t*") LongBuffer values,
-                                                int num_values);
-public static native void TFE_OpSetAttrIntList(TFE_Op op,
-                                                String attr_name,
-                                                @Cast("const int64_t*") long[] values,
-                                                int num_values);
-public static native void TFE_OpSetAttrFloatList(TFE_Op op,
-                                                  @Cast("const char*") BytePointer attr_name,
-                                                  @Const FloatPointer values,
-                                                  int num_values);
-public static native void TFE_OpSetAttrFloatList(TFE_Op op,
-                                                  String attr_name,
-                                                  @Const FloatBuffer values,
-                                                  int num_values);
-public static native void TFE_OpSetAttrFloatList(TFE_Op op,
-                                                  @Cast("const char*") BytePointer attr_name,
-                                                  @Const float[] values,
-                                                  int num_values);
-public static native void TFE_OpSetAttrFloatList(TFE_Op op,
-                                                  String attr_name,
-                                                  @Const FloatPointer values,
-                                                  int num_values);
-public static native void TFE_OpSetAttrFloatList(TFE_Op op,
-                                                  @Cast("const char*") BytePointer attr_name,
-                                                  @Const FloatBuffer values,
-                                                  int num_values);
-public static native void TFE_OpSetAttrFloatList(TFE_Op op,
-                                                  String attr_name,
-                                                  @Const float[] values,
-                                                  int num_values);
-public static native void TFE_OpSetAttrBoolList(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const unsigned char*") BytePointer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrBoolList(TFE_Op op,
-                                                 String attr_name,
-                                                 @Cast("const unsigned char*") ByteBuffer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrBoolList(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const unsigned char*") byte[] values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrBoolList(TFE_Op op,
-                                                 String attr_name,
-                                                 @Cast("const unsigned char*") BytePointer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrBoolList(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const unsigned char*") ByteBuffer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrBoolList(TFE_Op op,
-                                                 String attr_name,
-                                                 @Cast("const unsigned char*") byte[] values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrTypeList(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const TF_DataType*") IntPointer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrTypeList(TFE_Op op,
-                                                 String attr_name,
-                                                 @Cast("const TF_DataType*") IntBuffer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrTypeList(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const TF_DataType*") int[] values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrTypeList(TFE_Op op,
-                                                 String attr_name,
-                                                 @Cast("const TF_DataType*") IntPointer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrTypeList(TFE_Op op,
-                                                 @Cast("const char*") BytePointer attr_name,
-                                                 @Cast("const TF_DataType*") IntBuffer values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrTypeList(TFE_Op op,
-                                                 String attr_name,
-                                                 @Cast("const TF_DataType*") int[] values,
-                                                 int num_values);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, @Cast("const char*") BytePointer attr_name, @Cast("const int64_t**") PointerPointer dims,
-    @Const IntPointer num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, @Cast("const char*") BytePointer attr_name, @Cast("const int64_t**") @ByPtrPtr LongPointer dims,
-    @Const IntPointer num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, String attr_name, @Cast("const int64_t**") @ByPtrPtr LongBuffer dims,
-    @Const IntBuffer num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, @Cast("const char*") BytePointer attr_name, @Cast("const int64_t**") @ByPtrPtr long[] dims,
-    @Const int[] num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, String attr_name, @Cast("const int64_t**") @ByPtrPtr LongPointer dims,
-    @Const IntPointer num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, @Cast("const char*") BytePointer attr_name, @Cast("const int64_t**") @ByPtrPtr LongBuffer dims,
-    @Const IntBuffer num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrShapeList(
-    TFE_Op op, String attr_name, @Cast("const int64_t**") @ByPtrPtr long[] dims,
-    @Const int[] num_dims, int num_values, TF_Status out_status);
-public static native void TFE_OpSetAttrFunctionList(TFE_Op op,
-                                                     @Cast("const char*") BytePointer attr_name,
-                                                     @Cast("const TFE_Op**") PointerPointer value,
-                                                     int num_values);
-public static native void TFE_OpSetAttrFunctionList(TFE_Op op,
-                                                     @Cast("const char*") BytePointer attr_name,
-                                                     @Const @ByPtrPtr TFE_Op value,
-                                                     int num_values);
-public static native void TFE_OpSetAttrFunctionList(TFE_Op op,
-                                                     String attr_name,
-                                                     @Const @ByPtrPtr TFE_Op value,
-                                                     int num_values);
+    public static native void TFE_OpSetAttrFunctionName(TFE_Op op, String attr_name,
+        String data, @Cast("size_t") long length);
 
-// Returns the length (number of tensors) of the input argument `input_name`
+    public static native void TFE_OpSetAttrTensor(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        TF_Tensor tensor,
+        TF_Status status);
+
+    public static native void TFE_OpSetAttrTensor(TFE_Op op,
+        String attr_name,
+        TF_Tensor tensor,
+        TF_Status status);
+
+    public static native void TFE_OpSetAttrStringList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const void*const*") PointerPointer values,
+        @Cast("const size_t*") SizeTPointer lengths,
+        int num_values);
+
+    public static native void TFE_OpSetAttrStringList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const void*const*") @ByPtrPtr Pointer values,
+        @Cast("const size_t*") SizeTPointer lengths,
+        int num_values);
+
+    public static native void TFE_OpSetAttrStringList(TFE_Op op,
+        String attr_name,
+        @Cast("const void*const*") @ByPtrPtr Pointer values,
+        @Cast("const size_t*") SizeTPointer lengths,
+        int num_values);
+
+    public static native void TFE_OpSetAttrIntList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongPointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrIntList(TFE_Op op,
+        String attr_name,
+        @Cast("const int64_t*") LongBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrIntList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") long[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrIntList(TFE_Op op,
+        String attr_name,
+        @Cast("const int64_t*") LongPointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrIntList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t*") LongBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrIntList(TFE_Op op,
+        String attr_name,
+        @Cast("const int64_t*") long[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFloatList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Const FloatPointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFloatList(TFE_Op op,
+        String attr_name,
+        @Const FloatBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFloatList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Const float[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFloatList(TFE_Op op,
+        String attr_name,
+        @Const FloatPointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFloatList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Const FloatBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFloatList(TFE_Op op,
+        String attr_name,
+        @Const float[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrBoolList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const unsigned char*") BytePointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrBoolList(TFE_Op op,
+        String attr_name,
+        @Cast("const unsigned char*") ByteBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrBoolList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const unsigned char*") byte[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrBoolList(TFE_Op op,
+        String attr_name,
+        @Cast("const unsigned char*") BytePointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrBoolList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const unsigned char*") ByteBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrBoolList(TFE_Op op,
+        String attr_name,
+        @Cast("const unsigned char*") byte[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrTypeList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType*") IntPointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrTypeList(TFE_Op op,
+        String attr_name,
+        @Cast("const TF_DataType*") IntBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrTypeList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType*") int[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrTypeList(TFE_Op op,
+        String attr_name,
+        @Cast("const TF_DataType*") IntPointer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrTypeList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TF_DataType*") IntBuffer values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrTypeList(TFE_Op op,
+        String attr_name,
+        @Cast("const TF_DataType*") int[] values,
+        int num_values);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t**") PointerPointer dims,
+        @Const IntPointer num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t**") @ByPtrPtr LongPointer dims,
+        @Const IntPointer num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, String attr_name, @Cast("const int64_t**") @ByPtrPtr LongBuffer dims,
+        @Const IntBuffer num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t**") @ByPtrPtr long[] dims,
+        @Const int[] num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, String attr_name, @Cast("const int64_t**") @ByPtrPtr LongPointer dims,
+        @Const IntPointer num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, @Cast("const char*") BytePointer attr_name,
+        @Cast("const int64_t**") @ByPtrPtr LongBuffer dims,
+        @Const IntBuffer num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrShapeList(
+        TFE_Op op, String attr_name, @Cast("const int64_t**") @ByPtrPtr long[] dims,
+        @Const int[] num_dims, int num_values, TF_Status out_status);
+
+    public static native void TFE_OpSetAttrFunctionList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Cast("const TFE_Op**") PointerPointer value,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFunctionList(TFE_Op op,
+        @Cast("const char*") BytePointer attr_name,
+        @Const @ByPtrPtr TFE_Op value,
+        int num_values);
+
+    public static native void TFE_OpSetAttrFunctionList(TFE_Op op,
+        String attr_name,
+        @Const @ByPtrPtr TFE_Op value,
+        int num_values);
+
+    // Returns the length (number of tensors) of the input argument `input_name`
 // found in the provided `op`.
-public static native int TFE_OpGetInputLength(TFE_Op op,
-                                               @Cast("const char*") BytePointer input_name,
-                                               TF_Status status);
-public static native int TFE_OpGetInputLength(TFE_Op op,
-                                               String input_name,
-                                               TF_Status status);
+    public static native int TFE_OpGetInputLength(TFE_Op op,
+        @Cast("const char*") BytePointer input_name,
+        TF_Status status);
 
-// Returns the length (number of tensors) of the output argument `output_name`
+    public static native int TFE_OpGetInputLength(TFE_Op op,
+        String input_name,
+        TF_Status status);
+
+    // Returns the length (number of tensors) of the output argument `output_name`
 // found in the provided `op`.
-public static native int TFE_OpGetOutputLength(TFE_Op op,
-                                                @Cast("const char*") BytePointer output_name,
-                                                TF_Status status);
-public static native int TFE_OpGetOutputLength(TFE_Op op,
-                                                String output_name,
-                                                TF_Status status);
+    public static native int TFE_OpGetOutputLength(TFE_Op op,
+        @Cast("const char*") BytePointer output_name,
+        TF_Status status);
 
-// Execute the operation defined by 'op' and return handles to computed
+    public static native int TFE_OpGetOutputLength(TFE_Op op,
+        String output_name,
+        TF_Status status);
+
+    // Execute the operation defined by 'op' and return handles to computed
 // tensors in `retvals`.
 //
 // 'retvals' must point to a pre-allocated array of TFE_TensorHandle* and
@@ -4686,83 +5222,90 @@ public static native int TFE_OpGetOutputLength(TFE_Op op,
 // will block till they become ready and then return when the kernel execution
 // is done.
 // TODO(agarwal): change num_retvals to int from int*.
-public static native void TFE_Execute(TFE_Op op, @Cast("TFE_TensorHandle**") PointerPointer retvals,
-                                       IntPointer num_retvals, TF_Status status);
-public static native void TFE_Execute(TFE_Op op, @ByPtrPtr TFE_TensorHandle retvals,
-                                       IntPointer num_retvals, TF_Status status);
-public static native void TFE_Execute(TFE_Op op, @ByPtrPtr TFE_TensorHandle retvals,
-                                       IntBuffer num_retvals, TF_Status status);
-public static native void TFE_Execute(TFE_Op op, @ByPtrPtr TFE_TensorHandle retvals,
-                                       int[] num_retvals, TF_Status status);
+    public static native void TFE_Execute(TFE_Op op,
+        @Cast("TFE_TensorHandle**") PointerPointer retvals,
+        IntPointer num_retvals, TF_Status status);
 
-// Add a function (serialized FunctionDef protocol buffer) to ctx so
+    public static native void TFE_Execute(TFE_Op op, @ByPtrPtr TFE_TensorHandle retvals,
+        IntPointer num_retvals, TF_Status status);
+
+    public static native void TFE_Execute(TFE_Op op, @ByPtrPtr TFE_TensorHandle retvals,
+        IntBuffer num_retvals, TF_Status status);
+
+    public static native void TFE_Execute(TFE_Op op, @ByPtrPtr TFE_TensorHandle retvals,
+        int[] num_retvals, TF_Status status);
+
+    // Add a function (serialized FunctionDef protocol buffer) to ctx so
 // that it can be invoked using TFE_Execute.
-public static native void TFE_ContextAddFunctionDef(
-    TFE_Context ctx, @Cast("const char*") BytePointer serialized_function_def, @Cast("size_t") long size,
-    TF_Status status);
-public static native void TFE_ContextAddFunctionDef(
-    TFE_Context ctx, String serialized_function_def, @Cast("size_t") long size,
-    TF_Status status);
+    public static native void TFE_ContextAddFunctionDef(
+        TFE_Context ctx, @Cast("const char*") BytePointer serialized_function_def,
+        @Cast("size_t") long size,
+        TF_Status status);
 
-// Adds a function (created from TF_GraphToFunction or
+    public static native void TFE_ContextAddFunctionDef(
+        TFE_Context ctx, String serialized_function_def, @Cast("size_t") long size,
+        TF_Status status);
+
+    // Adds a function (created from TF_GraphToFunction or
 // TF_FunctionImportFunctionDef) to the context, allowing it to be executed with
 // TFE_Execute by creating an op with the same name as the function.
-public static native void TFE_ContextAddFunction(TFE_Context ctx,
-                                                  TF_Function function,
-                                                  TF_Status status);
+    public static native void TFE_ContextAddFunction(TFE_Context ctx,
+        TF_Function function,
+        TF_Status status);
 
-// Removes a function from the context. Once removed, you can no longer
+    // Removes a function from the context. Once removed, you can no longer
 // TFE_Execute it or TFE_Execute any TFE_Op which has it as an attribute or any
 // other function which calls it as an attribute.
-public static native void TFE_ContextRemoveFunction(TFE_Context ctx,
-                                                     @Cast("const char*") BytePointer name,
-                                                     TF_Status status);
-public static native void TFE_ContextRemoveFunction(TFE_Context ctx,
-                                                     String name,
-                                                     TF_Status status);
+    public static native void TFE_ContextRemoveFunction(TFE_Context ctx,
+        @Cast("const char*") BytePointer name,
+        TF_Status status);
 
-// Checks whether a function is registered under `name`.
-public static native @Cast("unsigned char") byte TFE_ContextHasFunction(TFE_Context ctx,
-                                                    @Cast("const char*") BytePointer name);
-public static native @Cast("unsigned char") byte TFE_ContextHasFunction(TFE_Context ctx,
-                                                    String name);
+    public static native void TFE_ContextRemoveFunction(TFE_Context ctx,
+        String name,
+        TF_Status status);
 
-// Enables tracing of RunMetadata on the ops executed from this context.
-public static native void TFE_ContextEnableRunMetadata(TFE_Context ctx);
+    // Checks whether a function is registered under `name`.
+    public static native @Cast("unsigned char")
+    byte TFE_ContextHasFunction(TFE_Context ctx,
+        @Cast("const char*") BytePointer name);
 
-// Disables tracing of RunMetadata on the ops executed from this context.
-public static native void TFE_ContextDisableRunMetadata(TFE_Context ctx);
+    public static native @Cast("unsigned char")
+    byte TFE_ContextHasFunction(TFE_Context ctx,
+        String name);
 
-// Populates the passed-in buffer with a serialized RunMetadata protocol buffer
+    // Enables tracing of RunMetadata on the ops executed from this context.
+    public static native void TFE_ContextEnableRunMetadata(TFE_Context ctx);
+
+    // Disables tracing of RunMetadata on the ops executed from this context.
+    public static native void TFE_ContextDisableRunMetadata(TFE_Context ctx);
+
+    // Populates the passed-in buffer with a serialized RunMetadata protocol buffer
 // containing any run metadata information accumulated so far and clears this
 // information.
 // If async mode is enabled, this call blocks till all currently pending ops are
 // done.
-public static native void TFE_ContextExportRunMetadata(TFE_Context ctx,
-                                                        TF_Buffer buf,
-                                                        TF_Status status);
+    public static native void TFE_ContextExportRunMetadata(TFE_Context ctx,
+        TF_Buffer buf,
+        TF_Status status);
 
-// Some TF ops need a step container to be set to limit the lifetime of some
+    // Some TF ops need a step container to be set to limit the lifetime of some
 // resources (mostly TensorArray and Stack, used in while loop gradients in
 // graph mode). Calling this on a context tells it to start a step.
-public static native void TFE_ContextStartStep(TFE_Context ctx);
+    public static native void TFE_ContextStartStep(TFE_Context ctx);
 
-// Ends a step. When there is no active step (that is, every started step has
+    // Ends a step. When there is no active step (that is, every started step has
 // been ended) step containers will be cleared. Note: it is not safe to call
 // TFE_ContextEndStep while ops which rely on the step container may be running.
-public static native void TFE_ContextEndStep(TFE_Context ctx);
+    public static native void TFE_ContextEndStep(TFE_Context ctx);
 
 // #ifdef __cplusplus
 // Targeting ../Tensor.java
 
-
-  // namespace tensorflow
-
+    // namespace tensorflow
 
 // #endif
 
 // #endif  // TENSORFLOW_C_EAGER_C_API_H_
-
 
 // Parsed from tensorflow/cc/framework/scope.h
 
@@ -4797,13 +5340,9 @@ limitations under the License.
 // #include "tensorflow/core/lib/gtl/array_slice.h"
 // Targeting ../NativeGraphPointer.java
 
-
 // Targeting ../NodeBuilder.java
 
-
 // Targeting ../TF_Scope.java
-
-
 
 /** A helper struct to hold the scopes that would be used by a function
  *  constructing a composite op. */
@@ -4814,10 +5353,9 @@ limitations under the License.
 
 /** \} */
 
-  // namespace tensorflow
+    // namespace tensorflow
 
 // #endif  // TENSORFLOW_CC_FRAMEWORK_SCOPE_H_
-
 
 // Parsed from tensorflow/cc/framework/grad_op_registry.h
 
@@ -4845,12 +5383,9 @@ limitations under the License.
 // #include "tensorflow/cc/framework/scope.h"
 // Targeting ../GradFunc.java
 
-
 // Targeting ../GradOpRegistry.java
 
-
-
-  // namespace ops
+    // namespace ops
 
 // Macros used to define gradient functions for ops.
 // #define REGISTER_GRADIENT_OP(name, fn)
@@ -4866,10 +5401,9 @@ limitations under the License.
 //   static bool unused_ret_val_##ctr =
 //       ::tensorflow::ops::GradOpRegistry::Global()->Register(name, fn)
 
-  // namespace tensorflow
+    // namespace tensorflow
 
 // #endif  // TENSORFLOW_CC_FRAMEWORK_GRAD_OP_REGISTRY_H_
-
 
 // Parsed from tensorflow/core/platform/status.h
 
@@ -4908,36 +5442,41 @@ limitations under the License.
 // Only clang supports warn_unused_result as a type annotation.
 // Targeting ../NativeStatus.java
 
-
-
 // Helper class to manage multiple child status values.
 
-
-
-
-
 // #ifndef SWIG
-
-
 
 // #endif  // SWIG
 
 
+    /**
+     * \ingroup core
+     */
+    @Namespace("tensorflow")
+    public static native @Cast("std::ostream*")
+    @ByRef
+    @Name("operator <<")
+    Pointer shiftLeft(@Cast("std::ostream*") @ByRef Pointer os, @Const @ByRef NativeStatus x);
 
+    @Namespace("tensorflow")
+    public static native @StdString
+    BytePointer TfCheckOpHelperOutOfLine(
+        @Const @ByRef NativeStatus v, @Cast("const char*") BytePointer msg);
 
+    @Namespace("tensorflow")
+    public static native @StdString
+    BytePointer TfCheckOpHelperOutOfLine(
+        @Const @ByRef NativeStatus v, String msg);
 
-/** \ingroup core */
-@Namespace("tensorflow") public static native @Cast("std::ostream*") @ByRef @Name("operator <<") Pointer shiftLeft(@Cast("std::ostream*") @ByRef Pointer os, @Const @ByRef NativeStatus x);
+    @Namespace("tensorflow")
+    public static native @StdString
+    BytePointer TfCheckOpHelper(@ByVal NativeStatus v,
+        @Cast("const char*") BytePointer msg);
 
-@Namespace("tensorflow") public static native @StdString BytePointer TfCheckOpHelperOutOfLine(
-    @Const @ByRef NativeStatus v, @Cast("const char*") BytePointer msg);
-@Namespace("tensorflow") public static native @StdString BytePointer TfCheckOpHelperOutOfLine(
-    @Const @ByRef NativeStatus v, String msg);
-
-@Namespace("tensorflow") public static native @StdString BytePointer TfCheckOpHelper(@ByVal NativeStatus v,
-                                           @Cast("const char*") BytePointer msg);
-@Namespace("tensorflow") public static native @StdString BytePointer TfCheckOpHelper(@ByVal NativeStatus v,
-                                           String msg);
+    @Namespace("tensorflow")
+    public static native @StdString
+    BytePointer TfCheckOpHelper(@ByVal NativeStatus v,
+        String msg);
 
 // #define TF_DO_CHECK_OK(val, level)
 //   while (auto _result = ::tensorflow::TfCheckOpHelper(val, #val))
@@ -4955,10 +5494,11 @@ limitations under the License.
 //   while (false && (::tensorflow::Status::OK() == (val))) LOG(FATAL)
 // #endif
 
-  // namespace tensorflow
+    // namespace tensorflow
 
 // #endif  // TENSORFLOW_CORE_PLATFORM_STATUS_H_
 
+// Targeting ../Node.java
 
 // Parsed from tensorflow/c/tf_status_helper.h
 
@@ -4983,25 +5523,74 @@ limitations under the License.
 // #include "tensorflow/c/tf_status.h"
 // #include "tensorflow/core/platform/status.h"
 
-// Set the attribute of "tf_status" from the attributes of "status".
-@Namespace("tensorflow") public static native void Set_TF_Status_from_Status(TF_Status tf_status,
-                               @Const @ByRef NativeStatus status);
+    // Set the attribute of "tf_status" from the attributes of "status".
+    @Namespace("tensorflow")
+    public static native void Set_TF_Status_from_Status(TF_Status tf_status,
+        @Const @ByRef NativeStatus status);
 
-// Returns a "status" from "tf_status".
-@Namespace("tensorflow") public static native @ByVal NativeStatus StatusFromTF_Status(@Const TF_Status tf_status);
-  // namespace internal
+    // Returns a "status" from "tf_status".
+    @Namespace("tensorflow")
+    public static native @ByVal
+    NativeStatus StatusFromTF_Status(@Const TF_Status tf_status);
+    // namespace internal
 
-  // namespace tensorflow
+    // namespace tensorflow
 
 // #endif  // TENSORFLOW_C_TF_STATUS_HELPER_H_
 
+// Parsed from tensorflow/cc/framework/ops.h
+
+/* Copyright 2016 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
+// #ifndef TENSORFLOW_CC_FRAMEWORK_OPS_H_
+// #define TENSORFLOW_CC_FRAMEWORK_OPS_H_
+
+// #include <type_traits>
+
+// #include "tensorflow/core/framework/tensor.h"
+// #include "tensorflow/core/framework/tensor.pb.h"
+// #include "tensorflow/core/graph/graph.h"
+// #include "tensorflow/core/lib/hash/hash.h"
+// #include "tensorflow/core/lib/strings/strcat.h"
+
+/** \defgroup core Core Tensorflow API */
+// Targeting ../NativeOperation.java
+
+// Targeting ../NativeOutput.java
+
+/** Hash class that can be used for e.g. storing Outputs in an unordered_map */
+
+/** Represents a tensor value that can be used as an operand to an Operation. */
+
+/** A type for representing the output of ops that produce more than one output,
+ *  or a list of tensors. */
+
+/** A type for representing the input to ops that require a list of tensors. */
+
+/** \} */
+
+    // namespace tensorflow
+
+// #endif  // TENSORFLOW_CC_FRAMEWORK_OPS_H_
 
 // Targeting ../TF_Graph.java
 
-
 // Targeting ../TF_OperationDescription.java
 
-
+// Targeting ../TF_Operation.java
 
 
 }

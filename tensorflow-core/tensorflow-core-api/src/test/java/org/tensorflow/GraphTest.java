@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,14 +29,15 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.tensorflow.exceptions.TFInvalidArgumentException;
 import org.tensorflow.op.Ops;
-import org.tensorflow.op.core.Constant;
 import org.tensorflow.op.linalg.MatMul;
 import org.tensorflow.proto.framework.DataType;
 import org.tensorflow.proto.framework.GraphDef;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TInt32;
 
-/** Unit tests for {@link org.tensorflow.Graph}. */
+/**
+ * Unit tests for {@link org.tensorflow.Graph}.
+ */
 public class GraphTest {
 
   @Test
@@ -93,7 +93,7 @@ public class GraphTest {
   public void iterateOverOperations() {
     try (Graph g = new Graph()) {
       Ops tf = Ops.create(g);
-      Iterator<Operation> iterator = g.operations();
+      Iterator<GraphOperation> iterator = g.operations();
       HashSet<Operation> operations;
 
       assertFalse(iterator.hasNext());
@@ -123,7 +123,8 @@ public class GraphTest {
     try (Graph g = new Graph()) {
       Ops tf = Ops.create(g);
       Operand<TInt32> control = tf.constant(0);
-      Operand<TInt32> a = tf.withControlDependencies(Collections.singletonList(control)).constant(1);
+      Operand<TInt32> a = tf.withControlDependencies(Collections.singletonList(control))
+          .constant(1);
       Operand<TInt32> b = tf.constant(2);
       Operand<TInt32> c = tf.constant(3);
 
@@ -131,9 +132,11 @@ public class GraphTest {
       Operand<TInt32> output = tf.math.mul(d, c);
 
       Set<GraphOperation> subgraph = g
-          .completeSubgraph(new LinkedHashSet<>(Arrays.asList(control, a, b, c)), Collections.singleton(output));
+          .completeSubgraph(new LinkedHashSet<>(Arrays.asList(control, a, b, c)),
+              Collections.singleton(output));
 
-      assertEquals(new LinkedHashSet<>(Arrays.asList(control.op(), a.op(), b.op(), c.op(), d.op(), output.op())),
+      assertEquals(new LinkedHashSet<>(
+              Arrays.asList(control.op(), a.op(), b.op(), c.op(), d.op(), output.op())),
           subgraph);
     }
   }
@@ -143,7 +146,8 @@ public class GraphTest {
     try (Graph g = new Graph()) {
       Ops tf = Ops.create(g);
       Operand<TInt32> control = tf.constant(0);
-      Operand<TInt32> a = tf.withControlDependencies(Collections.singletonList(control)).constant(1);
+      Operand<TInt32> a = tf.withControlDependencies(Collections.singletonList(control))
+          .constant(1);
       Operand<TInt32> b = tf.constant(2);
       Operand<TInt32> c = tf.constant(3);
 
@@ -153,7 +157,8 @@ public class GraphTest {
       Set<GraphOperation> subgraph = g
           .completeSubgraph(Collections.emptySet(), Collections.singleton(output));
 
-      assertEquals(new LinkedHashSet<>(Arrays.asList(control.op(), a.op(), b.op(), c.op(), d.op(), output.op())),
+      assertEquals(new LinkedHashSet<>(
+              Arrays.asList(control.op(), a.op(), b.op(), c.op(), d.op(), output.op())),
           subgraph);
     }
   }
@@ -191,7 +196,7 @@ public class GraphTest {
       Output<TFloat32> y0 = tf.math.square(x1).y();
       Output<TFloat32> y1 = tf.math.square(y0).y();
       Output<TFloat32> y2 = tf.math.addN(Arrays.asList(y0, x2)).sum();
-      
+
       Output<?>[] grads0 = g.addGradients(y1, toArray(x1));
       assertNotNull(grads0);
       assertEquals(1, grads0.length);
@@ -202,7 +207,7 @@ public class GraphTest {
       assertEquals(2, grads1.length);
       assertEquals(DataType.DT_FLOAT, grads1[0].dataType());
       assertEquals(DataType.DT_FLOAT, grads1[1].dataType());
-      
+
       try (TFloat32 c1 = TFloat32.scalarOf(3.0f);
           TFloat32 c2 = TFloat32.scalarOf(2.0f);
           AutoCloseableList<Tensor> outputs = new AutoCloseableList<>(
@@ -213,11 +218,11 @@ public class GraphTest {
                   .fetch(grads1[0])
                   .fetch(grads1[1])
                   .run())) {
-     
+
         assertEquals(3, outputs.size());
-        assertEquals(108.0f, ((TFloat32)outputs.get(0)).getFloat(), 0.0f);
-        assertEquals(6.0f, ((TFloat32)outputs.get(1)).getFloat(), 0.0f);
-        assertEquals(1.0f, ((TFloat32)outputs.get(2)).getFloat(), 0.0f);
+        assertEquals(108.0f, ((TFloat32) outputs.get(0)).getFloat(), 0.0f);
+        assertEquals(6.0f, ((TFloat32) outputs.get(1)).getFloat(), 0.0f);
+        assertEquals(1.0f, ((TFloat32) outputs.get(2)).getFloat(), 0.0f);
       }
     }
   }
@@ -238,7 +243,7 @@ public class GraphTest {
       assertEquals(DataType.DT_FLOAT, grad[0].dataType());
 
       try (TFloat32 c = TFloat32.scalarOf(3.0f);
-          TFloat32 output = (TFloat32)s.runner()
+          TFloat32 output = (TFloat32) s.runner()
               .feed(x, c)
               .fetch(grad[0])
               .run()
@@ -257,7 +262,7 @@ public class GraphTest {
       Output<TFloat32> x = tf.placeholder(TFloat32.class).output();
       Output<TFloat32> y0 = tf.math.square(x).y();
       Output<TFloat32> y1 = tf.math.square(y0).y();
-      
+
       Output<?>[] grad0 = g.addGradients(y1, toArray(y0));
       assertNotNull(grad0);
       assertEquals(1, grad0.length);
@@ -269,7 +274,7 @@ public class GraphTest {
       assertEquals(DataType.DT_FLOAT, grad1[0].dataType());
 
       try (TFloat32 c = TFloat32.scalarOf(3.0f);
-          TFloat32 output = (TFloat32)s.runner()
+          TFloat32 output = (TFloat32) s.runner()
               .feed(x, c)
               .fetch(grad1[0])
               .run()
@@ -320,16 +325,16 @@ public class GraphTest {
           toArray(input),
           (condGraph, condInputs, condOutputs) -> {
             Ops tfc = Ops.create(condGraph);
-            condOutputs[0] = tfc.math.less((Output<TInt32>)condInputs[0], tfc.constant(16)).z();
+            condOutputs[0] = tfc.math.less((Output<TInt32>) condInputs[0], tfc.constant(16)).z();
           },
           (bodyGraph, bodyInputs, bodyOutputs) -> {
             Ops tfb = Ops.create(bodyGraph);
-            bodyOutputs[0] = tfb.math.square((Output<TInt32>)bodyInputs[0]).y();
+            bodyOutputs[0] = tfb.math.square((Output<TInt32>) bodyInputs[0]).y();
           },
           "test_loop");
 
       try (TInt32 c = TInt32.scalarOf(2);
-          TInt32 output = (TInt32)s.runner()
+          TInt32 output = (TInt32) s.runner()
               .feed(input, c)
               .fetch(loopOutputs[0])
               .run()
@@ -354,12 +359,12 @@ public class GraphTest {
           inputs,
           (condGraph, condInputs, condOutputs) -> {
             Ops tfc = Ops.create(condGraph);
-            condOutputs[0] = tfc.math.less((Output<TInt32>)condInputs[0], tfc.constant(16)).z();
+            condOutputs[0] = tfc.math.less((Output<TInt32>) condInputs[0], tfc.constant(16)).z();
           },
           (bodyGraph, bodyInputs, bodyOutputs) -> {
             Ops tfb = Ops.create(bodyGraph);
-            bodyOutputs[0] = tfb.math.square((Output<TInt32>)bodyInputs[0]).y();
-            bodyOutputs[1] = tfb.math.square((Output<TInt32>)bodyInputs[1]).y();
+            bodyOutputs[0] = tfb.math.square((Output<TInt32>) bodyInputs[0]).y();
+            bodyOutputs[1] = tfb.math.square((Output<TInt32>) bodyInputs[1]).y();
           },
           "test_loop");
 
@@ -374,8 +379,8 @@ public class GraphTest {
                       .fetch(loopOutputs[1])
                       .run())) {
         assertEquals(2, outputs.size());
-        assertEquals(16, ((TInt32)outputs.get(0)).getInt()); // ((2^2)^2)
-        assertEquals(625, ((TInt32)outputs.get(1)).getInt()); // ((5^2)^2)
+        assertEquals(16, ((TInt32) outputs.get(0)).getInt()); // ((2^2)^2)
+        assertEquals(625, ((TInt32) outputs.get(1)).getInt()); // ((5^2)^2)
       }
     }
   }

@@ -382,7 +382,7 @@ public final class Ops {
 
   private final Scope scope;
 
-  private Ops(Scope scope) {
+  Ops(Scope scope) {
     this.scope = scope;
     nn = new NnOps(this);
     summary = new SummaryOps(this);
@@ -8181,7 +8181,7 @@ public final class Ops {
    * Creates an API for building operations in the provided execution environment
    */
   public static Ops create(ExecutionEnvironment env) {
-    return new Ops(env.baseScope());
+    return new Ops(new JavaScope(env.baseScope())));
   }
 
   /**

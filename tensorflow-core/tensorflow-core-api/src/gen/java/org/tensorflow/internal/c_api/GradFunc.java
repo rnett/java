@@ -2,24 +2,43 @@
 
 package org.tensorflow.internal.c_api;
 
-import java.nio.*;
-import org.bytedeco.javacpp.*;
-import org.bytedeco.javacpp.annotation.*;
+import org.bytedeco.javacpp.FunctionPointer;
+import org.bytedeco.javacpp.Loader;
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.annotation.ByRef;
+import org.bytedeco.javacpp.annotation.ByVal;
+import org.bytedeco.javacpp.annotation.Const;
+import org.bytedeco.javacpp.annotation.Properties;
+import org.bytedeco.javacpp.annotation.StdVector;
 
-import static org.tensorflow.internal.c_api.global.tensorflow.*;
 
-
-/** GradFunc is the signature for all gradient functions in GradOpRegistry.
- *  Implementations should add operations to compute the gradient outputs of
- *  'op' (returned in 'grad_outputs') using 'scope' and 'grad_inputs'. */
+/**
+ * GradFunc is the signature for all gradient functions in GradOpRegistry. Implementations should
+ * add operations to compute the gradient outputs of 'op' (returned in 'grad_outputs') using 'scope'
+ * and 'grad_inputs'.
+ */
 @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class GradFunc extends FunctionPointer {
-    static { Loader.load(); }
-    /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
-    public    GradFunc(Pointer p) { super(p); }
-    protected GradFunc() { allocate(); }
+
+    static {
+        Loader.load();
+    }
+
+    /**
+     * Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}.
+     */
+    public GradFunc(Pointer p) {
+        super(p);
+    }
+
+    protected GradFunc() {
+        allocate();
+    }
+
     private native void allocate();
-    public native @ByVal NativeStatus call(@Const @ByRef TF_Scope scope, @Cast("const tensorflow::Operation*") @ByRef TF_Operation op,
-                           @Cast("tensorflow::Output*") @StdVector TF_Output grad_inputs,
-                           @Cast("tensorflow::Output*") @StdVector TF_Output grad_outputs);
+
+    public native @ByVal
+    NativeStatus call(@Const @ByRef TF_Scope scope, @Const @ByRef NativeOperation op,
+        @StdVector NativeOutput grad_inputs,
+        @StdVector NativeOutput grad_outputs);
 }

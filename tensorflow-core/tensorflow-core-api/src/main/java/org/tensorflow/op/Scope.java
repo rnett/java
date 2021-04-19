@@ -15,7 +15,6 @@
  */
 package org.tensorflow.op;
 
-import java.util.ArrayList;
 import org.tensorflow.DeviceSpec;
 import org.tensorflow.ExecutionEnvironment;
 import org.tensorflow.OperationBuilder;
@@ -50,8 +49,9 @@ import org.tensorflow.OperationBuilder;
  *
  * <p><b>Scope hierarchy:</b>
  *
- * <p>A {@code Scope} provides various {@code with()} methods that create a new scope. The new scope
- * typically has one property changed while other properties are inherited from the parent scope.
+ * <p>A {@code Scope} provides various {@code with()} methods that create a new scope. The new
+ * scope typically has one property changed while other properties are inherited from the parent
+ * scope.
  *
  * <p>An example using {@code Constant} implemented as before:
  *
@@ -76,31 +76,17 @@ import org.tensorflow.OperationBuilder;
  *
  * <p>Scope objects are <b>not</b> thread-safe.
  */
-public final class Scope implements IScope {
-
-  /**
-   * Create a new top-level scope.
-   *
-   * <p><b>For internal use only</b>, use {@link ExecutionEnvironment#baseScope()} if you need a
-   * base level scope.
-   *
-   * @param env The execution environment used by the scope.
-   */
-  public Scope(ExecutionEnvironment env) {
-    this(env, new NameScope(env), new ArrayList<>(), DeviceSpec.newBuilder().build());
-  }
+public interface Scope {
 
   /** Returns the execution environment used by this scope. */
-  @Override
-  public ExecutionEnvironment env() {
-    return env;
-  }
+  ExecutionEnvironment env();
 
   /**
    * Returns a new scope where added operations will have the provided name prefix.
    *
-   * <p>Ops created with this scope will have {@code name/childScopeName/} as the prefix. The actual
-   * name will be unique in the returned scope. All other properties are inherited from the current
+   * <p>Ops created with this scope will have {@code name/childScopeName/} as the prefix. The
+   * actual name will be unique in the returned scope. All other properties are inherited from the
+   * current
    * scope.
    *
    * <p>The child scope name must match the regular expression {@code [A-Za-z0-9.][A-Za-z0-9_.\-]*}
@@ -109,11 +95,7 @@ public final class Scope implements IScope {
    * @return a new subscope
    * @throws IllegalArgumentException if the name is invalid
    */
-  @Override
-  public Scope withSubScope(String childScopeName) {
-    return new Scope(
-        env, nameScope.withSubScope(childScopeName, env), controlDependencies, deviceSpec);
-  }
+  Scope withSubScope(String childScopeName);
 
   /**
    * Return a new scope that uses the provided name for an op.
@@ -127,10 +109,7 @@ public final class Scope implements IScope {
    * @return a new Scope that uses opName for operations.
    * @throws IllegalArgumentException if the name is invalid
    */
-  @Override
-  public Scope withName(String opName) {
-    return new Scope(env, nameScope.withName(opName), controlDependencies, deviceSpec);
-  }
+  Scope withName(String opName);
 
   /**
    * Returns a new scope where added operations will be prefixed by this scope's op name (set by
@@ -148,14 +127,7 @@ public final class Scope implements IScope {
    * @return a new subscope
    * @throws IllegalArgumentException if the name is invalid
    */
-  @Override
-  public Scope withNameAsSubScope(String defaultName) {
-    return new Scope(
-        env,
-        nameScope.withSubScope(nameScope.makeOpName(defaultName), env),
-        controlDependencies,
-        deviceSpec);
-  }
+  Scope withNameAsSubScope(String defaultName);
 
   /**
    * Return a new scope that uses the provided device specification for an op.
@@ -166,10 +138,7 @@ public final class Scope implements IScope {
    * @param deviceSpec device specification for an operator in the returned scope
    * @return a new Scope that uses opName for operations.
    */
-  @Override
-  public Scope withDevice(DeviceSpec deviceSpec) {
-    return new Scope(env, nameScope, controlDependencies, deviceSpec);
-  }
+  Scope withDevice(DeviceSpec deviceSpec);
 
   /**
    * Create a unique name for an operator, using a provided default if necessary.
@@ -183,50 +152,27 @@ public final class Scope implements IScope {
    * scope.env().opBuilder("Const", scope.makeOpName("Const"))...
    * }</pre>
    *
-   * <p><b>Note:</b> if you provide a composite operator building class (i.e, a class that creates a
-   * set of related operations by calling other operator building code), the provided name will act
+   * <p><b>Note:</b> if you provide a composite operator building class (i.e, a class that creates
+   * a set of related operations by calling other operator building code), the provided name will
+   * act
    * as a subscope to all underlying operators.
    *
    * @param defaultName name for the underlying operator.
    * @return unique name for the operator.
    * @throws IllegalArgumentException if the default name is invalid.
    */
-  @Override
-  public String makeOpName(String defaultName) {
-    return nameScope.makeOpName(defaultName);
-  }
-
-  public static boolean isValidOpName(String name) {
-    return NameScope.isValidName(name);
-  }
-
-  private Scope(
-      ExecutionEnvironment env,
-      NameScope nameScope,
-      Iterable<Op> controlDependencies,
-      DeviceSpec deviceSpec) {
-    this.env = env;
-    this.nameScope = nameScope;
-    this.controlDependencies = controlDependencies;
-    this.deviceSpec = deviceSpec;
-  }
+  String makeOpName(String defaultName);
 
   /**
    * Returns a new scope where added operations will have the provided control dependencies.
    *
-   * <p>Ops created with this scope will have a control edge from each of the provided controls. All
-   * other properties are inherited from the current scope.
+   * <p>Ops created with this scope will have a control edge from each of the provided controls.
+   * All other properties are inherited from the current scope.
    *
    * @param controls control dependencies for ops created with the returned scope
    * @return a new scope with the provided control dependencies
    */
-  @Override
-  public Scope withControlDependencies(Iterable<Op> controls) {
-    for (Op control : controls) {
-      env.checkInput(control);
-    }
-    return new Scope(env, nameScope, controls, deviceSpec);
-  }
+  Scope withControlDependencies(Iterable<Op> controls);
 
   /**
    * Applies device specification and adds each Operand in controlDependencies as a control input to
@@ -234,31 +180,5 @@ public final class Scope implements IScope {
    *
    * @param builder OperationBuilder to add control inputs and device specification to
    */
-  @Override
-  public OperationBuilder apply(OperationBuilder builder) {
-    builder.setDevice(deviceSpec.toString());
-    return applyControlDependencies(builder);
-  }
-
-  /**
-   * Adds each Operand in controlDependencies as a control input to the provided builder.
-   *
-   * @param builder OperationBuilder to add control inputs to
-   */
-  private OperationBuilder applyControlDependencies(OperationBuilder builder) {
-    for (Op control : controlDependencies) {
-      builder = builder.addControlInput(control.op());
-    }
-    return builder;
-  }
-
-  private final ExecutionEnvironment env;
-  private final Iterable<Op> controlDependencies;
-  private final NameScope nameScope;
-  private final DeviceSpec deviceSpec;
-
-  /** Returns device string from the scope. */
-  public String getDeviceString() {
-    return deviceSpec.toString();
-  }
+  OperationBuilder apply(OperationBuilder builder);
 }
