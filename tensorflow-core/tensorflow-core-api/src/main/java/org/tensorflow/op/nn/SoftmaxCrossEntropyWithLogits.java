@@ -14,7 +14,6 @@ import org.tensorflow.types.TFloat16;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TInt64;
 import org.tensorflow.types.family.TNumber;
-import org.tensorflow.types.family.TType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -124,10 +123,10 @@ public class SoftmaxCrossEntropyWithLogits {
         axis = shape.numDimensions() + axis;
       }
       for (int i = 0; i < axis; i++) {
-        newArray[i] = shape.size(i);
+        newArray[i] = shape.get(i);
       }
       for (int i = axis + 1; i < shape.numDimensions(); i++) {
-        newArray[i - 1] = shape.size(i);
+        newArray[i - 1] = shape.get(i);
       }
       cost = Reshape.create(scope, cost, Constant.vectorOf(scope, newArray));
     }
@@ -152,7 +151,7 @@ public class SoftmaxCrossEntropyWithLogits {
       long product = 1L;
       boolean productValid = true;
       for (int i = ndims - 2; i >= 0; i--) {
-        long d = shape.size(i);
+        long d = shape.get(i);
         if (d == org.tensorflow.ndarray.Shape.UNKNOWN_SIZE) {
           productValid = false;
           break;
@@ -160,7 +159,7 @@ public class SoftmaxCrossEntropyWithLogits {
         product *= d;
       }
       if (productValid) {
-        return Reshape.create(scope, logits, Constant.arrayOf(scope, product, shape.size(-1)));
+        return Reshape.create(scope, logits, Constant.arrayOf(scope, product, shape.get(-1)));
       }
     }
 

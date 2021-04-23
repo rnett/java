@@ -566,7 +566,7 @@ public class Losses {
           tf.reshape(
               predictions,
               tf.constant(
-                  new long[] {-1L, predictionsShape.size(predictionsShape.numDimensions() - 1)}));
+                  new long[] {-1L, predictionsShape.get(predictionsShape.numDimensions() - 1)}));
     }
 
     @SuppressWarnings("unchecked")
@@ -643,7 +643,7 @@ public class Losses {
     Operand<T> smoothing = cast(tf, tf.constant(labelSmoothing), labelType);
     Shape labelsShape = labels.shape();
     int numDims = labelsShape.numDimensions();
-    Operand<T> numClasses = cast(tf, tf.constant(labelsShape.size(numDims - 1)), labelType);
+    Operand<T> numClasses = cast(tf, tf.constant(labelsShape.get(numDims - 1)), labelType);
     Operand<T> oneMinusSmoothing = cast(tf, tf.constant(1.f - labelSmoothing), labelType);
     return tf.math.add(tf.math.mul(labels, oneMinusSmoothing), tf.math.div(smoothing, numClasses));
   }
