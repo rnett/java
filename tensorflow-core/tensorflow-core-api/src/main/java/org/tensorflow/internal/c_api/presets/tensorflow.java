@@ -306,6 +306,8 @@ public class tensorflow implements LoadEnabled, InfoMapper {
             .annotations("@StdString").valueTypes("BytePointer", "String")
             .pointerTypes("BytePointer"))
         .put(new Info("absl::Span", "tensorflow::gtl::ArraySlice").annotations("@Span"))
+        .put(new Info("std::vector<tensorflow::Output>").valueTypes("@StdMove NativeOutputVector")
+            .pointerTypes("NativeOutputVector").define())
         .put(new Info("tensorflow::Output").javaNames("NativeOutput"))
         .put(new Info("tensorflow::Operation").javaNames("NativeOperation"))
         .put(new Info("tensorflow::Status").javaNames("NativeStatus").purify())

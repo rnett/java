@@ -9,7 +9,7 @@ import org.bytedeco.javacpp.annotation.ByRef;
 import org.bytedeco.javacpp.annotation.ByVal;
 import org.bytedeco.javacpp.annotation.Const;
 import org.bytedeco.javacpp.annotation.Properties;
-import org.bytedeco.javacpp.annotation.StdVector;
+import org.bytedeco.javacpp.annotation.StdMove;
 
 
 /**
@@ -39,6 +39,6 @@ public class GradFunc extends FunctionPointer {
 
     public native @ByVal
     NativeStatus call(@Const @ByRef TF_Scope scope, @Const @ByRef NativeOperation op,
-        @StdVector NativeOutput grad_inputs,
-        @StdVector NativeOutput grad_outputs);
+        @StdMove NativeOutputVector grad_inputs,
+        NativeOutputVector grad_outputs);
 }

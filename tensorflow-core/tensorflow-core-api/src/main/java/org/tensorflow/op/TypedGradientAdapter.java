@@ -27,7 +27,7 @@ import org.tensorflow.Operand;
 import org.tensorflow.Output;
 import org.tensorflow.internal.c_api.GradFunc;
 import org.tensorflow.internal.c_api.NativeOperation;
-import org.tensorflow.internal.c_api.NativeOutput;
+import org.tensorflow.internal.c_api.NativeOutputVector;
 import org.tensorflow.internal.c_api.NativeStatus;
 import org.tensorflow.internal.c_api.TF_Scope;
 import org.tensorflow.internal.c_api.TF_Status;
@@ -46,8 +46,8 @@ public class TypedGradientAdapter<T extends RawOp> extends GradFunc {
   }
 
   @Override
-  public NativeStatus call(TF_Scope scope, NativeOperation op, NativeOutput grad_inputs,
-      NativeOutput grad_outputs) {
+  public NativeStatus call(TF_Scope scope, NativeOperation op, NativeOutputVector grad_inputs,
+      NativeOutputVector grad_outputs) {
     try (PointerScope pointerScope = new PointerScope()) {
       Graph g = Graph.findGraphForPointer(scope.graph());
       if (g == null) {

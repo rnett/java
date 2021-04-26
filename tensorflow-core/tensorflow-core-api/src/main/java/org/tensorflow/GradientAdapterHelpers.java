@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.tensorflow.internal.c_api.NativeOutput;
+import org.tensorflow.internal.c_api.NativeOutputVector;
 import org.tensorflow.internal.c_api.Node;
 
 /**
@@ -34,10 +35,10 @@ public class GradientAdapterHelpers {
    * @param g             the graph the outputs are in
    * @param nativeOutputs the native outputs to convert
    */
-  public static List<Output<?>> fromNativeOutputs(Graph g, NativeOutput nativeOutputs) {
-    List<Output<?>> gradInputs = new ArrayList<>((int) nativeOutputs.capacity());
+  public static List<Output<?>> fromNativeOutputs(Graph g, NativeOutputVector nativeOutputs) {
+    List<Output<?>> gradInputs = new ArrayList<>((int) nativeOutputs.size());
     for (int i = 0; i < nativeOutputs.capacity(); i++) {
-      NativeOutput output = nativeOutputs.position(i);
+      NativeOutput output = nativeOutputs.get(i);
       gradInputs.add(new Output<>(getGraphOp(g, output.node()),
           output.index()));
     }
@@ -50,12 +51,13 @@ public class GradientAdapterHelpers {
    * @param outputs       the outputs to put
    * @param nativeOutputs the native array to put the outputs into
    */
-  public static void putToNativeOutputs(List<Operand<?>> outputs, NativeOutput nativeOutputs) {
-    nativeOutputs.capacity(outputs.size());
+  public static void putToNativeOutputs(List<Operand<?>> outputs,
+      NativeOutputVector nativeOutputs) {
+    nativeOutputs.resize(outputs.size());
     for (int i = 0; i < outputs.size(); i++) {
       Output<?> output = outputs.get(i).asOutput();
       Node node = ((GraphOperation) output.op()).getUnsafeNativeHandle().node();
-      nativeOutputs.position(i).put(new NativeOutput(node, output.index()));
+      nativeOutputs.put(i, new NativeOutput(node, output.index()));
     }
   }
 
