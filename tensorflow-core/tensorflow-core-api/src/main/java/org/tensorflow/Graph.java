@@ -233,9 +233,8 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
    * Finds the operations used to produce {@code outputs}, assuming {@code inputs} are provided.
    * Includes control dependencies.
    *
-   * <p>Note that this function can easily return ops upstream of inputs as part of the body.
-   * Depending on your use, the returned body should probably be filtered for {@code Placeholder}s,
-   * at least.
+   * <p>Note that this function can easily return ops upstream of inputs as part of the body. Depending
+   * on your use, the returned body should probably be filtered for {@code Placeholder}s, at least.
    *
    * @param inputs  the inputs of the subgraph.  Must be from single output ops.  May not be null.
    * @param outputs the outputs of the subgraph.  May not be null.
@@ -387,7 +386,7 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
     if (!isOpEnabled(type)) {
       throw new IllegalArgumentException("Op " + type + " is not valid in graph mode.");
     }
-    return new GraphOperationBuilder(this, type, name);
+    return new GraphOperationBuilder(this, type, name, dangerousOpBuilder);
   }
 
   @Override
@@ -572,8 +571,7 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
    * org.tensorflow.op.core.OnesLike OnesLike} for all shapes in {@code y}.
    *
    * <p>{@code prefix} is used as the name prefix applied to all nodes added to the graph to
-   * compute
-   * gradients. It must be unique within the provided graph or the operation will fail.
+   * compute gradients. It must be unique within the provided graph or the operation will fail.
    *
    * <p>If {@code prefix} is null, then one will be chosen automatically.
    *
@@ -585,7 +583,8 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
    *               {@code y}
    * @return the partial derivatives {@code dy} with the size of {@code x}
    */
-  public Output<?>[] addGradients(String prefix, Output<?>[] y, Output<?>[] x, Output<?>[] dx) {
+  public synchronized Output<?>[] addGradients(String prefix, Output<?>[] y, Output<?>[] x,
+      Output<?>[] dx) {
     Output<?>[] dy = new Output<?>[x.length];
     final TF_Operation[] yHandles = new TF_Operation[y.length];
     final int[] yIndices = new int[y.length];
@@ -817,7 +816,13 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
   private SaverDef saverDef;
   private final Scope baseScope;
 
+  private boolean dangerousOpBuilder;
+
   private final List<Op> initializers = new ArrayList<>();
+
+  synchronized void setDangerousOpBuilder(boolean dangerous) {
+    dangerousOpBuilder = dangerous;
+  }
 
   // Related native objects (such as the TF_Operation object backing an Operation instance)
   // have a validity tied to that of the Graph. The handles to those native objects are not

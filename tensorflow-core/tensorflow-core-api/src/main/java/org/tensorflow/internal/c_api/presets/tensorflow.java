@@ -50,6 +50,7 @@ import org.bytedeco.javacpp.tools.InfoMapper;
                 "tensorflow/c/tf_tensor.h",
                 "tensorflow/c/tf_tstring.h",
                 "tensorflow/c/c_api.h",
+                "tensorflow/c/c_api.cc",
 //                "tensorflow/c/env.h",
                 "tensorflow/c/kernels.h",
                 "tensorflow/c/ops.h",
@@ -229,9 +230,33 @@ public class tensorflow implements LoadEnabled, InfoMapper {
             .linePatterns("struct TF_OperationDescription \\{", "\\};",
                 "struct TF_Graph \\{", "\\};",
                 "struct TF_Operation \\{", "\\};"))
-        .put(new Info("graph.h").linePatterns("class Node;", "struct OutputTensor;"))
+        .put(new Info("graph.h")
+            .linePatterns("class Node \\{",
+                "// Stores debug information associated with the Node."))
         .put(new Info("Node").cppTypes("tensorflow::Node").purify())
-        .put(new Info("OutputTensor").skip())
+        .put(new Info(
+            "tensorflow::NodeDef",
+            "tensorflow::OpDef",
+            "tensorflow::AttrSlice",
+            "tensorflow::Edge",
+            "tensorflow::EdgeSet",
+            "tensorflow::WhileContext",
+            "tensorflow::NodeProperties",
+            "protobuf::RepeatedPtrField",
+            "gtl::iterator_range<NeighborIter>",
+            "tensorflow::DataType",
+            "tensorflow::DataTypeVector",
+            "tensorflow::Node::set_original_node_names",
+            "tensorflow::Node::AddAttr",
+            "tensorflow::Node::ClearAttr",
+            "tensorflow::Node::input_node"
+        ).skip())
+        .put(new Info("c_api.cc").linePatterns(
+            "// Helper functions -+", "// Shape functions -+",
+            "static TF_OperationDescription\\* TF_NewOperationLocked\\(TF_Graph\\* graph,", "\\}",
+            "static TF_Operation\\* TF_FinishOperationLocked\\(TF_OperationDescription\\* desc,",
+            "\\}"))
+        .put(new Info("OutputTensor", "TensorId", "tensorflow::AttrValue").skip())
         .put(new Info("TF_CAPI_EXPORT", "TF_Bool", "TF_GUARDED_BY",
             "TF_MUST_USE_RESULT").cppTypes()
             .annotations())
@@ -302,9 +327,10 @@ public class tensorflow implements LoadEnabled, InfoMapper {
         .put(new Info("TF_OperationDescription").pointerTypes("TF_OperationDescription").purify())
         .put(new Info("tensorflow::Scope").javaNames("TF_Scope"))
         .put(new Info("tensorflow::NodeBuilder").pointerTypes("NodeBuilder"))
-        .put(new Info("tensorflow::string", "absl::string_view", "tensorflow::StringPiece")
-            .annotations("@StdString").valueTypes("BytePointer", "String")
-            .pointerTypes("BytePointer"))
+        .put(
+            new Info("string", "tensorflow::string", "absl::string_view", "tensorflow::StringPiece")
+                .annotations("@StdString").valueTypes("BytePointer", "String")
+                .pointerTypes("BytePointer"))
         .put(new Info("absl::Span", "tensorflow::gtl::ArraySlice").annotations("@Span"))
         .put(
             new Info("std::vector<tensorflow::Output>").pointerTypes("NativeOutputVector").define())

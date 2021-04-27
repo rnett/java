@@ -40,7 +40,7 @@ public final class NativeScope implements Scope {
 
   @Override
   public NativeScope withSubScope(String childScopeName) {
-    return new NativeScope(nativeScope.NewSubScope(childScopeName), graph);
+    return new NativeScope(nativeScope.NewSubScope(childScopeName), graph, childScopeName);
   }
 
   @Override

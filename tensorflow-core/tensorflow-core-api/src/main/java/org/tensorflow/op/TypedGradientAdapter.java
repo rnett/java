@@ -18,6 +18,7 @@ package org.tensorflow.op;
 
 import static org.tensorflow.internal.c_api.global.tensorflow.StatusFromTF_Status;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import org.bytedeco.javacpp.PointerScope;
@@ -35,14 +36,19 @@ import org.tensorflow.internal.c_api.TF_Status;
 /**
  * A native adapter for {@link CustomGradient}.
  */
-public class TypedGradientAdapter<T extends RawOp> extends GradFunc {
+public final class TypedGradientAdapter<T extends RawOp> extends GradFunc {
 
   private final CustomGradient<T> gradient;
   private final Class<T> opClass;
+  private final Constructor<T> ctor;
 
   public TypedGradientAdapter(CustomGradient<T> gradient, Class<T> opClass) {
+    super();
     this.gradient = gradient;
     this.opClass = opClass;
+    //noinspection unchecked
+    this.ctor = (Constructor<T>) opClass.getDeclaredConstructors()[0];
+    ctor.setAccessible(true);
   }
 
   @Override
@@ -60,15 +66,21 @@ public class TypedGradientAdapter<T extends RawOp> extends GradFunc {
 
       List<Output<?>> gradInputs = GradientAdapterHelpers.fromNativeOutputs(g, grad_inputs);
 
-      @SuppressWarnings("unchecked")
-      T rawOp = (T) opClass.getDeclaredConstructors()[0]
-          .newInstance(GradientAdapterHelpers.getGraphOp(g, op.node()));
+      T rawOp = ctor.newInstance(GradientAdapterHelpers.getGraphOp(g, op.node()));
 
+      GradientAdapterHelpers.useDangerousLockedBuilders(g, true);
       List<Operand<?>> gradOutputs = gradient.call(tf, rawOp, gradInputs);
+      GradientAdapterHelpers.useDangerousLockedBuilders(g, false);
+
       GradientAdapterHelpers.putToNativeOutputs(gradOutputs, grad_outputs);
 
     } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException("Could not instantiate Op class " + opClass, e);
+      RuntimeException re = new RuntimeException("Could not instantiate Op class " + opClass, e);
+      re.printStackTrace();
+      throw re;
+    } catch (Throwable t) {
+      t.printStackTrace();
+      throw t;
     }
     return StatusFromTF_Status(TF_Status.newStatus());
   }

@@ -16,9 +16,11 @@
  */
 package org.tensorflow;
 
+import static org.tensorflow.internal.c_api.global.tensorflow.ToOperation;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import org.bytedeco.javacpp.PointerScope;
 import org.tensorflow.internal.c_api.NativeOutput;
 import org.tensorflow.internal.c_api.NativeOutputVector;
 import org.tensorflow.internal.c_api.Node;
@@ -37,7 +39,7 @@ public class GradientAdapterHelpers {
    */
   public static List<Output<?>> fromNativeOutputs(Graph g, NativeOutputVector nativeOutputs) {
     List<Output<?>> gradInputs = new ArrayList<>((int) nativeOutputs.size());
-    for (int i = 0; i < nativeOutputs.capacity(); i++) {
+    for (int i = 0; i < nativeOutputs.size(); i++) {
       NativeOutput output = nativeOutputs.get(i);
       gradInputs.add(new Output<>(getGraphOp(g, output.node()),
           output.index()));
@@ -69,12 +71,13 @@ public class GradientAdapterHelpers {
    * @return a graph operation with the underlying native node
    */
   public static GraphOperation getGraphOp(Graph g, Node node) {
-    for (Iterator<GraphOperation> it = g.operations(); it.hasNext(); ) {
-      GraphOperation op = it.next();
-      if (op.getUnsafeNativeHandle().node().equals(node)) {
-        return op;
-      }
+    try (PointerScope scope = new PointerScope();
+        Graph.Reference ref = g.ref()) {
+      return new GraphOperation(g, ToOperation(node));
     }
-    throw new IllegalStateException("No graph operation found for node " + node);
+  }
+
+  public static void useDangerousLockedBuilders(Graph g, boolean dangerous) {
+    g.setDangerousOpBuilder(dangerous);
   }
 }

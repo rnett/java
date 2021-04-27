@@ -35,11 +35,12 @@ import org.tensorflow.internal.c_api.TF_Status;
 /**
  * A native adapter for {@link RawCustomGradient}.
  */
-public class RawGradientAdapter extends GradFunc {
+public final class RawGradientAdapter extends GradFunc {
 
   private final RawCustomGradient gradient;
 
   public RawGradientAdapter(RawCustomGradient gradient) {
+    super();
     this.gradient = gradient;
   }
 
@@ -59,8 +60,14 @@ public class RawGradientAdapter extends GradFunc {
 
       GraphOperation operation = GradientAdapterHelpers.getGraphOp(g, op.node());
 
+      GradientAdapterHelpers.useDangerousLockedBuilders(g, true);
       List<Operand<?>> gradOutputs = gradient.call(tf, operation, gradInputs);
+      GradientAdapterHelpers.useDangerousLockedBuilders(g, false);
+
       GradientAdapterHelpers.putToNativeOutputs(gradOutputs, grad_outputs);
+    } catch (Throwable t) {
+      t.printStackTrace();
+      throw t;
     }
     return StatusFromTF_Status(TF_Status.newStatus());
   }

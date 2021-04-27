@@ -23,10 +23,12 @@ import static org.tensorflow.internal.c_api.global.tensorflow.TF_LoadLibrary;
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_Version;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.bytedeco.javacpp.PointerScope;
 import org.tensorflow.exceptions.TensorFlowException;
+import org.tensorflow.internal.c_api.GradFunc;
 import org.tensorflow.internal.c_api.GradOpRegistry;
 import org.tensorflow.internal.c_api.TF_Buffer;
 import org.tensorflow.internal.c_api.TF_Library;
@@ -151,6 +153,9 @@ public final class TensorFlow {
     }
   }
 
+  // to keep them from getting GC'd
+  private static Set<GradFunc> gradientFuncs = new HashSet<>();
+
   /**
    * Register a custom gradient function for ops of {@code opType} type.
    * <p>
@@ -162,7 +167,9 @@ public final class TensorFlow {
    * @param gradient the gradient function to use
    */
   public static void registerCustomGradient(String opType, RawCustomGradient gradient) {
-    GradOpRegistry.Global().Register(opType, new RawGradientAdapter(gradient));
+    GradFunc g = new RawGradientAdapter(gradient);
+    GradOpRegistry.Global().Register(opType, g);
+    gradientFuncs.add(g);
   }
 
   /**
@@ -176,7 +183,9 @@ public final class TensorFlow {
       CustomGradient<T> gradient) {
     try {
       String opName = (String) opClass.getDeclaredField("OP_NAME").get(null);
-      GradOpRegistry.Global().Register(opName, new TypedGradientAdapter<>(gradient, opClass));
+      GradFunc g = new TypedGradientAdapter<>(gradient, opClass);
+      GradOpRegistry.Global().Register(opName, g);
+      gradientFuncs.add(g);
     } catch (IllegalAccessException | NoSuchFieldException e) {
       throw new IllegalArgumentException(
           "Could not get OP_NAME field for class " + opClass
