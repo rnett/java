@@ -386,7 +386,7 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
     if (!isOpEnabled(type)) {
       throw new IllegalArgumentException("Op " + type + " is not valid in graph mode.");
     }
-    return new GraphOperationBuilder(this, type, name, dangerousOpBuilder);
+    return new GraphOperationBuilder(this, type, name, dangerousGradientBuilder);
   }
 
   @Override
@@ -816,12 +816,12 @@ public final class Graph implements ExecutionEnvironment, AutoCloseable {
   private SaverDef saverDef;
   private final Scope baseScope;
 
-  private boolean dangerousOpBuilder;
+  private boolean dangerousGradientBuilder;
 
   private final List<Op> initializers = new ArrayList<>();
 
-  synchronized void setDangerousOpBuilder(boolean dangerous) {
-    dangerousOpBuilder = dangerous;
+  synchronized void setDangerousGradientBuilder(boolean dangerous) {
+    dangerousGradientBuilder = dangerous;
   }
 
   // Related native objects (such as the TF_Operation object backing an Operation instance)

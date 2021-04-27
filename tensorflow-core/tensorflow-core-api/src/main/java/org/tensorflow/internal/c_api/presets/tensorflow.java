@@ -278,10 +278,13 @@ public class tensorflow implements LoadEnabled, InfoMapper {
         .put(new Info("tensorflow::Graph").javaNames("NativeGraphPointer"))
         .put(new Info("TF_Graph::graph")
             .javaText("public native @MemberGetter @ByRef NativeGraphPointer graph();"))
-        .put(new Info("TF_Graph::refiner", "TF_Graph::mu", "TF_Graph::name_map",
-            "TF_Graph::sessions", "TF_Graph::delete_requested").skip()).put(new Info("TF_Function")
-                .pointerTypes("TF_Function")
-                .base("org.tensorflow.internal.c_api.AbstractTF_Function"))
+        .put(new Info("TF_Graph::refiner", "TF_Graph::mu",
+            "TF_Graph::sessions", "TF_Graph::delete_requested").skip())
+        .put(new Info("std::unordered_map<tensorflow::string,tensorflow::Node*>")
+            .pointerTypes("NameMap").define())
+        .put(new Info("TF_Function")
+          .pointerTypes("TF_Function")
+          .base("org.tensorflow.internal.c_api.AbstractTF_Function"))
         .put(new Info("TF_ImportGraphDefOptions").pointerTypes("TF_ImportGraphDefOptions")
             .base("org.tensorflow.internal.c_api.AbstractTF_ImportGraphDefOptions"))
         .put(new Info("TF_WhileParams", "TFE_MonitoringCounterCell", "TFE_MonitoringSamplerCell",

@@ -78,6 +78,6 @@ public class GradientAdapterHelpers {
   }
 
   public static void useDangerousLockedBuilders(Graph g, boolean dangerous) {
-    g.setDangerousOpBuilder(dangerous);
+    g.setDangerousGradientBuilder(dangerous);
   }
 }

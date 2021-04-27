@@ -68,13 +68,13 @@ import org.tensorflow.proto.framework.NameAttrList;
 /** An {@link OperationBuilder} for adding {@link GraphOperation}s to a {@link Graph}. */
 public final class GraphOperationBuilder implements OperationBuilder {
 
-  GraphOperationBuilder(Graph graph, String type, String name, boolean dangerousBuilder) {
+  GraphOperationBuilder(Graph graph, String type, String name, boolean dangerousGradientBuilder) {
     this.graph = graph;
-    this.dangerousBuilder = dangerousBuilder;
+    this.dangerousGradientBuilder = dangerousGradientBuilder;
     Graph.Reference r = graph.ref();
     try {
-      if (dangerousBuilder) {
-        this.unsafeNativeHandle = allocateDangerous(r.nativeHandle(), type, name);
+      if (dangerousGradientBuilder) {
+        this.unsafeNativeHandle = allocateDangerousGradient(r.nativeHandle(), type, name);
       } else {
         this.unsafeNativeHandle = allocate(r.nativeHandle(), type, name);
       }
@@ -90,19 +90,16 @@ public final class GraphOperationBuilder implements OperationBuilder {
    */
   @Override
   public GraphOperation build() {
-    Graph.Reference r = graph.ref();
-    try {
+    try (Graph.Reference r = graph.ref()) {
       TF_Operation built;
-      if (dangerousBuilder) {
-        built = finishDangerous(unsafeNativeHandle);
+      if (dangerousGradientBuilder) {
+        built = finishDangerousGradient(r.nativeHandle(), unsafeNativeHandle);
       } else {
         built = finish(unsafeNativeHandle);
       }
       GraphOperation op = new GraphOperation(graph, built);
       unsafeNativeHandle = null;
       return op;
-    } finally {
-      r.close();
     }
   }
 
@@ -391,7 +388,7 @@ public final class GraphOperationBuilder implements OperationBuilder {
 
   private TF_OperationDescription unsafeNativeHandle;
   private final Graph graph;
-  private final boolean dangerousBuilder;
+  private final boolean dangerousGradientBuilder;
 
   private static void requireHandle(Pointer handle) {
     if (handle == null || handle.isNull()) {
@@ -420,7 +417,8 @@ public final class GraphOperationBuilder implements OperationBuilder {
     return TF_NewOperation(graphHandle, type, name);
   }
 
-  private static TF_OperationDescription allocateDangerous(TF_Graph graphHandle, String type,
+  private static TF_OperationDescription allocateDangerousGradient(TF_Graph graphHandle,
+      String type,
       String name) {
     if (graphHandle == null || graphHandle.isNull()) {
       throw new IllegalStateException("close() has been called on the Graph");
@@ -439,13 +437,14 @@ public final class GraphOperationBuilder implements OperationBuilder {
     }
   }
 
-  private static TF_Operation finishDangerous(TF_OperationDescription handle) {
+  private static TF_Operation finishDangerousGradient(TF_Graph g, TF_OperationDescription handle) {
     requireHandle(handle);
 
     try (PointerScope scope = new PointerScope()) {
       TF_Status status = TF_Status.newStatus();
       TF_Operation op = TF_FinishOperationLocked(handle, status);
       status.throwExceptionIfNotOK();
+//      g.name_map().put(TF_OperationName(op), null);
       return op;
     }
   }

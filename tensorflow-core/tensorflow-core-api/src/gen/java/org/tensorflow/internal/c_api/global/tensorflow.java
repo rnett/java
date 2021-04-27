@@ -78,6 +78,8 @@ public class tensorflow extends org.tensorflow.internal.c_api.presets.tensorflow
 
 // Targeting ../NativeOutputVector.java
 
+// Targeting ../NameMap.java
+
 // Parsed from tensorflow/core/platform/ctstring_internal.h
 
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
