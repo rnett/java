@@ -2,49 +2,27 @@
 
 package org.tensorflow.internal.c_api;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.annotation.Cast;
-import org.bytedeco.javacpp.annotation.Name;
-import org.bytedeco.javacpp.annotation.NoOffset;
-import org.bytedeco.javacpp.annotation.Properties;
-import org.bytedeco.javacpp.annotation.StdString;
+import java.nio.*;
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacpp.annotation.*;
+
+import static org.tensorflow.internal.c_api.global.tensorflow.*;
 
 // Parsed from tensorflow/core/graph/graph.h
 
-@Name("tensorflow::Node")
-@NoOffset
-@Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
+@Name("tensorflow::Node") @NoOffset @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class Node extends Pointer {
+    static { Loader.load(); }
+    /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
+    public Node(Pointer p) { super(p); }
 
-  static {
-    Loader.load();
-  }
-
-  /**
-   * Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}.
-   */
-  public Node(Pointer p) {
-    super(p);
-  }
-
-  public native @StdString
-  BytePointer DebugString();
-
+  public native @StdString BytePointer DebugString();
   public native int id();
-
   public native int cost_id();
-
-  public native @StdString
-  BytePointer name();
-
+  public native @StdString BytePointer name();
   public native void set_name(@StdString BytePointer name);
-
   public native void set_name(@StdString String name);
-
-  public native @StdString
-  BytePointer type_string();
+  public native @StdString BytePointer type_string();
 
   // def() provides the NodeDef the user supplied, but the specifics
   // of this Node may have changed due to placement, optimization, etc.
@@ -58,21 +36,17 @@ public class Node extends Pointer {
   // TODO(irving): Replace with NodeInfo.
 
   // input and output types
-  public native @Cast("tensorflow::int32")
-  int num_inputs();
+  public native @Cast("tensorflow::int32") int num_inputs();
 
-  public native @Cast("tensorflow::int32")
-  int num_outputs();
+  public native @Cast("tensorflow::int32") int num_outputs();
 
   // The device requested by the user.  For the actual assigned device,
   // use assigned_device_name() below.
-  public native @StdString
-  BytePointer requested_device();
+  public native @StdString BytePointer requested_device();
 
   // This changes the user requested device but not necessarily the device that
   // on which the operation will run.
   public native void set_requested_device(@StdString BytePointer device);
-
   public native void set_requested_device(@StdString String device);
 
   // This gives the device the runtime has assigned this node to.  If
@@ -81,22 +55,16 @@ public class Node extends Pointer {
   // fully specifies a device, and satisfies def().device().
   // TODO(josh11b): Move assigned_device_name outside of Node into a
   // NodeId->DeviceName map.
-  public native @StdString
-  BytePointer assigned_device_name();
-
+  public native @StdString BytePointer assigned_device_name();
   public native void set_assigned_device_name(@StdString BytePointer device_name);
-
   public native void set_assigned_device_name(@StdString String device_name);
-
-  public native @Cast("bool")
-  boolean has_assigned_device_name();
-
+  public native @Cast("bool") boolean has_assigned_device_name();
   public native int assigned_device_name_index();
-
   public native void set_assigned_device_name_index(int index);
 
   // Sets 'original_node_names' field of this node's DebugInfo proto to
   // 'names'.
+  
 
   // Read only access to attributes
 
@@ -106,109 +74,56 @@ public class Node extends Pointer {
   // includes control edges.
 
   // Node type helpers.
-  public native @Cast("bool")
-  boolean IsSource();
-
-  public native @Cast("bool")
-  boolean IsSink();
-
+  public native @Cast("bool") boolean IsSource();
+  public native @Cast("bool") boolean IsSink();
   // Anything other than the special Source & Sink nodes.
-  public native @Cast("bool")
-  boolean IsOp();
+  public native @Cast("bool") boolean IsOp();
 
   // Node class helpers
-  public native @Cast("bool")
-  boolean IsSwitch();
+  public native @Cast("bool") boolean IsSwitch();
+  public native @Cast("bool") boolean IsMerge();
+  public native @Cast("bool") boolean IsEnter();
+  public native @Cast("bool") boolean IsExit();
+  public native @Cast("bool") boolean IsNextIteration();
+  public native @Cast("bool") boolean IsLoopCond();
+  public native @Cast("bool") boolean IsControlTrigger();
+  public native @Cast("bool") boolean IsSend();
+  public native @Cast("bool") boolean IsRecv();
+  public native @Cast("bool") boolean IsConstant();
+  public native @Cast("bool") boolean IsVariable();
+  public native @Cast("bool") boolean IsIdentity();
+  public native @Cast("bool") boolean IsGetSessionHandle();
+  public native @Cast("bool") boolean IsGetSessionTensor();
+  public native @Cast("bool") boolean IsDeleteSessionTensor();
+  public native @Cast("bool") boolean IsControlFlow();
+  public native @Cast("bool") boolean IsHostSend();
+  public native @Cast("bool") boolean IsHostRecv();
+  public native @Cast("bool") boolean IsScopedAllocator();
+  public native @Cast("bool") boolean IsCollective();
 
-  public native @Cast("bool")
-  boolean IsMerge();
-
-  public native @Cast("bool")
-  boolean IsEnter();
-
-  public native @Cast("bool")
-  boolean IsExit();
-
-  public native @Cast("bool")
-  boolean IsNextIteration();
-
-  public native @Cast("bool")
-  boolean IsLoopCond();
-
-  public native @Cast("bool")
-  boolean IsControlTrigger();
-
-  public native @Cast("bool")
-  boolean IsSend();
-
-  public native @Cast("bool")
-  boolean IsRecv();
-
-  public native @Cast("bool")
-  boolean IsConstant();
-
-  public native @Cast("bool")
-  boolean IsVariable();
-
-  public native @Cast("bool")
-  boolean IsIdentity();
-
-  public native @Cast("bool")
-  boolean IsGetSessionHandle();
-
-  public native @Cast("bool")
-  boolean IsGetSessionTensor();
-
-  public native @Cast("bool")
-  boolean IsDeleteSessionTensor();
-
-  public native @Cast("bool")
-  boolean IsControlFlow();
-
-  public native @Cast("bool")
-  boolean IsHostSend();
-
-  public native @Cast("bool")
-  boolean IsHostRecv();
-
-  public native @Cast("bool")
-  boolean IsScopedAllocator();
-
-  public native @Cast("bool")
-  boolean IsCollective();
-
-  public native @Cast("bool")
-  boolean IsMetadata();
-
-  public native @Cast("bool")
-  boolean IsFakeParam();
-
-  public native @Cast("bool")
-  boolean IsPartitionedCall();
+  public native @Cast("bool") boolean IsMetadata();
+  public native @Cast("bool") boolean IsFakeParam();
+  public native @Cast("bool") boolean IsPartitionedCall();
 
   // Returns true if this node is any kind of function call node.
   //
   // NOTE: "function call nodes" include partitioned call ops, symbolic gradient
   // ops, and ops whose type_string is the name of a function ("function ops").
-  public native @Cast("bool")
-  boolean IsFunctionCall();
+  public native @Cast("bool") boolean IsFunctionCall();
 
-  public native @Cast("bool")
-  boolean IsIfNode();
-
-  public native @Cast("bool")
-  boolean IsWhileNode();
-
-  public native @Cast("bool")
-  boolean IsCaseNode();
-
+  public native @Cast("bool") boolean IsIfNode();
+  public native @Cast("bool") boolean IsWhileNode();
+  public native @Cast("bool") boolean IsCaseNode();
   // Is this node a function input
-  public native @Cast("bool")
-  boolean IsArg();
-
+  public native @Cast("bool") boolean IsArg();
   // Is this node a function output
-  public native @Cast("bool")
-  boolean IsRetval();
+  public native @Cast("bool") boolean IsRetval();
+
+  
+
+  
+
+  
 
   // Returns into '*e' the edge connecting to the 'idx' input of this Node.
 
@@ -217,6 +132,8 @@ public class Node extends Pointer {
 
   // Returns into '*n' the node that has an output connected to the
   // 'idx' input of this Node.
+  
+  
 
   // Returns into '*t' the idx-th input tensor of this node, represented as the
   // output tensor of input_node(idx).

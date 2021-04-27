@@ -2,88 +2,37 @@
 
 package org.tensorflow.internal.c_api;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.annotation.ByRef;
-import org.bytedeco.javacpp.annotation.ByVal;
-import org.bytedeco.javacpp.annotation.Const;
-import org.bytedeco.javacpp.annotation.Index;
-import org.bytedeco.javacpp.annotation.MemberGetter;
-import org.bytedeco.javacpp.annotation.Name;
-import org.bytedeco.javacpp.annotation.NoOffset;
-import org.bytedeco.javacpp.annotation.Properties;
-import org.bytedeco.javacpp.annotation.StdString;
+import java.nio.*;
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacpp.annotation.*;
 
-@Name("std::unordered_map<tensorflow::string,tensorflow::Node*>")
-@Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
+import static org.tensorflow.internal.c_api.global.tensorflow.*;
+
+@Name("std::unordered_map<tensorflow::string,tensorflow::Node*>") @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class NameMap extends Pointer {
-
-    static {
-        Loader.load();
-    }
-
-    /**
-     * Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}.
-     */
-    public NameMap(Pointer p) {
-        super(p);
-    }
-
-    public NameMap() {
-        allocate();
-    }
-
+    static { Loader.load(); }
+    /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
+    public NameMap(Pointer p) { super(p); }
+    public NameMap()       { allocate();  }
     private native void allocate();
+    public native @Name("operator =") @ByRef NameMap put(@ByRef NameMap x);
 
-    public native @Name("operator =")
-    @ByRef
-    NameMap put(@ByRef NameMap x);
-
-    public boolean empty() {
-        return size() == 0;
-    }
-
+    public boolean empty() { return size() == 0; }
     public native long size();
 
-    @Index
-    public native Node get(@StdString BytePointer i);
-
+    @Index public native Node get(@StdString BytePointer i);
     public native NameMap put(@StdString BytePointer i, Node value);
 
-    public native @ByVal
-    Iterator begin();
+    public native @ByVal Iterator begin();
+    public native @ByVal Iterator end();
+    @NoOffset @Name("iterator") public static class Iterator extends Pointer {
+        public Iterator(Pointer p) { super(p); }
+        public Iterator() { }
 
-    public native @ByVal
-    Iterator end();
-
-    @NoOffset
-    @Name("iterator")
-    public static class Iterator extends Pointer {
-
-        public Iterator(Pointer p) {
-            super(p);
-        }
-
-        public Iterator() {
-        }
-
-        public native @Name("operator ++")
-        @ByRef
-        Iterator increment();
-
-        public native @Name("operator ==")
-        boolean equals(@ByRef Iterator it);
-
-        public native @Name("operator *().first")
-        @MemberGetter
-        @StdString
-        BytePointer first();
-
-        public native @Name("operator *().second")
-        @MemberGetter
-        @Const
-        Node second();
+        public native @Name("operator ++") @ByRef Iterator increment();
+        public native @Name("operator ==") boolean equals(@ByRef Iterator it);
+        public native @Name("operator *().first") @MemberGetter @StdString BytePointer first();
+        public native @Name("operator *().second") @MemberGetter @Const Node second();
     }
 }
 
