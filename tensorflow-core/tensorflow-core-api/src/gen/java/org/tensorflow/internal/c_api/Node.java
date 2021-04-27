@@ -2,29 +2,18 @@
 
 package org.tensorflow.internal.c_api;
 
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.annotation.Name;
-import org.bytedeco.javacpp.annotation.Opaque;
-import org.bytedeco.javacpp.annotation.Properties;
+import java.nio.*;
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacpp.annotation.*;
+
+import static org.tensorflow.internal.c_api.global.tensorflow.*;
 
 // Parsed from tensorflow/core/graph/graph.h
 
-@Name("tensorflow::Node")
-@Opaque
-@Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
+@Name("tensorflow::Node") @Opaque @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class Node extends Pointer {
-
-    /**
-     * Empty constructor. Calls {@code super((Pointer)null)}.
-     */
-    public Node() {
-        super((Pointer) null);
-    }
-
-    /**
-     * Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}.
-     */
-    public Node(Pointer p) {
-        super(p);
-    }
+    /** Empty constructor. Calls {@code super((Pointer)null)}. */
+    public Node() { super((Pointer)null); }
+    /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
+    public Node(Pointer p) { super(p); }
 }

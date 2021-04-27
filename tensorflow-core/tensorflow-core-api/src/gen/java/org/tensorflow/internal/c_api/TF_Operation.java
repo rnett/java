@@ -2,27 +2,17 @@
 
 package org.tensorflow.internal.c_api;
 
-import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.annotation.ByRef;
-import org.bytedeco.javacpp.annotation.MemberGetter;
-import org.bytedeco.javacpp.annotation.Properties;
+import java.nio.*;
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacpp.annotation.*;
+
+import static org.tensorflow.internal.c_api.global.tensorflow.*;
 
 @Properties(inherit = org.tensorflow.internal.c_api.presets.tensorflow.class)
 public class TF_Operation extends Pointer {
+    static { Loader.load(); }
+    /** Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}. */
+    public TF_Operation(Pointer p) { super(p); }
 
-  static {
-    Loader.load();
-  }
-
-  /**
-   * Pointer cast constructor. Invokes {@link Pointer#Pointer(Pointer)}.
-   */
-  public TF_Operation(Pointer p) {
-    super(p);
-  }
-
-  public native @MemberGetter
-  @ByRef
-  Node node();
+  public native @MemberGetter @ByRef Node node();
 }
