@@ -20,6 +20,6 @@ public class GradFunc extends FunctionPointer {
     protected GradFunc() { allocate(); }
     private native void allocate();
     public native @ByVal NativeStatus call(@Const @ByRef TF_Scope scope, @Const @ByRef NativeOperation op,
-                           NativeOutputVector grad_inputs,
+                           @Const @ByRef NativeOutputVector grad_inputs,
                            NativeOutputVector grad_outputs);
 }
