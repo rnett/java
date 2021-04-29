@@ -1,0 +1,82 @@
+diff --git a/tensorflow/c/c_api.cc b/tensorflow/c/c_api.cc
+index f3bf7b98a1e..4d4cd1b1fe1 100644
+--- a/tensorflow/c/c_api.cc
++++ b/tensorflow/c/c_api.cc
+@@ -645,12 +645,12 @@ TF_DEVICELIST_METHOD(uint64_t, TF_DeviceListIncarnation, incarnation(), 0);
+
+ // Helper functions -----------------------------------------------------------
+
+-namespace {
+-
+ TF_Operation* ToOperation(Node* node) {
+   return static_cast<TF_Operation*>(static_cast<void*>(node));
+ }
+
++namespace {
++
+ string OutputName(const TF_Output& output) {
+   return StrCat(output.oper->node.name(), ":", output.index);
+ }
+@@ -782,7 +782,7 @@ void TF_GraphGetTensorShape(TF_Graph* graph, TF_Output output, int64_t* dims,
+
+ extern "C" {
+
+-static TF_OperationDescription* TF_NewOperationLocked(TF_Graph* graph,
++TF_OperationDescription* TF_NewOperationLocked(TF_Graph* graph,
+                                                       const char* op_type,
+                                                       const char* oper_name)
+     TF_EXCLUSIVE_LOCKS_REQUIRED(graph->mu) {
+@@ -1041,7 +1041,7 @@ void TF_SetAttrValueProto(TF_OperationDescription* desc, const char* attr_name,
+   status->status = Status::OK();
+ }
+
+-static TF_Operation* TF_FinishOperationLocked(TF_OperationDescription* desc,
++TF_Operation* TF_FinishOperationLocked(TF_OperationDescription* desc,
+                                               TF_Status* status)
+     TF_EXCLUSIVE_LOCKS_REQUIRED(desc->graph->mu) {
+   Node* ret = nullptr;
+diff --git a/tensorflow/c/c_api.h b/tensorflow/c/c_api.h
+index 705cf85e051..d38ae62e86a 100644
+--- a/tensorflow/c/c_api.h
++++ b/tensorflow/c/c_api.h
+@@ -255,6 +255,10 @@ TF_CAPI_EXPORT extern void TF_GraphGetTensorShape(TF_Graph* graph,
+                                                   int64_t* dims, int num_dims,
+                                                   TF_Status* status);
+
++TF_OperationDescription* TF_NewOperationLocked(TF_Graph* graph,
++                                                      const char* op_type,
++                                                      const char* oper_name);
++
+ // Operation will only be added to *graph when TF_FinishOperation() is
+ // called (assuming TF_FinishOperation() does not return an error).
+ // *graph must not be deleted until after TF_FinishOperation() is
+@@ -406,6 +410,9 @@ TF_CAPI_EXPORT extern void TF_SetAttrValueProto(TF_OperationDescription* desc,
+                                                 size_t proto_len,
+                                                 TF_Status* status);
+
++TF_Operation* TF_FinishOperationLocked(TF_OperationDescription* desc,
++                                              TF_Status* status);
++
+ // If this function succeeds:
+ //   * *status is set to an OK value,
+ //   * a TF_Operation is added to the graph,
+diff --git a/tensorflow/c/c_api_internal.h b/tensorflow/c/c_api_internal.h
+index 76345cf068c..904f083a2d9 100644
+--- a/tensorflow/c/c_api_internal.h
++++ b/tensorflow/c/c_api_internal.h
+@@ -185,6 +185,12 @@ struct TF_Server {
+ };
+ #endif  // !defined(IS_MOBILE_PLATFORM) && !defined(IS_SLIM_BUILD)
+
++// Exposed helper functions
++
++TF_Operation* ToOperation(tensorflow::Node* node);
++
++// End Exposed helper functions
++
+ namespace tensorflow {
+ 
+ Status MessageToBuffer(const tensorflow::protobuf::MessageLite& in,
+-- 
+2.17.1
+
