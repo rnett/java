@@ -15,11 +15,14 @@
  */
 package org.tensorflow.processor.operator;
 
+import com.squareup.javapoet.ArrayTypeName;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.tensorflow.Names;
@@ -108,6 +111,7 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
 
     TypeSpec.Builder opsBuilder =
         TypeSpec.classBuilder("Ops")
+            .addSuperinterface(Names.WithOps)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addJavadoc(
                 "An API for building operations as {@link $T Op}s\n<p>\n"
@@ -146,52 +150,65 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
 
     opsBuilder.addMethod(ctorBuilder.build());
 
+    opsBuilder.addMethod(MethodSpec
+        .methodBuilder("tf")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(Names.Ops)
+        .addStatement("return this")
+        .build()
+    );
+
     opsBuilder.addMethod(
         MethodSpec.methodBuilder("withSubScope")
             .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
             .addParameter(Names.String, "childScopeName")
             .returns(Names.Ops)
             .addStatement("return new $T(scope.withSubScope(childScopeName))", Names.Ops)
-            .addJavadoc(
-                "Returns an API that builds operations with the provided name prefix.\n"
-                    + "\n@see {@link $T#withSubScope(String)}\n",
-                Names.Scope)
+            .addJavadoc("{@inheritDoc}")
             .build());
 
     opsBuilder.addMethod(
         MethodSpec.methodBuilder("withName")
             .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
             .addParameter(Names.String, "opName")
             .returns(Names.Ops)
             .addStatement("return new Ops(scope.withName(opName))")
-            .addJavadoc(
-                "Returns an API that uses the provided name for an op.\n\n"
-                    + "@see {@link $T#withName(String)}\n",
-                Names.Scope)
+            .addJavadoc("{@inheritDoc}")
             .build());
 
     opsBuilder.addMethod(
         MethodSpec.methodBuilder("withDevice")
             .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
             .addParameter(Names.DeviceSpec, "deviceSpec")
             .returns(Names.Ops)
             .addStatement("return new Ops(scope.withDevice(deviceSpec))")
-            .addJavadoc(
-                "Returns an API that places the created operations on the device(s) matching the provided spec.\n\n"
-                    + "@see {@link $T#withDevice(DeviceSpec)}\n",
-                Names.Scope)
+            .addJavadoc("{@inheritDoc}")
             .build());
 
     opsBuilder.addMethod(
         MethodSpec.methodBuilder("withControlDependencies")
             .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
             .addParameter(Names.IterableOp, "controls")
             .returns(Names.Ops)
             .addStatement("return new Ops(scope.withControlDependencies(controls))")
-            .addJavadoc(
-                "Returns an API that adds operations to the graph with the provided control dependencies.\n\n"
-                    + "@see {@link $T#withControlDependencies(Iterable<Op<?>>)}\n",
-                Names.Scope)
+            .addJavadoc("{@inheritDoc}")
+            .build());
+
+    opsBuilder.addMethod(
+        MethodSpec.methodBuilder("withControlDependencies")
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
+            .addParameter(ArrayTypeName.of(Names.Op), "controls")
+            .varargs()
+            .returns(Names.Ops)
+            .addStatement("return withControlDependencies($T.asList(controls))", ClassName.get(
+                Arrays.class))
+            .addJavadoc("{@inheritDoc}")
             .build());
 
     opsBuilder.addField(

@@ -53,6 +53,8 @@ public class Names {
   public static final ClassName OperationBuilder = ClassName.get(TensorflowPackage, "OperationBuilder");
   public static final TypeName IterableOp = ParameterizedTypeName.get(ClassName.get(Iterable.class), Op);
 
+  public static final ClassName WithOps = ClassName.get(OpPackage, "WithOps");
+
   public static final ClassName Operand = ClassName.get(TensorflowPackage, "Operand");
   public static final ClassName Output = ClassName.get(TensorflowPackage, "Output");
 
