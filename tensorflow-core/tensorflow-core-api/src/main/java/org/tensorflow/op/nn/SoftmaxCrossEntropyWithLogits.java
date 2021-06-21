@@ -1,5 +1,7 @@
 package org.tensorflow.op.nn;
 
+import java.util.Arrays;
+import java.util.List;
 import org.tensorflow.Operand;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.op.Scope;
@@ -14,9 +16,6 @@ import org.tensorflow.types.TFloat16;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TInt64;
 import org.tensorflow.types.family.TNumber;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Operator(group = "nn")
 public class SoftmaxCrossEntropyWithLogits {
@@ -77,7 +76,9 @@ public class SoftmaxCrossEntropyWithLogits {
     }
 
     if (logits.asOutput().type() == TFloat16.class || logits.asOutput().type() == TBfloat16.class) {
-      Operand<TFloat32> result =  softmaxCrossEntropyWithLogits(scope,
+      Operand<TFloat32> result =
+          softmaxCrossEntropyWithLogits(
+              scope,
               Cast.create(scope, labels, TFloat32.class),
               Cast.create(scope, logits, TFloat32.class),
               axis);
@@ -85,10 +86,8 @@ public class SoftmaxCrossEntropyWithLogits {
     }
 
     if (logits.asOutput().type() != labels.asOutput().type()) {
-      return softmaxCrossEntropyWithLogits(scope,
-              Cast.create(scope, labels, logits.asOutput().type()),
-              logits,
-              axis);
+      return softmaxCrossEntropyWithLogits(
+          scope, Cast.create(scope, labels, logits.asOutput().type()), logits, axis);
     }
 
     Operand<TInt64> inputRank = Cast.create(scope, Rank.create(scope, logits), TInt64.class);
@@ -106,7 +105,7 @@ public class SoftmaxCrossEntropyWithLogits {
 
     org.tensorflow.op.nn.raw.SoftmaxCrossEntropyWithLogits<T> smax =
         org.tensorflow.op.nn.raw.SoftmaxCrossEntropyWithLogits.create(
-            scope, logits, (Operand<T>)labels);
+            scope, logits, (Operand<T>) labels);
     /* cannot use generic on cost, because cost may be recast later. */
     Operand<T> cost = smax.loss();
     Operand<TInt64> outputShape =

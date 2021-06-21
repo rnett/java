@@ -1,18 +1,18 @@
 /* Copyright 2019-2021 The TensorFlow Authors. All Rights Reserved.
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- =======================================================================
- */
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+=======================================================================
+*/
 package org.tensorflow.processor.operator;
 
 import com.squareup.javapoet.ArrayTypeName;
@@ -56,7 +56,7 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
 
   @Override
   protected TypeSpec buildGroupClass(OpsSpec spec) {
-    //System.out.println("Generating " + spec.className + " class");
+    // System.out.println("Generating " + spec.className + " class");
 
     MethodSpec.Builder ctorBuilder =
         MethodSpec.constructorBuilder()
@@ -101,7 +101,7 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
 
   @Override
   protected TypeSpec buildTopClass(OpsSpec spec) {
-    //System.out.println("Generating " + spec.className + " class");
+    // System.out.println("Generating " + spec.className + " class");
 
     MethodSpec.Builder ctorBuilder =
         MethodSpec.constructorBuilder()
@@ -150,14 +150,13 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
 
     opsBuilder.addMethod(ctorBuilder.build());
 
-    opsBuilder.addMethod(MethodSpec
-        .methodBuilder("tf")
-        .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(Override.class)
-        .returns(Names.Ops)
-        .addStatement("return this")
-        .build()
-    );
+    opsBuilder.addMethod(
+        MethodSpec.methodBuilder("tf")
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
+            .returns(Names.Ops)
+            .addStatement("return this")
+            .build());
 
     opsBuilder.addMethod(
         MethodSpec.methodBuilder("withSubScope")
@@ -206,8 +205,8 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
             .addParameter(ArrayTypeName.of(Names.Op), "controls")
             .varargs()
             .returns(Names.Ops)
-            .addStatement("return withControlDependencies($T.asList(controls))", ClassName.get(
-                Arrays.class))
+            .addStatement(
+                "return withControlDependencies($T.asList(controls))", ClassName.get(Arrays.class))
             .addJavadoc("{@inheritDoc}")
             .build());
 
@@ -247,15 +246,25 @@ public final class OperatorProcessor extends BaseOperatorProcessor<TypeSpec> {
     return opsBuilder.build();
   }
 
-  private static void addGroupFields(TypeSpec.Builder classBuilder, MethodSpec.Builder ctorBuilder, List<OpsSpec> groups, boolean isTopClass) {
-    groups.forEach(group -> {
-      System.out.println("Adding field in " + classBuilder.build().name + ": " + group.fieldName);
-      classBuilder.addField(
-          FieldSpec.builder(group.className, group.fieldName)
-              .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-              .build()
-      );
-      ctorBuilder.addStatement("$L = new $T(" + (isTopClass ? "this" : "ops") + ")", group.fieldName, group.className).build();
-    });
+  private static void addGroupFields(
+      TypeSpec.Builder classBuilder,
+      MethodSpec.Builder ctorBuilder,
+      List<OpsSpec> groups,
+      boolean isTopClass) {
+    groups.forEach(
+        group -> {
+          System.out.println(
+              "Adding field in " + classBuilder.build().name + ": " + group.fieldName);
+          classBuilder.addField(
+              FieldSpec.builder(group.className, group.fieldName)
+                  .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                  .build());
+          ctorBuilder
+              .addStatement(
+                  "$L = new $T(" + (isTopClass ? "this" : "ops") + ")",
+                  group.fieldName,
+                  group.className)
+              .build();
+        });
   }
 }
