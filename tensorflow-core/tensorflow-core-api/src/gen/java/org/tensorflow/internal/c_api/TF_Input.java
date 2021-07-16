@@ -25,7 +25,7 @@ public class TF_Input extends Pointer {
         return (TF_Input)super.position(position);
     }
     @Override public TF_Input getPointer(long i) {
-        return new TF_Input((Pointer)this).position(position + i);
+        return new TF_Input((Pointer)this).offsetAddress(i);
     }
 
   public native TF_Operation oper(); public native TF_Input oper(TF_Operation setter);

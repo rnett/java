@@ -24,7 +24,7 @@ public class TF_TString_Small extends Pointer {
         return (TF_TString_Small)super.position(position);
     }
     @Override public TF_TString_Small getPointer(long i) {
-        return new TF_TString_Small((Pointer)this).position(position + i);
+        return new TF_TString_Small((Pointer)this).offsetAddress(i);
     }
   // NOLINT
   public native @Cast("uint8_t") byte size(); public native TF_TString_Small size(byte setter);

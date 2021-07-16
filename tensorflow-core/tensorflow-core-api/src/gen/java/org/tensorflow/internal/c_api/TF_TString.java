@@ -24,7 +24,7 @@ public class TF_TString extends Pointer {
         return (TF_TString)super.position(position);
     }
     @Override public TF_TString getPointer(long i) {
-        return new TF_TString((Pointer)this).position(position + i);
+        return new TF_TString((Pointer)this).offsetAddress(i);
     }
   // NOLINT
     // small conflicts with '#define small char' in RpcNdr.h for MSVC, so we use

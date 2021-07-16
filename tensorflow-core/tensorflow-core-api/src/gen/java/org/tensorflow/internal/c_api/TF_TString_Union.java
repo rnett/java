@@ -24,7 +24,7 @@ public class TF_TString_Union extends Pointer {
         return (TF_TString_Union)super.position(position);
     }
     @Override public TF_TString_Union getPointer(long i) {
-        return new TF_TString_Union((Pointer)this).position(position + i);
+        return new TF_TString_Union((Pointer)this).offsetAddress(i);
     }
   // NOLINT
   public native @ByRef TF_TString_Large large(); public native TF_TString_Union large(TF_TString_Large setter);

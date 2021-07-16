@@ -22,7 +22,7 @@ public class NativeOutput extends Pointer {
         return (NativeOutput)super.position(position);
     }
     @Override public NativeOutput getPointer(long i) {
-        return new NativeOutput((Pointer)this).position(position + i);
+        return new NativeOutput((Pointer)this).offsetAddress(i);
     }
 
   public NativeOutput() { super((Pointer)null); allocate(); }

@@ -24,7 +24,7 @@ public class TF_TString_Offset extends Pointer {
         return (TF_TString_Offset)super.position(position);
     }
     @Override public TF_TString_Offset getPointer(long i) {
-        return new TF_TString_Offset((Pointer)this).position(position + i);
+        return new TF_TString_Offset((Pointer)this).offsetAddress(i);
     }
   // NOLINT
   public native @Cast("uint32_t") int size(); public native TF_TString_Offset size(int setter);

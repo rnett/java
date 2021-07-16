@@ -1,18 +1,18 @@
 /* Copyright 2019-2021 The TensorFlow Authors. All Rights Reserved.
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- =======================================================================
- */
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+=======================================================================
+*/
 package org.tensorflow;
 
 import static org.tensorflow.internal.c_api.global.tensorflow.TF_AddControlInput;
@@ -415,9 +415,8 @@ public final class GraphOperationBuilder implements OperationBuilder {
     return TF_NewOperation(graphHandle, type, name);
   }
 
-  private static TF_OperationDescription allocateDangerousGradient(TF_Graph graphHandle,
-      String type,
-      String name) {
+  private static TF_OperationDescription allocateDangerousGradient(
+      TF_Graph graphHandle, String type, String name) {
     if (graphHandle == null || graphHandle.isNull()) {
       throw new IllegalStateException("close() has been called on the Graph");
     }
@@ -457,8 +456,7 @@ public final class GraphOperationBuilder implements OperationBuilder {
   }
 
   private static void addInputList(
-      TF_OperationDescription handle, TF_Operation[] opHandles,
-      int[] indices) {
+      TF_OperationDescription handle, TF_Operation[] opHandles, int[] indices) {
     requireHandle(handle);
     if (indices.length != opHandles.length) {
       throw new IllegalArgumentException(
@@ -528,8 +526,7 @@ public final class GraphOperationBuilder implements OperationBuilder {
   }
 
   private static void setAttrBoolList(
-      TF_OperationDescription handle, String name,
-      boolean[] value) {
+      TF_OperationDescription handle, String name, boolean[] value) {
     requireHandle(handle);
     try (PointerScope scope = new PointerScope()) {
       TF_SetAttrBoolList(handle, name, new BytePointer(new BooleanPointer(value)), value.length);
@@ -547,8 +544,7 @@ public final class GraphOperationBuilder implements OperationBuilder {
   }
 
   private static void setAttrTensor(
-      TF_OperationDescription handle, String name,
-      TF_Tensor tensorHandle) {
+      TF_OperationDescription handle, String name, TF_Tensor tensorHandle) {
     requireHandle(handle);
     requireTensor(tensorHandle);
 
@@ -560,8 +556,7 @@ public final class GraphOperationBuilder implements OperationBuilder {
   }
 
   private static void setAttrTensorList(
-      TF_OperationDescription handle, String name,
-      TF_Tensor[] tensorHandles) {
+      TF_OperationDescription handle, String name, TF_Tensor[] tensorHandles) {
     requireHandle(handle);
 
     try (PointerScope scope = new PointerScope()) {
@@ -573,15 +568,13 @@ public final class GraphOperationBuilder implements OperationBuilder {
 
       TF_Status status = TF_Status.newStatus();
       TF_SetAttrTensorList(
-          handle, new BytePointer(name), tensors.position(0), tensorHandles.length,
-          status);
+          handle, new BytePointer(name), tensors.position(0), tensorHandles.length, status);
       status.throwExceptionIfNotOK();
     }
   }
 
   private static void setAttrShape(
-      TF_OperationDescription handle, String name, long[] shape,
-      int numDims) {
+      TF_OperationDescription handle, String name, long[] shape, int numDims) {
     requireHandle(handle);
 
     // num_dims and env->GetArrayLength(shape) are assumed to be consistent.
@@ -590,8 +583,7 @@ public final class GraphOperationBuilder implements OperationBuilder {
   }
 
   private static void setAttrShapeList(
-      TF_OperationDescription handle, String name, long[] shapes,
-      int[] numDims) {
+      TF_OperationDescription handle, String name, long[] shapes, int[] numDims) {
     requireHandle(handle);
 
     try (PointerScope scope = new PointerScope()) {
@@ -602,14 +594,12 @@ public final class GraphOperationBuilder implements OperationBuilder {
         shapesPointer.position(shapesPointer.position() + numDims[i] * 8);
       }
       TF_SetAttrShapeList(
-          handle, new BytePointer(name), shapesPointers, new IntPointer(numDims),
-          numDims.length);
+          handle, new BytePointer(name), shapesPointers, new IntPointer(numDims), numDims.length);
     }
   }
 
   private static void setAttrStringList(
-      TF_OperationDescription handle, String name,
-      byte[][] value) {
+      TF_OperationDescription handle, String name, byte[][] value) {
     requireHandle(handle);
 
     try (PointerScope scope = new PointerScope()) {

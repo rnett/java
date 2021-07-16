@@ -27,7 +27,7 @@ public class GradOpRegistry extends Pointer {
         return (GradOpRegistry)super.position(position);
     }
     @Override public GradOpRegistry getPointer(long i) {
-        return new GradOpRegistry((Pointer)this).position(position + i);
+        return new GradOpRegistry((Pointer)this).offsetAddress(i);
     }
 
   /** Registers 'func' as the gradient function for 'op'.

@@ -21,7 +21,7 @@ import org.tensorflow.ExecutionEnvironment;
 import org.tensorflow.OperationBuilder;
 
 /**
- * A Java implementation of {@link Scope}.  This is used in all cases except custom gradient
+ * A Java implementation of {@link Scope}. This is used in all cases except custom gradient
  * definitions.
  */
 public final class JavaScope implements Scope {
@@ -32,7 +32,7 @@ public final class JavaScope implements Scope {
    * @param env The execution environment used by the scope.
    */
   public JavaScope(ExecutionEnvironment env) {
-    this(env, new NameScope(), new ArrayList<>(), DeviceSpec.newBuilder().build());
+    this(env, new NameScope(env), new ArrayList<>(), DeviceSpec.newBuilder().build());
   }
 
   @Override
@@ -42,8 +42,8 @@ public final class JavaScope implements Scope {
 
   @Override
   public JavaScope withSubScope(String childScopeName) {
-    return new JavaScope(env, nameScope.withSubScope(childScopeName), controlDependencies,
-        deviceSpec);
+    return new JavaScope(
+        env, nameScope.withSubScope(childScopeName, env), controlDependencies, deviceSpec);
   }
 
   @Override
@@ -53,8 +53,11 @@ public final class JavaScope implements Scope {
 
   @Override
   public JavaScope withNameAsSubScope(String defaultName) {
-    return new JavaScope(env, nameScope.withSubScope(nameScope.makeOpName(defaultName)),
-        controlDependencies, deviceSpec);
+    return new JavaScope(
+        env,
+        nameScope.withSubScope(nameScope.makeOpName(defaultName), env),
+        controlDependencies,
+        deviceSpec);
   }
 
   @Override
@@ -68,7 +71,9 @@ public final class JavaScope implements Scope {
   }
 
   private JavaScope(
-      ExecutionEnvironment env, NameScope nameScope, Iterable<Op> controlDependencies,
+      ExecutionEnvironment env,
+      NameScope nameScope,
+      Iterable<Op> controlDependencies,
       DeviceSpec deviceSpec) {
     this.env = env;
     this.nameScope = nameScope;
@@ -107,9 +112,7 @@ public final class JavaScope implements Scope {
   private final NameScope nameScope;
   private final DeviceSpec deviceSpec;
 
-  /**
-   * Returns device string from the scope.
-   */
+  /** Returns device string from the scope. */
   public String getDeviceString() {
     return deviceSpec.toString();
   }

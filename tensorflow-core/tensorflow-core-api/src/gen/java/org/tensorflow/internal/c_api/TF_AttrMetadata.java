@@ -25,7 +25,7 @@ public class TF_AttrMetadata extends Pointer {
         return (TF_AttrMetadata)super.position(position);
     }
     @Override public TF_AttrMetadata getPointer(long i) {
-        return new TF_AttrMetadata((Pointer)this).position(position + i);
+        return new TF_AttrMetadata((Pointer)this).offsetAddress(i);
     }
 
   // A boolean: 1 if the attribute value is a list, 0 otherwise.

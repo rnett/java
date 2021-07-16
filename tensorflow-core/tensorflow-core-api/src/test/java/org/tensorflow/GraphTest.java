@@ -35,9 +35,7 @@ import org.tensorflow.proto.framework.GraphDef;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TInt32;
 
-/**
- * Unit tests for {@link org.tensorflow.Graph}.
- */
+/** Unit tests for {@link org.tensorflow.Graph}. */
 public class GraphTest {
 
   @Test
@@ -46,11 +44,12 @@ public class GraphTest {
     // Create a graph for A * X + B
     try (Graph g = new Graph()) {
       Ops tf = Ops.create(g);
-      tf.withName("Y").linalg.matMul(
-          tf.withName("A").constant(new int[2][2]),
-          tf.withName("X").placeholder(TInt32.class),
-          MatMul.transposeA(true).transposeB(false)
-      );
+      tf.withName("Y")
+          .linalg
+          .matMul(
+              tf.withName("A").constant(new int[2][2]),
+              tf.withName("X").placeholder(TInt32.class),
+              MatMul.transposeA(true).transposeB(false));
       graphDef = g.toGraphDef();
     }
     // Import the GraphDef and find all the nodes.
@@ -123,19 +122,20 @@ public class GraphTest {
     try (Graph g = new Graph()) {
       Ops tf = Ops.create(g);
       Operand<TInt32> control = tf.constant(0);
-      Operand<TInt32> a = tf.withControlDependencies(Collections.singletonList(control))
-          .constant(1);
+      Operand<TInt32> a =
+          tf.withControlDependencies(Collections.singletonList(control)).constant(1);
       Operand<TInt32> b = tf.constant(2);
       Operand<TInt32> c = tf.constant(3);
 
       Operand<TInt32> d = tf.math.add(a, b);
       Operand<TInt32> output = tf.math.mul(d, c);
 
-      Set<GraphOperation> subgraph = g
-          .completeSubgraph(new LinkedHashSet<>(Arrays.asList(control, a, b, c)),
-              Collections.singleton(output));
+      Set<GraphOperation> subgraph =
+          g.completeSubgraph(
+              new LinkedHashSet<>(Arrays.asList(control, a, b, c)), Collections.singleton(output));
 
-      assertEquals(new LinkedHashSet<>(
+      assertEquals(
+          new LinkedHashSet<>(
               Arrays.asList(control.op(), a.op(), b.op(), c.op(), d.op(), output.op())),
           subgraph);
     }
@@ -146,18 +146,19 @@ public class GraphTest {
     try (Graph g = new Graph()) {
       Ops tf = Ops.create(g);
       Operand<TInt32> control = tf.constant(0);
-      Operand<TInt32> a = tf.withControlDependencies(Collections.singletonList(control))
-          .constant(1);
+      Operand<TInt32> a =
+          tf.withControlDependencies(Collections.singletonList(control)).constant(1);
       Operand<TInt32> b = tf.constant(2);
       Operand<TInt32> c = tf.constant(3);
 
       Operand<TInt32> d = tf.math.add(a, b);
       Operand<TInt32> output = tf.math.mul(d, c);
 
-      Set<GraphOperation> subgraph = g
-          .completeSubgraph(Collections.emptySet(), Collections.singleton(output));
+      Set<GraphOperation> subgraph =
+          g.completeSubgraph(Collections.emptySet(), Collections.singleton(output));
 
-      assertEquals(new LinkedHashSet<>(
+      assertEquals(
+          new LinkedHashSet<>(
               Arrays.asList(control.op(), a.op(), b.op(), c.op(), d.op(), output.op())),
           subgraph);
     }
@@ -210,14 +211,15 @@ public class GraphTest {
 
       try (TFloat32 c1 = TFloat32.scalarOf(3.0f);
           TFloat32 c2 = TFloat32.scalarOf(2.0f);
-          AutoCloseableList<Tensor> outputs = new AutoCloseableList<>(
-              s.runner()
-                  .feed(x1, c1)
-                  .feed(x2, c2)
-                  .fetch(grads0[0])
-                  .fetch(grads1[0])
-                  .fetch(grads1[1])
-                  .run())) {
+          AutoCloseableList<Tensor> outputs =
+              new AutoCloseableList<>(
+                  s.runner()
+                      .feed(x1, c1)
+                      .feed(x2, c2)
+                      .fetch(grads0[0])
+                      .fetch(grads1[0])
+                      .fetch(grads1[1])
+                      .run())) {
 
         assertEquals(3, outputs.size());
         assertEquals(108.0f, ((TFloat32) outputs.get(0)).getFloat(), 0.0f);
@@ -243,11 +245,7 @@ public class GraphTest {
       assertEquals(DataType.DT_FLOAT, grad[0].dataType());
 
       try (TFloat32 c = TFloat32.scalarOf(3.0f);
-          TFloat32 output = (TFloat32) s.runner()
-              .feed(x, c)
-              .fetch(grad[0])
-              .run()
-              .get(0)) {
+          TFloat32 output = (TFloat32) s.runner().feed(x, c).fetch(grad[0]).run().get(0)) {
         assertEquals(114.0f, output.getFloat(), 0.0f);
       }
     }
@@ -274,11 +272,7 @@ public class GraphTest {
       assertEquals(DataType.DT_FLOAT, grad1[0].dataType());
 
       try (TFloat32 c = TFloat32.scalarOf(3.0f);
-          TFloat32 output = (TFloat32) s.runner()
-              .feed(x, c)
-              .fetch(grad1[0])
-              .run()
-              .get(0)) {
+          TFloat32 output = (TFloat32) s.runner().feed(x, c).fetch(grad1[0]).run().get(0)) {
         assertEquals(108.0f, output.getFloat(), 0.0f);
       }
     }
@@ -321,24 +315,22 @@ public class GraphTest {
       Output<?> input = tf.placeholder(TInt32.class).output();
 
       @SuppressWarnings("unchecked")
-      Output<?>[] loopOutputs = g.whileLoop(
-          toArray(input),
-          (condGraph, condInputs, condOutputs) -> {
-            Ops tfc = Ops.create(condGraph);
-            condOutputs[0] = tfc.math.less((Output<TInt32>) condInputs[0], tfc.constant(16)).z();
-          },
-          (bodyGraph, bodyInputs, bodyOutputs) -> {
-            Ops tfb = Ops.create(bodyGraph);
-            bodyOutputs[0] = tfb.math.square((Output<TInt32>) bodyInputs[0]).y();
-          },
-          "test_loop");
+      Output<?>[] loopOutputs =
+          g.whileLoop(
+              toArray(input),
+              (condGraph, condInputs, condOutputs) -> {
+                Ops tfc = Ops.create(condGraph);
+                condOutputs[0] =
+                    tfc.math.less((Output<TInt32>) condInputs[0], tfc.constant(16)).z();
+              },
+              (bodyGraph, bodyInputs, bodyOutputs) -> {
+                Ops tfb = Ops.create(bodyGraph);
+                bodyOutputs[0] = tfb.math.square((Output<TInt32>) bodyInputs[0]).y();
+              },
+              "test_loop");
 
       try (TInt32 c = TInt32.scalarOf(2);
-          TInt32 output = (TInt32) s.runner()
-              .feed(input, c)
-              .fetch(loopOutputs[0])
-              .run()
-              .get(0)) {
+          TInt32 output = (TInt32) s.runner().feed(input, c).fetch(loopOutputs[0]).run().get(0)) {
         assertEquals(16, output.getInt()); // ((2^2)^2)
       }
     }
@@ -355,18 +347,20 @@ public class GraphTest {
       Output<?>[] inputs = toArray(input1, input2);
 
       @SuppressWarnings("unchecked")
-      Output<?>[] loopOutputs = g.whileLoop(
-          inputs,
-          (condGraph, condInputs, condOutputs) -> {
-            Ops tfc = Ops.create(condGraph);
-            condOutputs[0] = tfc.math.less((Output<TInt32>) condInputs[0], tfc.constant(16)).z();
-          },
-          (bodyGraph, bodyInputs, bodyOutputs) -> {
-            Ops tfb = Ops.create(bodyGraph);
-            bodyOutputs[0] = tfb.math.square((Output<TInt32>) bodyInputs[0]).y();
-            bodyOutputs[1] = tfb.math.square((Output<TInt32>) bodyInputs[1]).y();
-          },
-          "test_loop");
+      Output<?>[] loopOutputs =
+          g.whileLoop(
+              inputs,
+              (condGraph, condInputs, condOutputs) -> {
+                Ops tfc = Ops.create(condGraph);
+                condOutputs[0] =
+                    tfc.math.less((Output<TInt32>) condInputs[0], tfc.constant(16)).z();
+              },
+              (bodyGraph, bodyInputs, bodyOutputs) -> {
+                Ops tfb = Ops.create(bodyGraph);
+                bodyOutputs[0] = tfb.math.square((Output<TInt32>) bodyInputs[0]).y();
+                bodyOutputs[1] = tfb.math.square((Output<TInt32>) bodyInputs[1]).y();
+              },
+              "test_loop");
 
       try (TInt32 c1 = TInt32.scalarOf(2);
           TInt32 c2 = TInt32.scalarOf(5);

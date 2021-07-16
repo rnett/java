@@ -32,7 +32,7 @@ public class TF_Buffer extends org.tensorflow.internal.c_api.AbstractTF_Buffer {
         return (TF_Buffer)super.position(position);
     }
     @Override public TF_Buffer getPointer(long i) {
-        return new TF_Buffer((Pointer)this).position(position + i);
+        return new TF_Buffer((Pointer)this).offsetAddress(i);
     }
 
   public native @Const Pointer data(); public native TF_Buffer data(Pointer data);

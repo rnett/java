@@ -24,7 +24,7 @@ public class TF_TString_View extends Pointer {
         return (TF_TString_View)super.position(position);
     }
     @Override public TF_TString_View getPointer(long i) {
-        return new TF_TString_View((Pointer)this).position(position + i);
+        return new TF_TString_View((Pointer)this).offsetAddress(i);
     }
   // NOLINT
   public native @Cast("size_t") long size(); public native TF_TString_View size(long setter);

@@ -137,4 +137,11 @@ public class Node extends Pointer {
 
   // Returns into '*t' the idx-th input tensor of this node, represented as the
   // output tensor of input_node(idx).
+
+  // Sets the stack trace for the node. Assumes that getting and setting the
+  // stack trace for a given node will not race.
+  
+
+  // Get the stack trace for when the node was instantiated.
+  
 }

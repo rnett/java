@@ -26,7 +26,7 @@ public class TF_AllocatorAttributes extends Pointer {
         return (TF_AllocatorAttributes)super.position(position);
     }
     @Override public TF_AllocatorAttributes getPointer(long i) {
-        return new TF_AllocatorAttributes((Pointer)this).position(position + i);
+        return new TF_AllocatorAttributes((Pointer)this).offsetAddress(i);
     }
 
   public native @Cast("size_t") long struct_size(); public native TF_AllocatorAttributes struct_size(long setter);

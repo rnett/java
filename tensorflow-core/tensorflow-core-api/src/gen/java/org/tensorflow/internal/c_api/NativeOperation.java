@@ -25,7 +25,7 @@ public class NativeOperation extends Pointer {
         return (NativeOperation)super.position(position);
     }
     @Override public NativeOperation getPointer(long i) {
-        return new NativeOperation((Pointer)this).position(position + i);
+        return new NativeOperation((Pointer)this).offsetAddress(i);
     }
 
   public NativeOperation() { super((Pointer)null); allocate(); }

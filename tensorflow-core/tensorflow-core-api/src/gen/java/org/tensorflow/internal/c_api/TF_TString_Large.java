@@ -24,7 +24,7 @@ public class TF_TString_Large extends Pointer {
         return (TF_TString_Large)super.position(position);
     }
     @Override public TF_TString_Large getPointer(long i) {
-        return new TF_TString_Large((Pointer)this).position(position + i);
+        return new TF_TString_Large((Pointer)this).offsetAddress(i);
     }
   // NOLINT
   public native @Cast("size_t") long size(); public native TF_TString_Large size(long setter);

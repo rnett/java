@@ -27,7 +27,7 @@ public class TF_StringView extends Pointer {
         return (TF_StringView)super.position(position);
     }
     @Override public TF_StringView getPointer(long i) {
-        return new TF_StringView((Pointer)this).position(position + i);
+        return new TF_StringView((Pointer)this).offsetAddress(i);
     }
 
   public native @Cast("const char*") BytePointer data(); public native TF_StringView data(BytePointer setter);

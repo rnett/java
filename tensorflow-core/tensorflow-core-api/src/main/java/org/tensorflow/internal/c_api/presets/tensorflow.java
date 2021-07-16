@@ -284,7 +284,8 @@ public class tensorflow implements LoadEnabled, InfoMapper {
     }
   }
 
-  @Overridepublic void map(InfoMap infoMap) {
+  @Override
+  public void map(InfoMap infoMap) {
     infoMap
         .put(
             new Info("c_api_internal.h")
@@ -382,9 +383,10 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                 .javaText("public native long erase(@StdString BytePointer key);"))
         .put(
             new Info("TF_Function")
-          .pointerTypes("TF_Function")
-          .base("org.tensorflow.internal.c_api.AbstractTF_Function"))
-        .put(new Info("TF_ImportGraphDefOptions")
+                .pointerTypes("TF_Function")
+                .base("org.tensorflow.internal.c_api.AbstractTF_Function"))
+        .put(
+            new Info("TF_ImportGraphDefOptions")
                 .pointerTypes("TF_ImportGraphDefOptions")
                 .base("org.tensorflow.internal.c_api.AbstractTF_ImportGraphDefOptions"))
         .put(
@@ -452,9 +454,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
             new Info("TFE_TensorHandle")
                 .pointerTypes("TFE_TensorHandle")
                 .base("org.tensorflow.internal.c_api.AbstractTFE_TensorHandle"))
-        .put(
-            new Info(
-                    "SP_Stream").cast().pointerTypes("Pointer"))
+        .put(new Info("SP_Stream").cast().pointerTypes("Pointer"))
         .put(
             new Info(
                     "TF_ShapeInferenceContextDimValueKnown",
@@ -465,7 +465,7 @@ public class tensorflow implements LoadEnabled, InfoMapper {
         .put(new Info("tensorflow::Scope").javaNames("TF_Scope"))
         .put(new Info("tensorflow::NodeBuilder").pointerTypes("NodeBuilder"))
         .put(
-            new Info("string", "tensorflow::string", "absl::string_view", "tensorflow::StringPiece")
+            new Info("string", "tensorflow::string")
                 .annotations("@StdString")
                 .valueTypes("BytePointer", "String")
                 .pointerTypes("BytePointer"))
@@ -515,7 +515,14 @@ public class tensorflow implements LoadEnabled, InfoMapper {
                     "tensorflow::Operation::output",
                     "tensorflow::Operation::hash",
                     "tensorflow::Output::hash",
-                    "tensorflow::Output::type")
+                    "tensorflow::Output::type",
+                    "tensorflow::Status::GetAllPayloads",
+                    "tensorflow::Status::ReplaceAllPayloads",
+                    "tensorflow::Status::ErasePayload",
+                    "tensorflow::Status::SetPayload",
+                    "tensorflow::Status::GetPayload",
+                    "tensorflow::Node::SetStackTrace",
+                    "tensorflow::Node::GetStackTrace")
                 .skip());
   }
 

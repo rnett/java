@@ -25,7 +25,7 @@ public class TF_Output extends Pointer {
         return (TF_Output)super.position(position);
     }
     @Override public TF_Output getPointer(long i) {
-        return new TF_Output((Pointer)this).position(position + i);
+        return new TF_Output((Pointer)this).offsetAddress(i);
     }
 
   public native TF_Operation oper(); public native TF_Output oper(TF_Operation setter);

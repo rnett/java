@@ -1,18 +1,18 @@
 /* Copyright 2019-2021 The TensorFlow Authors. All Rights Reserved.
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- =======================================================================
- */
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+=======================================================================
+*/
 package org.tensorflow.op;
 
 import org.tensorflow.DeviceSpec;
@@ -49,9 +49,8 @@ import org.tensorflow.OperationBuilder;
  *
  * <p><b>Scope hierarchy:</b>
  *
- * <p>A {@code Scope} provides various {@code with()} methods that create a new scope. The new
- * scope typically has one property changed while other properties are inherited from the parent
- * scope.
+ * <p>A {@code Scope} provides various {@code with()} methods that create a new scope. The new scope
+ * typically has one property changed while other properties are inherited from the parent scope.
  *
  * <p>An example using {@code Constant} implemented as before:
  *
@@ -84,9 +83,8 @@ public interface Scope {
   /**
    * Returns a new scope where added operations will have the provided name prefix.
    *
-   * <p>Ops created with this scope will have {@code name/childScopeName/} as the prefix. The
-   * actual name will be unique in the returned scope. All other properties are inherited from the
-   * current
+   * <p>Ops created with this scope will have {@code name/childScopeName/} as the prefix. The actual
+   * name will be unique in the returned scope. All other properties are inherited from the current
    * scope.
    *
    * <p>The child scope name must match the regular expression {@code [A-Za-z0-9.][A-Za-z0-9_.\-]*}
@@ -152,9 +150,8 @@ public interface Scope {
    * scope.env().opBuilder("Const", scope.makeOpName("Const"))...
    * }</pre>
    *
-   * <p><b>Note:</b> if you provide a composite operator building class (i.e, a class that creates
-   * a set of related operations by calling other operator building code), the provided name will
-   * act
+   * <p><b>Note:</b> if you provide a composite operator building class (i.e, a class that creates a
+   * set of related operations by calling other operator building code), the provided name will act
    * as a subscope to all underlying operators.
    *
    * @param defaultName name for the underlying operator.
@@ -166,8 +163,8 @@ public interface Scope {
   /**
    * Returns a new scope where added operations will have the provided control dependencies.
    *
-   * <p>Ops created with this scope will have a control edge from each of the provided controls.
-   * All other properties are inherited from the current scope.
+   * <p>Ops created with this scope will have a control edge from each of the provided controls. All
+   * other properties are inherited from the current scope.
    *
    * @param controls control dependencies for ops created with the returned scope
    * @return a new scope with the provided control dependencies

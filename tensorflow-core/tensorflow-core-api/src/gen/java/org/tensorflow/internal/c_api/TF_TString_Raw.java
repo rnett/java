@@ -24,7 +24,7 @@ public class TF_TString_Raw extends Pointer {
         return (TF_TString_Raw)super.position(position);
     }
     @Override public TF_TString_Raw getPointer(long i) {
-        return new TF_TString_Raw((Pointer)this).position(position + i);
+        return new TF_TString_Raw((Pointer)this).offsetAddress(i);
     }
   // NOLINT
   public native @Cast("uint8_t") byte raw(int i); public native TF_TString_Raw raw(int i, byte setter);
